@@ -18,7 +18,7 @@ import {
   doc,
   getDocs,
 } from "firebase/firestore";
-import { Project, ProjectWithStats } from "@/types";
+import { Project, ProjectWithStats, TeamMember } from "@/types";
 import Navbar from "@/components/common/Navbar";
 import { PageLoader } from "@/components/common/LoadingSpinner";
 import CreateProjectModal from "@/components/projects/CreateProjectModal";
@@ -105,10 +105,20 @@ export default function ProjectsPage() {
   }) => {
     if (!user) return;
 
+    // Create owner as first team member
+    const ownerMember: TeamMember = {
+      userId: user.uid,
+      email: user.email || "",
+      displayName: user.displayName || undefined,
+      role: "owner",
+      joinedAt: new Date().toISOString(),
+    };
+
     await addDoc(collection(db, "projects"), {
       ...projectData,
       userId: user.uid,
       status: "active",
+      teamMembers: [ownerMember],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });

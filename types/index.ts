@@ -7,9 +7,31 @@ export interface User {
   createdAt: Date;
 }
 
+export type TeamMemberRole = "owner" | "editor" | "viewer";
+
+export interface TeamMember {
+  userId: string;
+  email: string;
+  displayName?: string;
+  role: TeamMemberRole;
+  joinedAt: string;
+}
+
+export interface ProjectInvite {
+  id: string;
+  projectId: string;
+  projectName: string;
+  invitedEmail: string;
+  invitedBy: string;
+  invitedByName: string;
+  role: TeamMemberRole;
+  status: "pending" | "accepted" | "declined";
+  createdAt: string;
+}
+
 export interface Project {
   id: string;
-  userId: string;
+  userId: string; // Owner's ID
   name: string;
   description: string;
   estimatedBudget: number;
@@ -18,6 +40,8 @@ export interface Project {
   status: "active" | "completed" | "on-hold";
   createdAt: string;
   updatedAt: string;
+  // Team collaboration
+  teamMembers?: TeamMember[];
 }
 
 export interface BudgetEntry {
@@ -32,6 +56,7 @@ export interface BudgetEntry {
   invoiceType?: "image" | "pdf";
   createdAt: string;
   updatedAt: string;
+  addedBy?: string; // User ID who added this entry
 }
 
 export type BudgetCategory =

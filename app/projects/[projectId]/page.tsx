@@ -22,6 +22,8 @@ import {
   BudgetEntry,
   BudgetCategory,
   BUDGET_CATEGORIES,
+  TeamMember,
+  TeamMemberRole,
 } from "@/types";
 import Navbar from "@/components/common/Navbar";
 import { PageLoader } from "@/components/common/LoadingSpinner";
@@ -30,6 +32,7 @@ import FilePreviewModal from "@/components/common/FilePreviewModal";
 import BudgetOverviewChart from "@/components/charts/BudgetOverviewChart";
 import CategoryBreakdownChart from "@/components/charts/CategoryBreakdownChart";
 import SpendingTimelineChart from "@/components/charts/SpendingTimelineChart";
+import TeamManagementModal from "@/components/projects/TeamManagementModal";
 import {
   ArrowLeft,
   Plus,
@@ -43,6 +46,7 @@ import {
   Image as ImageIcon,
   Calendar,
   AlertTriangle,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -67,6 +71,7 @@ export default function ProjectDetailPage({
     type: "image" | "pdf";
   } | null>(null);
   const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [showTeamModal, setShowTeamModal] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -81,7 +86,12 @@ export default function ProjectDetailPage({
       const projectDoc = await getDoc(doc(db, "projects", projectId));
       if (projectDoc.exists()) {
         const data = projectDoc.data();
-        if (data.userId !== user.uid) {
+        // Check if user is owner or team member
+        const isOwner = data.userId === user.uid;
+        const isTeamMember = data.teamMembers?.some(
+          (m: TeamMember) => m.userId === user.uid
+        );
+        if (!isOwner && !isTeamMember) {
           router.push("/projects");
           return;
         }
@@ -209,6 +219,80 @@ export default function ProjectDetailPage({
     return BUDGET_CATEGORIES.find((c) => c.value === value)?.label || value;
   };
 
+  // Team management helpers
+  const isOwner = project.userId === user?.uid;
+  const currentUserRole: TeamMemberRole = isOwner
+    ? "owner"
+    : project.teamMembers?.find((m) => m.userId === user?.uid)?.role ||
+      "viewer";
+  const teamMembers = project.teamMembers || [];
+
+  const handleInviteMember = async (email: string, role: TeamMemberRole) => {
+    if (!project) return;
+
+    const newMember: TeamMember = {
+      userId: "", // Will be populated when user accepts
+      email: email.toLowerCase(),
+      role,
+      joinedAt: new Date().toISOString(),
+    };
+
+    // For now, add directly (in production, would send invite email)
+    await updateDoc(doc(db, "projects", project.id), {
+      teamMembers: [...teamMembers, newMember],
+      updatedAt: new Date().toISOString(),
+    });
+
+    // Refetch project to update state
+    const projectDoc = await getDoc(doc(db, "projects", project.id));
+    if (projectDoc.exists()) {
+      setProject({ id: projectDoc.id, ...projectDoc.data() } as Project);
+    }
+
+    toast.success(`Invited ${email} to the project!`);
+  };
+
+  const handleRemoveMember = async (userId: string) => {
+    if (!project) return;
+
+    const updatedMembers = teamMembers.filter(
+      (m) => m.userId !== userId && m.email !== userId
+    );
+
+    await updateDoc(doc(db, "projects", project.id), {
+      teamMembers: updatedMembers,
+      updatedAt: new Date().toISOString(),
+    });
+
+    // Refetch project to update state
+    const projectDoc = await getDoc(doc(db, "projects", project.id));
+    if (projectDoc.exists()) {
+      setProject({ id: projectDoc.id, ...projectDoc.data() } as Project);
+    }
+
+    toast.success("Team member removed");
+  };
+
+  const handleUpdateRole = async (userId: string, role: TeamMemberRole) => {
+    if (!project) return;
+
+    const updatedMembers = teamMembers.map((m) =>
+      m.userId === userId ? { ...m, role } : m
+    );
+
+    await updateDoc(doc(db, "projects", project.id), {
+      teamMembers: updatedMembers,
+      updatedAt: new Date().toISOString(),
+    });
+
+    const projectDoc = await getDoc(doc(db, "projects", project.id));
+    if (projectDoc.exists()) {
+      setProject({ id: projectDoc.id, ...projectDoc.data() } as Project);
+    }
+
+    toast.success("Role updated");
+  };
+
   const getCategoryColor = (value: string) => {
     return BUDGET_CATEGORIES.find((c) => c.value === value)?.color || "#6B7280";
   };
@@ -261,13 +345,37 @@ export default function ProjectDetailPage({
                 {project.description || "No description"}
               </p>
             </div>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="btn btn-accent"
-            >
-              <Plus className="w-5 h-5" />
-              Add Entry
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowTeamModal(true)}
+                className="flex items-center gap-2 rounded-xl transition-colors"
+                style={{
+                  padding: "12px 20px",
+                  backgroundColor: "var(--background-secondary)",
+                  border: "2px solid var(--border)",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                }}
+              >
+                <Users className="w-5 h-5" style={{ color: "#8b5cf6" }} />
+                Team ({teamMembers.length})
+              </button>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-2 rounded-xl text-white"
+                style={{
+                  padding: "12px 20px",
+                  background:
+                    "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                  boxShadow: "0 8px 20px rgba(139, 92, 246, 0.3)",
+                }}
+              >
+                <Plus className="w-5 h-5" />
+                Add Entry
+              </button>
+            </div>
           </div>
         </div>
 
@@ -531,6 +639,18 @@ export default function ProjectDetailPage({
           fileType={previewFile.type}
         />
       )}
+
+      <TeamManagementModal
+        isOpen={showTeamModal}
+        onClose={() => setShowTeamModal(false)}
+        projectId={project.id}
+        projectName={project.name}
+        teamMembers={teamMembers}
+        currentUserRole={currentUserRole}
+        onInviteMember={handleInviteMember}
+        onRemoveMember={handleRemoveMember}
+        onUpdateRole={handleUpdateRole}
+      />
     </div>
   );
 }
