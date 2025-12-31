@@ -34,6 +34,7 @@ import {
   Calendar,
   AlertTriangle,
   Users,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -62,6 +63,26 @@ export default function ProjectDetailPage({
     undefined
   );
 
+  // Pagination State
+  const [limit, setLimit] = useState(20);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageHistory, setPageHistory] = useState<
+    ({ date: string; id: string } | undefined)[]
+  >([undefined]);
+  const [projectTotalSpent, setProjectTotalSpent] = useState(0);
+
+  // Filter State
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  const handleClearFilters = () => {
+    setFilterCategory("all");
+    setStartDate("");
+    setEndDate("");
+    setCurrentPage(0);
+    setPageHistory([undefined]);
+  };
+
   const handleEditEntry = (entry: BudgetEntry) => {
     setEditingEntry(entry);
     setShowAddModal(true);
@@ -76,19 +97,22 @@ export default function ProjectDetailPage({
   const fetchData = useCallback(async () => {
     if (!user) return;
     try {
-      // Parallel fetch could be better but sticking to simple sequence for clarity
-      // Actually we need to verify access implicitly via API failure
-      const projectData = await api.projects.get(projectId); // Need to implement backend for specific project get or reuse list?
-      // Wait, I implemented /api/projects for list, but /api/projects/[projectId] is NOT implmented in backend yet!
-      // I implemented /api/projects/[projectId]/team and /api/projects/[projectId]/entries
-      // But I missed /api/projects/[projectId] for GET single project details.
-
-      // I need to add that route first or logic will fail.
-      // But let's write this frontend assuming I will fix backend immediately after.
+      const projectData = await api.projects.get(projectId);
       setProject(projectData);
 
-      const entriesData = await api.entries.list(projectId);
-      setEntries(entriesData);
+      const cursor = pageHistory[currentPage];
+      const data = await api.entries.list(projectId, {
+        limit,
+        cursor,
+      });
+
+      setEntries(data.entries);
+      setProjectTotalSpent(data.totalSpent);
+
+      // Update history if we have a next cursor and we are at the end of known history
+      if (data.nextCursor && currentPage === pageHistory.length - 1) {
+        setPageHistory((prev) => [...prev, data.nextCursor!]);
+      }
     } catch (error) {
       console.error("Error fetching project data:", error);
       toast.error("Failed to load project details");
@@ -96,7 +120,7 @@ export default function ProjectDetailPage({
     } finally {
       setLoading(false);
     }
-  }, [projectId, user, router]);
+  }, [projectId, user, router, currentPage, limit, pageHistory]); // Added dependencies
 
   useEffect(() => {
     if (authLoading) return;
@@ -105,7 +129,7 @@ export default function ProjectDetailPage({
       return;
     }
     fetchData();
-  }, [user, authLoading, fetchData, router]);
+  }, [user, authLoading, fetchData, router]); // fetchData dependency handles updates
 
   const handleDeleteEntry = async (entryId: string) => {
     if (!confirm("Are you sure you want to delete this entry?")) return;
@@ -113,7 +137,7 @@ export default function ProjectDetailPage({
     try {
       await api.entries.delete(projectId, entryId);
       toast.success("Entry deleted");
-      setEntries((prev) => prev.filter((e) => e.id !== entryId));
+      fetchData(); // Refresh to update list and totals
     } catch (error) {
       console.error("Error deleting entry:", error);
       toast.error("Failed to delete entry");
@@ -128,10 +152,8 @@ export default function ProjectDetailPage({
     return null;
   }
 
-  const totalSpent = entries.reduce(
-    (sum, entry) => sum + (entry.amount || 0),
-    0
-  );
+  // Use the total fetched from backend instead of reducing current page entries
+  const totalSpent = projectTotalSpent;
   const remaining = project.estimatedBudget - totalSpent;
   const isOverBudget = remaining < 0;
   const progress =
@@ -165,7 +187,7 @@ export default function ProjectDetailPage({
   const teamMembers = project.teamMembers || [];
 
   return (
-    <div style={{ backgroundColor: "var(--background)", minHeight: "100vh" }}>
+    <main className="container py-8 space-y-8">
       {/* Background Effects */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         <div
@@ -383,100 +405,130 @@ export default function ProjectDetailPage({
         <div className="card">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <h3 className="text-lg font-semibold">Budget Entries</h3>
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="form-select w-auto"
-            >
-              <option value="all">All Categories</option>
-              {BUDGET_CATEGORIES.map((cat) => (
-                <option key={cat.value} value={cat.value}>
-                  {cat.label}
-                </option>
-              ))}
-            </select>
+
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Date Filter Group */}
+              <div className="flex items-center bg-background-secondary rounded-lg border border-border px-3 py-1.5 shadow-sm">
+                <Calendar className="w-4 h-4 text-foreground-muted mr-2" />
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    setCurrentPage(0);
+                    setPageHistory([undefined]);
+                  }}
+                  className="bg-transparent text-sm border-none focus:ring-0 p-0 w-28 text-foreground placeholder-foreground-muted appearance-none [&::-webkit-calendar-picker-indicator]:hidden cursor-pointer"
+                  placeholder="Start"
+                  aria-label="Start Date"
+                />
+                <span className="text-foreground-muted mx-2">→</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => {
+                    setEndDate(e.target.value);
+                    setCurrentPage(0);
+                    setPageHistory([undefined]);
+                  }}
+                  className="bg-transparent text-sm border-none focus:ring-0 p-0 w-28 text-foreground placeholder-foreground-muted appearance-none [&::-webkit-calendar-picker-indicator]:hidden cursor-pointer"
+                  placeholder="End"
+                  aria-label="End Date"
+                />
+              </div>
+
+              {/* Category Filter */}
+              <div className="relative">
+                <select
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value)}
+                  className="form-select pl-3 pr-8 py-1.5 text-sm bg-background-secondary border-border rounded-lg shadow-sm focus:border-accent focus:ring-accent"
+                >
+                  <option value="all">All Categories</option>
+                  {BUDGET_CATEGORIES.map((cat) => (
+                    <option key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Clear Filter Button */}
+              {(filterCategory !== "all" || startDate || endDate) && (
+                <button
+                  onClick={handleClearFilters}
+                  className="btn btn-ghost btn-sm text-error hover:bg-error/10"
+                  title="Clear All Filters"
+                >
+                  <X className="w-4 h-4 mr-1.5" />
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
 
           {filteredEntries.length > 0 ? (
-            <div className="table-container">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Category</th>
-                    <th>Description</th>
-                    <th>Amount</th>
-                    <th>Invoice</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredEntries.map((entry) => (
-                    <tr key={entry.id}>
-                      <td>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-foreground-muted" />
-                          {new Date(entry.date).toLocaleDateString()}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="flex flex-col gap-1 items-start">
-                          <span
-                            className="badge"
-                            style={{
-                              backgroundColor: `${getCategoryColor(
-                                entry.category
-                              )}20`,
-                              color: getCategoryColor(entry.category),
-                            }}
-                          >
-                            {getCategoryLabel(entry.category)}
-                          </span>
-                          {entry.subCategory && (
+            <>
+              <div className="table-container">
+                <table className="table">
+                  {/* ... existing table header ... */}
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Category</th>
+                      <th>Description</th>
+                      <th>Amount</th>
+                      <th>Invoice</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredEntries.map((entry) => (
+                      <tr key={entry.id}>
+                        {/* ... existing rows ... */}
+                        <td>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-foreground-muted" />
+                            {new Date(entry.date).toLocaleDateString()}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="flex flex-col gap-1 items-start">
                             <span
-                              className="text-xs text-foreground-muted px-2 py-0.5 rounded-full bg-background-secondary border border-border"
-                              title={getSubCategoryLabel(entry.subCategory)}
+                              className="badge"
+                              style={{
+                                backgroundColor: `${getCategoryColor(
+                                  entry.category
+                                )}20`,
+                                color: getCategoryColor(entry.category),
+                              }}
                             >
-                              {getSubCategoryLabel(entry.subCategory)}
+                              {getCategoryLabel(entry.category)}
                             </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="max-w-xs truncate">{entry.description}</td>
-                      <td
-                        className="font-medium"
-                        title={formatCurrency(entry.amount, project.currency)}
-                      >
-                        {formatCurrencyCompact(entry.amount, project.currency)}
-                      </td>
-                      <td>
-                        {entry.invoiceUrl ? (
-                          <button
-                            onClick={() =>
-                              setPreviewFile({
-                                url: entry.invoiceUrl!,
-                                name: entry.invoiceFileName || "Invoice",
-                                type: entry.invoiceType || "image",
-                              })
-                            }
-                            className="btn btn-ghost btn-sm p-1"
-                            title="View Invoice"
-                          >
-                            {entry.invoiceType === "pdf" ? (
-                              <FileText className="w-4 h-4 text-error" />
-                            ) : (
-                              <ImageIcon className="w-4 h-4 text-primary" />
+                            {entry.subCategory && (
+                              <span
+                                className="text-xs text-foreground-muted px-2 py-0.5 rounded-full bg-background-secondary border border-border"
+                                title={getSubCategoryLabel(entry.subCategory)}
+                              >
+                                {getSubCategoryLabel(entry.subCategory)}
+                              </span>
                             )}
-                          </button>
-                        ) : (
-                          <span className="text-foreground-muted text-sm">
-                            —
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        <div className="flex items-center gap-1">
-                          {entry.invoiceUrl && (
+                          </div>
+                        </td>
+                        <td className="max-w-xs truncate">
+                          {entry.description}
+                        </td>
+                        <td
+                          className="font-medium"
+                          title={formatCurrency(entry.amount, project.currency)}
+                        >
+                          {formatCurrencyCompact(
+                            entry.amount,
+                            project.currency
+                          )}
+                        </td>
+                        <td>
+                          {entry.invoiceUrl ? (
                             <button
                               onClick={() =>
                                 setPreviewFile({
@@ -486,32 +538,107 @@ export default function ProjectDetailPage({
                                 })
                               }
                               className="btn btn-ghost btn-sm p-1"
-                              title="Preview"
+                              title="View Invoice"
                             >
-                              <Eye className="w-4 h-4" />
+                              {entry.invoiceType === "pdf" ? (
+                                <FileText className="w-4 h-4 text-error" />
+                              ) : (
+                                <ImageIcon className="w-4 h-4 text-primary" />
+                              )}
                             </button>
+                          ) : (
+                            <span className="text-foreground-muted text-sm">
+                              —
+                            </span>
                           )}
-                          <button
-                            onClick={() => handleEditEntry(entry)}
-                            className="btn btn-ghost btn-sm p-1 text-primary"
-                            title="Edit"
-                          >
-                            <FileText className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteEntry(entry.id)}
-                            className="btn btn-ghost btn-sm p-1 text-error"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-1">
+                            {entry.invoiceUrl && (
+                              <button
+                                onClick={() =>
+                                  setPreviewFile({
+                                    url: entry.invoiceUrl!,
+                                    name: entry.invoiceFileName || "Invoice",
+                                    type: entry.invoiceType || "image",
+                                  })
+                                }
+                                className="btn btn-ghost btn-sm p-1"
+                                title="Preview"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleEditEntry(entry)}
+                              className="btn btn-ghost btn-sm p-1 text-primary"
+                              title="Edit"
+                            >
+                              <FileText className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteEntry(entry.id)}
+                              className="btn btn-ghost btn-sm p-1 text-error"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-between mt-4 px-2 border-t border-border pt-4 flex-wrap gap-4">
+                <div className="flex items-center gap-2 bg-background-secondary rounded-md px-2 py-1">
+                  <span className="text-sm text-foreground-muted whitespace-nowrap">
+                    Rows:
+                  </span>
+                  <select
+                    value={limit}
+                    onChange={(e) => {
+                      setLimit(Number(e.target.value));
+                      setCurrentPage(0);
+                      setPageHistory([undefined]);
+                    }}
+                    className="bg-transparent border-none text-sm focus:ring-0 p-0 cursor-pointer"
+                  >
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setCurrentPage((p) => Math.max(0, p - 1));
+                    }}
+                    disabled={currentPage === 0}
+                    className="btn btn-outline btn-sm"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-1" />
+                    Previous
+                  </button>
+                  <span className="text-sm text-foreground-muted mx-2">
+                    Page {currentPage + 1}
+                  </span>
+                  <button
+                    onClick={() => {
+                      setCurrentPage((p) => p + 1);
+                    }}
+                    disabled={entries.length < limit}
+                    className="btn btn-outline btn-sm"
+                  >
+                    Next
+                    <ArrowLeft className="w-4 h-4 ml-1 rotate-180" />
+                  </button>
+                </div>
+              </div>
+            </>
           ) : (
             <div className="text-center py-12">
               <Receipt className="w-12 h-12 text-foreground-muted mx-auto mb-4" />
@@ -558,6 +685,6 @@ export default function ProjectDetailPage({
         currentUserRole={currentUserRole}
         onUpdate={fetchData} // Refresh data when team updated
       />
-    </div>
+    </main>
   );
 }

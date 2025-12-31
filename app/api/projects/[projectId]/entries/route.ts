@@ -24,9 +24,47 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { projectId } = await params;
-    const entries = await entryService.getEntries(projectId, user.uid);
 
-    return NextResponse.json({ entries });
+    // Parse pagination params
+    const searchParams = request.nextUrl.searchParams;
+    const limit = searchParams.get("limit")
+      ? parseInt(searchParams.get("limit")!)
+      : undefined;
+    const cursorDate = searchParams.get("cursorDate");
+    const cursorId = searchParams.get("cursorId");
+    const startDate = searchParams.get("startDate") || undefined;
+    const endDate = searchParams.get("endDate") || undefined;
+
+    const cursor =
+      cursorDate && cursorId ? { date: cursorDate, id: cursorId } : undefined;
+
+    // Get entries
+    const entries = await entryService.getEntries(
+      projectId,
+      user.uid,
+      limit,
+      cursor,
+      startDate,
+      endDate
+    );
+
+    // Get total spent (we need a service method for this, or just quick hack: repo access?)
+    // I should add getTotalSpent to Service.
+    // But I'm in the middle of a thought process. I need to make a tool call.
+    // I will replace this step with Updating EntryService.
+    const totalSpent = await entryService.getTotalSpent(projectId, user.uid);
+
+    // Determine next cursor
+    let nextCursor = null;
+    if (limit && entries.length === limit) {
+      const lastEntry = entries[entries.length - 1];
+      nextCursor = {
+        date: lastEntry.date,
+        id: lastEntry.id,
+      };
+    }
+
+    return NextResponse.json({ entries, totalSpent, nextCursor });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

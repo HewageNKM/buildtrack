@@ -12,11 +12,30 @@ export class EntryService {
     this.projectService = new ProjectService();
   }
 
-  async getEntries(projectId: string, userId: string): Promise<BudgetEntry[]> {
+  async getEntries(
+    projectId: string,
+    userId: string,
+    limit?: number,
+    cursor?: { date: string; id: string },
+    startDate?: string,
+    endDate?: string
+  ): Promise<BudgetEntry[]> {
     const access = await this.projectService.verifyAccess(projectId, userId);
     if (!access.hasAccess) throw new Error("Access denied");
 
-    return await this.entryRepo.getByProjectId(projectId);
+    return await this.entryRepo.getByProjectId(
+      projectId,
+      limit,
+      cursor,
+      startDate,
+      endDate
+    );
+  }
+
+  async getTotalSpent(projectId: string, userId: string): Promise<number> {
+    const access = await this.projectService.verifyAccess(projectId, userId);
+    if (!access.hasAccess) throw new Error("Access denied");
+    return await this.entryRepo.getProjectTotalSpent(projectId);
   }
 
   async createEntry(

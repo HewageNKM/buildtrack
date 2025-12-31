@@ -2,11 +2,36 @@ import api from "@/lib/axios";
 import { BudgetEntry, BudgetCategory } from "@/types";
 
 export const entriesApi = {
-  list: async (projectId: string) => {
-    const response = await api.get<{ entries: BudgetEntry[] }>(
-      `/projects/${projectId}/entries`
-    );
-    return response.data.entries;
+  list: async (
+    projectId: string,
+    options?: {
+      limit?: number;
+      cursor?: { date: string; id: string };
+      startDate?: string;
+      endDate?: string;
+    }
+  ) => {
+    let url = `/projects/${projectId}/entries`;
+    const params = new URLSearchParams();
+
+    if (options?.limit) params.append("limit", options.limit.toString());
+    if (options?.cursor) {
+      params.append("cursorDate", options.cursor.date);
+      params.append("cursorId", options.cursor.id);
+    }
+    if (options?.startDate) params.append("startDate", options.startDate);
+    if (options?.endDate) params.append("endDate", options.endDate);
+
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+
+    const response = await api.get<{
+      entries: BudgetEntry[];
+      totalSpent: number;
+      nextCursor?: { date: string; id: string } | null;
+    }>(url);
+    return response.data;
   },
 
   create: async (
