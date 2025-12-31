@@ -36,7 +36,7 @@ interface ProjectModalProps {
     name: string;
     description: string;
     estimatedBudget: number;
-    currency: CurrencyCode;
+    currency?: CurrencyCode;
     startDate: string;
     endDate?: string;
   };

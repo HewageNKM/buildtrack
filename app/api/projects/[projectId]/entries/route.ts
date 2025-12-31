@@ -44,10 +44,11 @@ export async function POST(
     const { projectId } = await params;
     const formData = await request.formData();
 
-    const category = formData.get("category");
-    const description = formData.get("description");
-    const amount = parseFloat(formData.get("amount") as string);
-    const date = formData.get("date");
+    const category = formData.get("category") as any;
+    const subCategory = formData.get("subCategory") as string | undefined;
+    const description = (formData.get("description") as string) || "";
+    const amount = parseFloat((formData.get("amount") as string) || "0");
+    const date = (formData.get("date") as string) || new Date().toISOString();
     const invoiceFile = formData.get("invoice") as File | null;
 
     let fileData;
@@ -64,11 +65,62 @@ export async function POST(
       projectId,
       user.uid,
       user.email || "",
-      { category, description, amount, date },
+      { category, subCategory, description, amount, date },
       fileData
     );
 
     return NextResponse.json({ message: "Created", entry });
+  } catch (error: any) {
+    console.error(error);
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ projectId: string }> }
+) {
+  try {
+    const user = await verifyAuth(request);
+    if (!user)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const { projectId } = await params;
+    const { searchParams } = new URL(request.url);
+    const entryId = searchParams.get("entryId");
+
+    if (!entryId)
+      return NextResponse.json({ error: "Entry ID required" }, { status: 400 });
+
+    const formData = await request.formData();
+
+    const category = formData.get("category") as any;
+    const subCategory = formData.get("subCategory") as string | undefined;
+    const description = (formData.get("description") as string) || undefined;
+    const amountStr = formData.get("amount") as string;
+    const amount = amountStr ? parseFloat(amountStr) : undefined;
+    const date = (formData.get("date") as string) || undefined;
+    const invoiceFile = formData.get("invoice") as File | null;
+
+    let fileData;
+    if (invoiceFile && invoiceFile.size > 0) {
+      const buffer = Buffer.from(await invoiceFile.arrayBuffer());
+      fileData = {
+        buffer,
+        name: invoiceFile.name,
+        type: invoiceFile.type,
+      };
+    }
+
+    const entry = await entryService.updateEntry(
+      projectId,
+      entryId,
+      user.uid,
+      { category, subCategory, description, amount, date },
+      fileData
+    );
+
+    return NextResponse.json({ message: "Updated", entry });
   } catch (error: any) {
     console.error(error);
     return NextResponse.json({ error: error.message }, { status: 400 });

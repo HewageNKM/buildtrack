@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,7 +13,12 @@ import {
   Tag,
   Paperclip,
 } from "lucide-react";
-import { BUDGET_CATEGORIES, BudgetCategory } from "@/types";
+import {
+  BUDGET_CATEGORIES,
+  BudgetCategory,
+  BudgetEntry,
+  MATERIAL_TYPES,
+} from "@/types";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { api } from "@/lib/api";
@@ -22,17 +27,10 @@ import toast from "react-hot-toast";
 interface AddEntryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  projectId: string; // Added projectId prop
-  onSubmit?: never; // Deprecate onSubmit prop in favor of internal handling or keep if parent wrapper handles it?
-  // Actually parent might want to refresh. Let's keep a onEntryAdded callback.
+  projectId: string;
   onEntryAdded: () => void;
+  initialData?: BudgetEntry;
 }
-
-// Updating props interface to match new usage or keeping compatible?
-// The modal was previously receiving onSubmit which handled the API call.
-// Now the modal should handle the API call internally or we update the parent to use the API client.
-// Current Instruction says "Replace logic with api.entries.create" IN THE MODAL.
-// So I will change onSubmit to onEntryAdded.
 
 const inputStyle = {
   width: "100%",
@@ -59,14 +57,36 @@ export default function AddEntryModal({
   onClose,
   projectId,
   onEntryAdded,
+  initialData,
 }: AddEntryModalProps) {
   const [category, setCategory] = useState<BudgetCategory>("materials");
+  const [subCategory, setSubCategory] = useState("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [invoice, setInvoice] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setCategory(initialData.category);
+        setSubCategory(initialData.subCategory || "");
+        setDescription(initialData.description);
+        setAmount(initialData.amount.toString());
+        setDate(initialData.date.split("T")[0]);
+      } else {
+        setCategory("materials");
+        setSubCategory("");
+        setDescription("");
+        setAmount("");
+        setDate(new Date().toISOString().split("T")[0]);
+        setInvoice(null);
+      }
+      setError("");
+    }
+  }, [isOpen, initialData]);
 
   useBodyScrollLock(isOpen);
 
@@ -109,26 +129,36 @@ export default function AddEntryModal({
     setLoading(true);
 
     try {
-      await api.entries.create(projectId, {
+      const data = {
         category,
+        subCategory: category === "materials" ? subCategory : undefined,
         description: description.trim(),
         amount: parsedAmount,
         date,
         invoice: invoice || undefined,
-      });
+      };
 
-      toast.success("Entry added successfully");
-
-      setCategory("materials");
-      setDescription("");
-      setAmount("");
-      setDate(new Date().toISOString().split("T")[0]);
-      setInvoice(null);
+      if (initialData) {
+        await api.entries.update(projectId, initialData.id, data);
+        toast.success("Entry updated successfully");
+      } else {
+        await api.entries.create(projectId, data);
+        toast.success("Entry added successfully");
+      }
 
       onEntryAdded();
       onClose();
-    } catch (err) {
-      setError("Failed to add entry. Please try again.");
+
+      if (!initialData) {
+        setCategory("materials");
+        setSubCategory("");
+        setDescription("");
+        setAmount("");
+        setDate(new Date().toISOString().split("T")[0]);
+        setInvoice(null);
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to save entry");
       console.error(err);
     } finally {
       setLoading(false);
@@ -136,6 +166,9 @@ export default function AddEntryModal({
   };
 
   const removeInvoice = () => setInvoice(null);
+
+  // Filter subcategories logic or just constant
+  const showSubCategory = category === "materials";
 
   return (
     <AnimatePresence>
@@ -187,7 +220,9 @@ export default function AddEntryModal({
                 >
                   <DollarSign className="w-5 h-5 text-white" />
                 </div>
-                <h2 style={{ fontSize: "20px", fontWeight: 700 }}>Add Entry</h2>
+                <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
+                  {initialData ? "Edit Entry" : "Add Entry"}
+                </h2>
               </div>
               <button
                 onClick={onClose}
@@ -223,24 +258,54 @@ export default function AddEntryModal({
                 </motion.div>
               )}
 
-              <div style={{ marginBottom: "20px" }}>
-                <label style={labelStyle}>
-                  <Tag className="w-4 h-4 text-blue-500" />
-                  Category
-                </label>
-                <select
-                  value={category}
-                  onChange={(e) =>
-                    setCategory(e.target.value as BudgetCategory)
-                  }
-                  style={inputStyle}
-                >
-                  {BUDGET_CATEGORIES.map((cat) => (
-                    <option key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </option>
-                  ))}
-                </select>
+              <div
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                style={{ marginBottom: "20px" }}
+              >
+                <div>
+                  <label style={labelStyle}>
+                    <Tag className="w-4 h-4 text-blue-500" />
+                    Category
+                  </label>
+                  <select
+                    value={category}
+                    onChange={(e) => {
+                      setCategory(e.target.value as BudgetCategory);
+                      setSubCategory(""); // Reset subcategory when category changes
+                    }}
+                    style={inputStyle}
+                  >
+                    {BUDGET_CATEGORIES.map((cat) => (
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {showSubCategory && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                  >
+                    <label style={labelStyle}>
+                      <Tag className="w-4 h-4 text-indigo-500" />
+                      Material Type
+                    </label>
+                    <select
+                      value={subCategory}
+                      onChange={(e) => setSubCategory(e.target.value)}
+                      style={inputStyle}
+                    >
+                      <option value="">Select Material...</option>
+                      {MATERIAL_TYPES.map((type) => (
+                        <option key={type.value} value={type.value}>
+                          {type.label}
+                        </option>
+                      ))}
+                    </select>
+                  </motion.div>
+                )}
               </div>
 
               <div style={{ marginBottom: "20px" }}>
@@ -445,7 +510,7 @@ export default function AddEntryModal({
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4" />
-                      Add Entry
+                      {initialData ? "Save Changes" : "Add Entry"}
                     </>
                   )}
                 </motion.button>

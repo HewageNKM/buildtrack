@@ -25,6 +25,7 @@ export class EntryService {
     userEmail: string,
     data: {
       category: any;
+      subCategory?: string;
       description: string;
       amount: number;
       date: string;
@@ -58,18 +59,103 @@ export class EntryService {
     const entryData = {
       projectId,
       category: data.category,
+      subCategory: data.subCategory || null,
       description: data.description,
       amount: data.amount,
       date: data.date,
-      invoiceUrl,
-      invoiceFileName,
-      invoiceType,
+      invoiceUrl: invoiceUrl || null,
+      invoiceFileName: invoiceFileName || null,
+      invoiceType: invoiceType || null,
       addedBy: userId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
     return await this.entryRepo.create(entryData);
+  }
+
+  async updateEntry(
+    projectId: string,
+    entryId: string,
+    userId: string,
+    data: {
+      category?: any;
+      subCategory?: string;
+      description?: string;
+      amount?: number;
+      date?: string;
+    },
+    file?: { buffer: Buffer; name: string; type: string }
+  ): Promise<BudgetEntry> {
+    const access = await this.projectService.verifyAccess(projectId, userId);
+    if (!access.hasAccess) throw new Error("Access denied");
+
+    // Check if user is allowed to edit (owners/editors only)
+    if (access.role === "viewer")
+      throw new Error("Viewers cannot edit entries");
+
+    const existingEntry = await this.entryRepo.getById(entryId);
+    if (!existingEntry) throw new Error("Entry not found");
+
+    // Check if entry belongs to this project
+    if (existingEntry.projectId !== projectId)
+      throw new Error("Entry does not belong to this project");
+
+    let invoiceUrl = existingEntry.invoiceUrl;
+    let invoiceFileName = existingEntry.invoiceFileName;
+    let invoiceType = existingEntry.invoiceType;
+
+    // Handle new file upload if provided
+    if (file) {
+      // Delete old file if exists
+      if (existingEntry.invoiceUrl) {
+        try {
+          const bucket = adminStorage.bucket();
+          const urlParts = existingEntry.invoiceUrl.split("/");
+          const oldFileName = urlParts.slice(-3).join("/");
+          // Check if file exists before deleting prevents error
+          const oldFile = bucket.file(oldFileName);
+          const [exists] = await oldFile.exists();
+          if (exists) await oldFile.delete();
+        } catch (err) {
+          console.error("Error deleting old invoice file:", err);
+        }
+      }
+
+      // Upload new file
+      const fileName = `invoices/${projectId}/${Date.now()}-${file.name}`;
+      const bucket = adminStorage.bucket();
+      const fileRef = bucket.file(fileName);
+
+      await fileRef.save(file.buffer, {
+        metadata: { contentType: file.type },
+      });
+
+      await fileRef.makePublic();
+      invoiceUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+      invoiceFileName = file.name;
+      invoiceType = file.type.startsWith("image/") ? "image" : "pdf";
+    }
+
+    const updateData: any = {
+      ...data,
+      invoiceUrl: invoiceUrl || null,
+      invoiceFileName: invoiceFileName || null,
+      invoiceType: invoiceType || null,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Remove undefined fields
+    Object.keys(updateData).forEach(
+      (key) => updateData[key] === undefined && delete updateData[key]
+    );
+
+    // Explicitly handle subCategory null/undefined logic if needed,
+    // but BaseRepository.update handles partials.
+    // However, if we want to UNSET subCategory, we might need to send null?
+    // For now assuming update sends what is changed.
+
+    return await this.entryRepo.update(entryId, updateData);
   }
 
   async deleteEntry(

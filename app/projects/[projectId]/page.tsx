@@ -7,6 +7,7 @@ import {
   Project,
   BudgetEntry,
   BUDGET_CATEGORIES,
+  MATERIAL_TYPES,
   TeamMemberRole,
 } from "@/types";
 import { api } from "@/lib/api";
@@ -58,6 +59,19 @@ export default function ProjectDetailPage({
   } | null>(null);
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [showTeamModal, setShowTeamModal] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<BudgetEntry | undefined>(
+    undefined
+  );
+
+  const handleEditEntry = (entry: BudgetEntry) => {
+    setEditingEntry(entry);
+    setShowAddModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    setEditingEntry(undefined);
+  };
 
   // Fetch project and entries
   const fetchData = useCallback(async () => {
@@ -139,6 +153,10 @@ export default function ProjectDetailPage({
     return BUDGET_CATEGORIES.find((c) => c.value === value)?.color || "#6B7280";
   };
 
+  const getSubCategoryLabel = (value: string) => {
+    return MATERIAL_TYPES.find((t) => t.value === value)?.label || value;
+  };
+
   // Team management helpers
   const isOwner = project.userId === user?.uid;
   const currentUserRole: TeamMemberRole = isOwner
@@ -171,7 +189,7 @@ export default function ProjectDetailPage({
         style={{ maxWidth: "1200px", margin: "0 auto", padding: "16px 24px" }}
       >
         {/* Back Button & Header */}
-        <div className="mb-2">
+        <div className="mb-6">
           <Link
             href="/projects"
             className="inline-flex items-center gap-2 text-foreground-muted hover:text-foreground transition-colors mb-4"
@@ -211,7 +229,10 @@ export default function ProjectDetailPage({
                 Team ({teamMembers.length})
               </button>
               <button
-                onClick={() => setShowAddModal(true)}
+                onClick={() => {
+                  setEditingEntry(undefined);
+                  setShowAddModal(true);
+                }}
                 className="flex items-center gap-2 rounded-xl text-white"
                 style={{
                   padding: "12px 20px",
@@ -230,7 +251,7 @@ export default function ProjectDetailPage({
         </div>
 
         {/* Stats Cards */}
-        <div className="grid-cols-stats mb-2 mt-5">
+        <div className="grid-cols-stats mb-6 mt-8">
           <div className="card">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-primary/10 rounded-lg">
@@ -304,7 +325,7 @@ export default function ProjectDetailPage({
         </div>
 
         {/* Progress Bar */}
-        <div className="card mb-2">
+        <div className="card mb-6">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-foreground-muted">
               Budget Progress
@@ -327,7 +348,7 @@ export default function ProjectDetailPage({
         </div>
 
         {/* Charts */}
-        <div className="grid md:grid-cols-2 gap-2 mb-2">
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
           <BudgetOverviewChart
             estimatedBudget={project.estimatedBudget}
             totalSpent={totalSpent}
@@ -335,7 +356,7 @@ export default function ProjectDetailPage({
           <CategoryBreakdownChart entries={entries} />
         </div>
 
-        <div className="mb-2">
+        <div className="mb-6">
           <SpendingTimelineChart
             entries={entries}
             estimatedBudget={project.estimatedBudget}
@@ -383,17 +404,27 @@ export default function ProjectDetailPage({
                         </div>
                       </td>
                       <td>
-                        <span
-                          className="badge"
-                          style={{
-                            backgroundColor: `${getCategoryColor(
-                              entry.category
-                            )}20`,
-                            color: getCategoryColor(entry.category),
-                          }}
-                        >
-                          {getCategoryLabel(entry.category)}
-                        </span>
+                        <div className="flex flex-col gap-1 items-start">
+                          <span
+                            className="badge"
+                            style={{
+                              backgroundColor: `${getCategoryColor(
+                                entry.category
+                              )}20`,
+                              color: getCategoryColor(entry.category),
+                            }}
+                          >
+                            {getCategoryLabel(entry.category)}
+                          </span>
+                          {entry.subCategory && (
+                            <span
+                              className="text-xs text-foreground-muted px-2 py-0.5 rounded-full bg-background-secondary border border-border"
+                              title={getSubCategoryLabel(entry.subCategory)}
+                            >
+                              {getSubCategoryLabel(entry.subCategory)}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="max-w-xs truncate">{entry.description}</td>
                       <td className="font-medium">
@@ -442,6 +473,13 @@ export default function ProjectDetailPage({
                             </button>
                           )}
                           <button
+                            onClick={() => handleEditEntry(entry)}
+                            className="btn btn-ghost btn-sm p-1 text-primary"
+                            title="Edit"
+                          >
+                            <FileText className="w-4 h-4" />
+                          </button>
+                          <button
                             onClick={() => handleDeleteEntry(entry.id)}
                             className="btn btn-ghost btn-sm p-1 text-error"
                             title="Delete"
@@ -476,9 +514,10 @@ export default function ProjectDetailPage({
 
       <AddEntryModal
         isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
+        onClose={handleCloseModal}
         projectId={project.id}
         onEntryAdded={fetchData} // Refresh data when entry added
+        initialData={editingEntry}
       />
 
       {previewFile && (
