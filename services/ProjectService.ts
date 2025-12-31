@@ -1,6 +1,5 @@
 import { ProjectRepository } from "@/repositories/ProjectRepository";
 import { Project, TeamMemberRole, TeamMember } from "@/types";
-import { adminAuth } from "@/lib/firebase/admin";
 
 export class ProjectService {
   private projectRepo: ProjectRepository;

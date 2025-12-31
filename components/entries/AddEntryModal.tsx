@@ -10,6 +10,8 @@ import {
   Calendar,
   Sparkles,
   DollarSign,
+  Tag,
+  Paperclip,
 } from "lucide-react";
 import { BUDGET_CATEGORIES, BudgetCategory } from "@/types";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
@@ -43,7 +45,9 @@ const inputStyle = {
 };
 
 const labelStyle = {
-  display: "block",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
   fontSize: "14px",
   fontWeight: 600,
   marginBottom: "8px",
@@ -220,7 +224,10 @@ export default function AddEntryModal({
               )}
 
               <div style={{ marginBottom: "20px" }}>
-                <label style={labelStyle}>Category</label>
+                <label style={labelStyle}>
+                  <Tag className="w-4 h-4 text-blue-500" />
+                  Category
+                </label>
                 <select
                   value={category}
                   onChange={(e) =>
@@ -237,7 +244,10 @@ export default function AddEntryModal({
               </div>
 
               <div style={{ marginBottom: "20px" }}>
-                <label style={labelStyle}>Description *</label>
+                <label style={labelStyle}>
+                  <FileText className="w-4 h-4 text-purple-500" />
+                  Description *
+                </label>
                 <input
                   type="text"
                   value={description}
@@ -253,7 +263,10 @@ export default function AddEntryModal({
                 style={{ marginBottom: "20px" }}
               >
                 <div>
-                  <label style={labelStyle}>Amount *</label>
+                  <label style={labelStyle}>
+                    <DollarSign className="w-4 h-4 text-green-500" />
+                    Amount *
+                  </label>
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
                       <DollarSign
@@ -275,11 +288,8 @@ export default function AddEntryModal({
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-2" style={labelStyle}>
-                    <Calendar
-                      className="w-4 h-4"
-                      style={{ color: "#8b5cf6" }}
-                    />
+                  <label style={labelStyle}>
+                    <Calendar className="w-4 h-4 text-violet-500" />
                     Date
                   </label>
                   <input
@@ -293,7 +303,10 @@ export default function AddEntryModal({
 
               {/* Invoice Upload */}
               <div style={{ marginBottom: "24px" }}>
-                <label style={labelStyle}>Invoice (Optional)</label>
+                <label style={labelStyle}>
+                  <Paperclip className="w-4 h-4 text-amber-500" />
+                  Invoice (Optional)
+                </label>
 
                 {invoice ? (
                   <motion.div

@@ -9,6 +9,8 @@ import {
   AlertCircle,
   Sparkles,
   Coins,
+  FileText,
+  Tag,
 } from "lucide-react";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import {
@@ -51,7 +53,9 @@ const inputStyle = {
 };
 
 const labelStyle = {
-  display: "block" as const,
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
   fontSize: "14px",
   fontWeight: 600,
   marginBottom: "8px",
@@ -232,7 +236,10 @@ export default function ProjectModal({
               )}
 
               <div style={{ marginBottom: "20px" }}>
-                <label style={labelStyle}>Project Name *</label>
+                <label style={labelStyle}>
+                  <Tag className="w-4 h-4 text-blue-500" />
+                  Project Name *
+                </label>
                 <input
                   type="text"
                   value={name}
@@ -244,7 +251,10 @@ export default function ProjectModal({
               </div>
 
               <div style={{ marginBottom: "20px" }}>
-                <label style={labelStyle}>Description</label>
+                <label style={labelStyle}>
+                  <FileText className="w-4 h-4 text-purple-500" />
+                  Description
+                </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -259,7 +269,10 @@ export default function ProjectModal({
                 style={{ marginBottom: "20px" }}
               >
                 <div>
-                  <label style={labelStyle}>Estimated Budget *</label>
+                  <label style={labelStyle}>
+                    <Coins className="w-4 h-4 text-green-500" />
+                    Estimated Budget *
+                  </label>
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
                       <span
@@ -286,8 +299,8 @@ export default function ProjectModal({
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-2" style={labelStyle}>
-                    <Coins className="w-4 h-4" style={{ color: "#f59e0b" }} />
+                  <label style={labelStyle}>
+                    <Coins className="w-4 h-4 text-amber-500" />
                     Currency
                   </label>
                   <select
@@ -311,11 +324,8 @@ export default function ProjectModal({
                 style={{ marginBottom: "24px" }}
               >
                 <div>
-                  <label className="flex items-center gap-2" style={labelStyle}>
-                    <Calendar
-                      className="w-4 h-4"
-                      style={{ color: "#8b5cf6" }}
-                    />
+                  <label style={labelStyle}>
+                    <Calendar className="w-4 h-4 text-violet-500" />
                     Start Date
                   </label>
                   <input
@@ -327,11 +337,8 @@ export default function ProjectModal({
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-2" style={labelStyle}>
-                    <Calendar
-                      className="w-4 h-4"
-                      style={{ color: "#ec4899" }}
-                    />
+                  <label style={labelStyle}>
+                    <Calendar className="w-4 h-4 text-pink-500" />
                     End Date
                   </label>
                   <input

@@ -23,7 +23,12 @@ export class EntryService {
     projectId: string,
     userId: string,
     userEmail: string,
-    data: any,
+    data: {
+      category: any;
+      description: string;
+      amount: number;
+      date: string;
+    },
     file?: { buffer: Buffer; name: string; type: string }
   ): Promise<BudgetEntry> {
     const access = await this.projectService.verifyAccess(projectId, userId);
