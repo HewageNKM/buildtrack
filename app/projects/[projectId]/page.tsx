@@ -11,7 +11,11 @@ import {
   TeamMemberRole,
 } from "@/types";
 import { api } from "@/lib/api";
-import { formatCurrency, formatCurrencyCompact } from "@/lib/currency";
+import {
+  formatCurrency,
+  formatCurrencyCompact,
+  DEFAULT_CURRENCY,
+} from "@/lib/currency";
 
 import Navbar from "@/components/common/Navbar";
 import { PageLoader } from "@/components/common/LoadingSpinner";
@@ -385,11 +389,11 @@ export default function ProjectDetailPage({
           <BudgetOverviewChart
             estimatedBudget={project.estimatedBudget}
             totalSpent={totalSpent}
-            currency={project.currency}
+            currency={project.currency || DEFAULT_CURRENCY}
           />
           <CategoryBreakdownChart
             entries={entries}
-            currency={project.currency}
+            currency={project.currency || DEFAULT_CURRENCY}
           />
         </div>
 
@@ -397,7 +401,7 @@ export default function ProjectDetailPage({
           <SpendingTimelineChart
             entries={entries}
             estimatedBudget={project.estimatedBudget}
-            currency={project.currency}
+            currency={project.currency || DEFAULT_CURRENCY}
           />
         </div>
 
