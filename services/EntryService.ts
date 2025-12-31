@@ -24,7 +24,7 @@ export class EntryService {
     userId: string,
     userEmail: string,
     data: {
-      category: any;
+      category: BudgetEntry["category"];
       subCategory?: string;
       description: string;
       amount: number;
@@ -59,13 +59,13 @@ export class EntryService {
     const entryData = {
       projectId,
       category: data.category,
-      subCategory: data.subCategory || null,
+      subCategory: data.subCategory || undefined,
       description: data.description,
       amount: data.amount,
       date: data.date,
-      invoiceUrl: invoiceUrl || null,
-      invoiceFileName: invoiceFileName || null,
-      invoiceType: invoiceType || null,
+      invoiceUrl: invoiceUrl || undefined,
+      invoiceFileName: invoiceFileName || undefined,
+      invoiceType: invoiceType || undefined,
       addedBy: userId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -79,7 +79,7 @@ export class EntryService {
     entryId: string,
     userId: string,
     data: {
-      category?: any;
+      category?: BudgetEntry["category"];
       subCategory?: string;
       description?: string;
       amount?: number;
@@ -137,17 +137,19 @@ export class EntryService {
       invoiceType = file.type.startsWith("image/") ? "image" : "pdf";
     }
 
-    const updateData: any = {
+    const updateData: Partial<BudgetEntry> = {
       ...data,
-      invoiceUrl: invoiceUrl || null,
-      invoiceFileName: invoiceFileName || null,
-      invoiceType: invoiceType || null,
+      invoiceUrl: invoiceUrl || undefined,
+      invoiceFileName: invoiceFileName || undefined,
+      invoiceType: invoiceType || undefined,
       updatedAt: new Date().toISOString(),
     };
 
     // Remove undefined fields
     Object.keys(updateData).forEach(
-      (key) => updateData[key] === undefined && delete updateData[key]
+      (key) =>
+        updateData[key as keyof BudgetEntry] === undefined &&
+        delete updateData[key as keyof BudgetEntry]
     );
 
     // Explicitly handle subCategory null/undefined logic if needed,
