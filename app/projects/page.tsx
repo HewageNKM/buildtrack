@@ -174,57 +174,78 @@ export default function ProjectsPage() {
       icon: FolderKanban,
       label: "Active Projects",
       value: activeProjects,
-      iconClass: "stat-icon-primary",
+      color: "#8b5cf6",
     },
     {
       icon: DollarSign,
       label: "Total Budget",
       value: formatCurrency(totalBudget),
-      iconClass: "stat-icon-secondary",
+      color: "#ec4899",
     },
     {
       icon: TrendingUp,
       label: "Total Spent",
       value: formatCurrency(totalSpent),
-      iconClass: "stat-icon-accent",
+      color: "#06b6d4",
     },
     {
       icon: AlertTriangle,
       label: "Over Budget",
       value: overBudgetProjects,
-      iconClass:
-        overBudgetProjects > 0 ? "stat-icon-danger" : "stat-icon-success",
+      color: overBudgetProjects > 0 ? "#ef4444" : "#10b981",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Animated Background */}
-      <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full mix-blend-multiply filter blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500/10 rounded-full mix-blend-multiply filter blur-3xl" />
+    <div style={{ backgroundColor: "var(--background)", minHeight: "100vh" }}>
+      {/* Background Effects */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div
+          className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full opacity-20 blur-[120px]"
+          style={{
+            background: "linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)",
+          }}
+        />
+        <div
+          className="absolute bottom-0 -left-40 w-[400px] h-[400px] rounded-full opacity-15 blur-[100px]"
+          style={{
+            background: "linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)",
+          }}
+        />
       </div>
 
       <Navbar />
 
-      <main className="container py-8">
+      <main
+        style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 24px" }}
+      >
         {/* Header */}
         <motion.div
-          className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
+          className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+          style={{ marginBottom: "40px" }}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <div>
-            <h1 className="text-3xl md:text-4xl font-black mb-1">
+            <h1
+              style={{ fontSize: "32px", fontWeight: 900, marginBottom: "8px" }}
+            >
               My <span className="text-gradient">Projects</span>
             </h1>
-            <p className="text-foreground-muted">
+            <p style={{ color: "var(--foreground-muted)", fontSize: "16px" }}>
               Manage and track your construction project budgets
             </p>
           </div>
           <motion.button
             onClick={() => setShowCreateModal(true)}
-            className="btn btn-secondary"
+            className="flex items-center gap-2 rounded-xl text-white"
+            style={{
+              padding: "14px 24px",
+              background: "linear-gradient(135deg, #ec4899 0%, #f472b6 100%)",
+              fontSize: "15px",
+              fontWeight: 700,
+              boxShadow: "0 8px 25px rgba(236, 72, 153, 0.4)",
+            }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -235,7 +256,8 @@ export default function ProjectsPage() {
 
         {/* Stats Cards */}
         <motion.div
-          className="grid-cols-stats mb-8"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-5"
+          style={{ marginBottom: "40px" }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -243,18 +265,42 @@ export default function ProjectsPage() {
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
-              className="card"
+              className="rounded-2xl"
+              style={{
+                padding: "24px",
+                backgroundColor: "var(--card)",
+                border: "1px solid var(--border)",
+              }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 + index * 0.05 }}
+              whileHover={{ y: -4 }}
             >
               <div className="flex items-center gap-4">
-                <div className={`stat-icon ${stat.iconClass}`}>
+                <div
+                  className="flex items-center justify-center rounded-xl shrink-0"
+                  style={{
+                    width: "52px",
+                    height: "52px",
+                    background: `linear-gradient(135deg, ${stat.color} 0%, ${stat.color}aa 100%)`,
+                    boxShadow: `0 8px 20px ${stat.color}35`,
+                  }}
+                >
                   <stat.icon className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-foreground-muted">{stat.label}</p>
-                  <p className="text-2xl font-black">{stat.value}</p>
+                  <p
+                    style={{
+                      fontSize: "13px",
+                      color: "var(--foreground-muted)",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    {stat.label}
+                  </p>
+                  <p style={{ fontSize: "22px", fontWeight: 900 }}>
+                    {stat.value}
+                  </p>
                 </div>
               </div>
             </motion.div>
@@ -263,18 +309,28 @@ export default function ProjectsPage() {
 
         {/* Search */}
         <motion.div
-          className="mb-8"
+          style={{ marginBottom: "32px" }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <div className="relative max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+          <div className="relative" style={{ maxWidth: "400px" }}>
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
+              style={{ color: "var(--foreground-muted)" }}
+            />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="form-input pl-12"
+              className="w-full rounded-xl"
+              style={{
+                padding: "14px 14px 14px 48px",
+                backgroundColor: "var(--background-secondary)",
+                border: "2px solid var(--border)",
+                fontSize: "15px",
+                color: "var(--foreground)",
+              }}
               placeholder="Search projects..."
             />
           </div>
@@ -282,7 +338,7 @@ export default function ProjectsPage() {
 
         {/* Projects Grid */}
         {filteredProjects.length > 0 ? (
-          <div className="grid-cols-projects">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.map((project, index) => (
               <ProjectCard
                 key={project.id}
@@ -294,17 +350,44 @@ export default function ProjectsPage() {
           </div>
         ) : (
           <motion.div
-            className="card text-center py-16"
+            className="rounded-3xl text-center"
+            style={{
+              padding: "80px 32px",
+              backgroundColor: "var(--card)",
+              border: "1px solid var(--border)",
+            }}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <div className="stat-icon-primary mx-auto mb-6">
+            <div
+              className="flex items-center justify-center rounded-2xl mx-auto"
+              style={{
+                width: "72px",
+                height: "72px",
+                marginBottom: "24px",
+                background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                boxShadow: "0 12px 35px rgba(139, 92, 246, 0.4)",
+              }}
+            >
               <FolderKanban className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-bold mb-2">
+            <h3
+              style={{
+                fontSize: "22px",
+                fontWeight: 700,
+                marginBottom: "12px",
+              }}
+            >
               {searchQuery ? "No projects found" : "No projects yet"}
             </h3>
-            <p className="text-foreground-muted mb-6 max-w-sm mx-auto">
+            <p
+              style={{
+                color: "var(--foreground-muted)",
+                marginBottom: "28px",
+                maxWidth: "360px",
+                margin: "0 auto 28px",
+              }}
+            >
               {searchQuery
                 ? "Try adjusting your search query"
                 : "Create your first project to start tracking your budget"}
@@ -312,7 +395,15 @@ export default function ProjectsPage() {
             {!searchQuery && (
               <motion.button
                 onClick={() => setShowCreateModal(true)}
-                className="btn btn-secondary"
+                className="inline-flex items-center gap-2 rounded-xl text-white"
+                style={{
+                  padding: "16px 28px",
+                  background:
+                    "linear-gradient(135deg, #ec4899 0%, #f472b6 100%)",
+                  fontSize: "15px",
+                  fontWeight: 700,
+                  boxShadow: "0 8px 25px rgba(236, 72, 153, 0.4)",
+                }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >

@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, HardHat, Calendar, AlertCircle, Sparkles } from "lucide-react";
+import {
+  X,
+  HardHat,
+  Calendar,
+  AlertCircle,
+  Sparkles,
+  DollarSign,
+} from "lucide-react";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 interface CreateProjectModalProps {
@@ -16,6 +23,24 @@ interface CreateProjectModalProps {
     endDate?: string;
   }) => Promise<void>;
 }
+
+const inputStyle = {
+  width: "100%",
+  padding: "14px 16px",
+  backgroundColor: "var(--background-secondary)",
+  border: "2px solid transparent",
+  borderRadius: "12px",
+  fontSize: "15px",
+  color: "var(--foreground)",
+};
+
+const labelStyle = {
+  display: "block",
+  fontSize: "14px",
+  fontWeight: 600,
+  marginBottom: "8px",
+  color: "var(--foreground)",
+};
 
 export default function CreateProjectModal({
   isOpen,
@@ -76,35 +101,82 @@ export default function CreateProjectModal({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="modal-overlay"
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            backdropFilter: "blur(4px)",
+            padding: "24px",
+          }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
         >
           <motion.div
-            className="modal-content"
+            className="w-full rounded-3xl"
+            style={{
+              maxWidth: "500px",
+              backgroundColor: "var(--card)",
+              border: "1px solid var(--border)",
+              maxHeight: "90vh",
+              overflow: "auto",
+            }}
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="modal-header">
+            {/* Header */}
+            <div
+              className="flex items-center justify-between"
+              style={{
+                padding: "24px",
+                borderBottom: "1px solid var(--border)",
+              }}
+            >
               <div className="flex items-center gap-3">
-                <div className="stat-icon-secondary p-2">
+                <div
+                  className="flex items-center justify-center rounded-xl"
+                  style={{
+                    width: "44px",
+                    height: "44px",
+                    background:
+                      "linear-gradient(135deg, #ec4899 0%, #f472b6 100%)",
+                    boxShadow: "0 8px 20px rgba(236, 72, 153, 0.3)",
+                  }}
+                >
                   <HardHat className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="modal-title">New Project</h2>
+                <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
+                  New Project
+                </h2>
               </div>
-              <button onClick={onClose} className="modal-close">
+              <button
+                onClick={onClose}
+                className="flex items-center justify-center rounded-xl transition-colors"
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  backgroundColor: "var(--background-secondary)",
+                }}
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit}>
+            {/* Form */}
+            <form onSubmit={handleSubmit} style={{ padding: "24px" }}>
               {error && (
                 <motion.div
-                  className="flex items-center gap-2 p-4 rounded-xl bg-error-bg text-error text-sm mb-4 border border-error/20"
+                  className="flex items-center gap-3 rounded-xl"
+                  style={{
+                    padding: "14px",
+                    marginBottom: "20px",
+                    backgroundColor: "rgba(239, 68, 68, 0.1)",
+                    border: "1px solid rgba(239, 68, 68, 0.3)",
+                    color: "#f87171",
+                    fontSize: "14px",
+                  }}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                 >
@@ -113,48 +185,42 @@ export default function CreateProjectModal({
                 </motion.div>
               )}
 
-              <div className="form-group">
-                <label htmlFor="name" className="form-label">
-                  Project Name *
-                </label>
+              <div style={{ marginBottom: "20px" }}>
+                <label style={labelStyle}>Project Name *</label>
                 <input
-                  id="name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="form-input"
+                  style={inputStyle}
                   placeholder="e.g., Office Renovation 2024"
                   required
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="description" className="form-label">
-                  Description
-                </label>
+              <div style={{ marginBottom: "20px" }}>
+                <label style={labelStyle}>Description</label>
                 <textarea
-                  id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="form-input min-h-[100px] resize-none"
+                  style={{ ...inputStyle, minHeight: "100px", resize: "none" }}
                   placeholder="Brief description of the project..."
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="budget" className="form-label">
-                  Estimated Budget *
-                </label>
+              <div style={{ marginBottom: "20px" }}>
+                <label style={labelStyle}>Estimated Budget *</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground-muted font-semibold">
-                    $
-                  </span>
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <DollarSign
+                      className="w-5 h-5"
+                      style={{ color: "var(--foreground-muted)" }}
+                    />
+                  </div>
                   <input
-                    id="budget"
                     type="number"
                     value={estimatedBudget}
                     onChange={(e) => setEstimatedBudget(e.target.value)}
-                    className="form-input pl-8"
+                    style={{ ...inputStyle, paddingLeft: "44px" }}
                     placeholder="0.00"
                     step="0.01"
                     min="0"
@@ -163,58 +229,75 @@ export default function CreateProjectModal({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="form-group">
-                  <label
-                    htmlFor="startDate"
-                    className="form-label flex items-center gap-2"
-                  >
-                    <Calendar className="w-4 h-4 text-primary" />
+              <div
+                className="grid grid-cols-2 gap-4"
+                style={{ marginBottom: "24px" }}
+              >
+                <div>
+                  <label className="flex items-center gap-2" style={labelStyle}>
+                    <Calendar
+                      className="w-4 h-4"
+                      style={{ color: "#8b5cf6" }}
+                    />
                     Start Date
                   </label>
                   <input
-                    id="startDate"
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="form-input"
+                    style={inputStyle}
                   />
                 </div>
 
-                <div className="form-group">
-                  <label
-                    htmlFor="endDate"
-                    className="form-label flex items-center gap-2"
-                  >
-                    <Calendar className="w-4 h-4 text-secondary" />
+                <div>
+                  <label className="flex items-center gap-2" style={labelStyle}>
+                    <Calendar
+                      className="w-4 h-4"
+                      style={{ color: "#ec4899" }}
+                    />
                     End Date
                   </label>
                   <input
-                    id="endDate"
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="form-input"
+                    style={inputStyle}
                     min={startDate}
                   />
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-6">
+              <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="btn btn-outline flex-1"
                   disabled={loading}
+                  className="flex-1 flex items-center justify-center rounded-xl transition-colors"
+                  style={{
+                    padding: "14px",
+                    backgroundColor: "var(--background-secondary)",
+                    border: "2px solid var(--border)",
+                    fontSize: "15px",
+                    fontWeight: 600,
+                  }}
                 >
                   Cancel
                 </button>
                 <motion.button
                   type="submit"
-                  className="btn btn-secondary flex-1"
                   disabled={loading}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl text-white"
+                  style={{
+                    padding: "14px",
+                    background:
+                      "linear-gradient(135deg, #ec4899 0%, #f472b6 100%)",
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    boxShadow: "0 8px 25px rgba(236, 72, 153, 0.4)",
+                    opacity: loading ? 0.7 : 1,
+                  }}
+                  whileHover={{ scale: loading ? 1 : 1.02 }}
+                  whileTap={{ scale: loading ? 1 : 0.98 }}
                 >
                   {loading ? (
                     <LoadingSpinner size="sm" />

@@ -214,10 +214,28 @@ export default function ProjectDetailPage({
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div style={{ backgroundColor: "var(--background)", minHeight: "100vh" }}>
+      {/* Background Effects */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div
+          className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full opacity-20 blur-[120px]"
+          style={{
+            background: "linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)",
+          }}
+        />
+        <div
+          className="absolute bottom-0 -left-40 w-[400px] h-[400px] rounded-full opacity-15 blur-[100px]"
+          style={{
+            background: "linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)",
+          }}
+        />
+      </div>
+
       <Navbar />
 
-      <main className="container py-8">
+      <main
+        style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 24px" }}
+      >
         {/* Back Button & Header */}
         <div className="mb-8">
           <Link

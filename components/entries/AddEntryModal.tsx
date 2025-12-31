@@ -11,6 +11,7 @@ import {
   Image as ImageIcon,
   Calendar,
   Sparkles,
+  DollarSign,
 } from "lucide-react";
 import { BUDGET_CATEGORIES, BudgetCategory } from "@/types";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
@@ -26,6 +27,24 @@ interface AddEntryModalProps {
     invoice?: File;
   }) => Promise<void>;
 }
+
+const inputStyle = {
+  width: "100%",
+  padding: "14px 16px",
+  backgroundColor: "var(--background-secondary)",
+  border: "2px solid transparent",
+  borderRadius: "12px",
+  fontSize: "15px",
+  color: "var(--foreground)",
+};
+
+const labelStyle = {
+  display: "block",
+  fontSize: "14px",
+  fontWeight: 600,
+  marginBottom: "8px",
+  color: "var(--foreground)",
+};
 
 export default function AddEntryModal({
   isOpen,
@@ -107,30 +126,80 @@ export default function AddEntryModal({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="modal-overlay"
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            backdropFilter: "blur(4px)",
+            padding: "24px",
+          }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
         >
           <motion.div
-            className="modal-content max-w-lg"
+            className="w-full rounded-3xl"
+            style={{
+              maxWidth: "520px",
+              backgroundColor: "var(--card)",
+              border: "1px solid var(--border)",
+              maxHeight: "90vh",
+              overflow: "auto",
+            }}
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="modal-header">
-              <h2 className="modal-title">Add Budget Entry</h2>
-              <button onClick={onClose} className="modal-close">
+            {/* Header */}
+            <div
+              className="flex items-center justify-between"
+              style={{
+                padding: "24px",
+                borderBottom: "1px solid var(--border)",
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex items-center justify-center rounded-xl"
+                  style={{
+                    width: "44px",
+                    height: "44px",
+                    background:
+                      "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                    boxShadow: "0 8px 20px rgba(139, 92, 246, 0.3)",
+                  }}
+                >
+                  <DollarSign className="w-5 h-5 text-white" />
+                </div>
+                <h2 style={{ fontSize: "20px", fontWeight: 700 }}>Add Entry</h2>
+              </div>
+              <button
+                onClick={onClose}
+                className="flex items-center justify-center rounded-xl transition-colors"
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  backgroundColor: "var(--background-secondary)",
+                }}
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit}>
+            {/* Form */}
+            <form onSubmit={handleSubmit} style={{ padding: "24px" }}>
               {error && (
                 <motion.div
-                  className="flex items-center gap-2 p-4 rounded-xl bg-error-bg text-error text-sm mb-4 border border-error/20"
+                  className="flex items-center gap-3 rounded-xl"
+                  style={{
+                    padding: "14px",
+                    marginBottom: "20px",
+                    backgroundColor: "rgba(239, 68, 68, 0.1)",
+                    border: "1px solid rgba(239, 68, 68, 0.3)",
+                    color: "#f87171",
+                    fontSize: "14px",
+                  }}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                 >
@@ -139,17 +208,14 @@ export default function AddEntryModal({
                 </motion.div>
               )}
 
-              <div className="form-group">
-                <label htmlFor="category" className="form-label">
-                  Category
-                </label>
+              <div style={{ marginBottom: "20px" }}>
+                <label style={labelStyle}>Category</label>
                 <select
-                  id="category"
                   value={category}
                   onChange={(e) =>
                     setCategory(e.target.value as BudgetCategory)
                   }
-                  className="form-select"
+                  style={inputStyle}
                 >
                   {BUDGET_CATEGORIES.map((cat) => (
                     <option key={cat.value} value={cat.value}>
@@ -159,36 +225,36 @@ export default function AddEntryModal({
                 </select>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="description" className="form-label">
-                  Description *
-                </label>
+              <div style={{ marginBottom: "20px" }}>
+                <label style={labelStyle}>Description *</label>
                 <input
-                  id="description"
                   type="text"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="form-input"
+                  style={inputStyle}
                   placeholder="e.g., Cement bags for foundation"
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="form-group">
-                  <label htmlFor="amount" className="form-label">
-                    Amount *
-                  </label>
+              <div
+                className="grid grid-cols-2 gap-4"
+                style={{ marginBottom: "20px" }}
+              >
+                <div>
+                  <label style={labelStyle}>Amount *</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground-muted font-semibold">
-                      $
-                    </span>
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <DollarSign
+                        className="w-5 h-5"
+                        style={{ color: "var(--foreground-muted)" }}
+                      />
+                    </div>
                     <input
-                      id="amount"
                       type="number"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      className="form-input pl-8"
+                      style={{ ...inputStyle, paddingLeft: "44px" }}
                       placeholder="0.00"
                       step="0.01"
                       min="0"
@@ -197,40 +263,47 @@ export default function AddEntryModal({
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label
-                    htmlFor="date"
-                    className="form-label flex items-center gap-2"
-                  >
-                    <Calendar className="w-4 h-4 text-primary" />
+                <div>
+                  <label className="flex items-center gap-2" style={labelStyle}>
+                    <Calendar
+                      className="w-4 h-4"
+                      style={{ color: "#8b5cf6" }}
+                    />
                     Date
                   </label>
                   <input
-                    id="date"
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="form-input"
+                    style={inputStyle}
                   />
                 </div>
               </div>
 
               {/* Invoice Upload */}
-              <div className="form-group">
-                <label className="form-label">Invoice (Optional)</label>
+              <div style={{ marginBottom: "24px" }}>
+                <label style={labelStyle}>Invoice (Optional)</label>
 
                 {invoice ? (
                   <motion.div
-                    className="flex items-center gap-4 p-4 bg-background-secondary rounded-xl border border-border"
+                    className="flex items-center gap-4 rounded-xl"
+                    style={{
+                      padding: "16px",
+                      backgroundColor: "var(--background-secondary)",
+                      border: "1px solid var(--border)",
+                    }}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                   >
                     <div
-                      className={`stat-icon ${
-                        invoice.type.startsWith("image/")
-                          ? "stat-icon-primary"
-                          : "stat-icon-danger"
-                      } p-2`}
+                      className="flex items-center justify-center rounded-xl shrink-0"
+                      style={{
+                        width: "44px",
+                        height: "44px",
+                        background: invoice.type.startsWith("image/")
+                          ? "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)"
+                          : "linear-gradient(135deg, #ef4444 0%, #f87171 100%)",
+                      }}
                     >
                       {invoice.type.startsWith("image/") ? (
                         <ImageIcon className="w-5 h-5 text-white" />
@@ -239,55 +312,109 @@ export default function AddEntryModal({
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate">{invoice.name}</p>
-                      <p className="text-xs text-foreground-muted">
+                      <p
+                        className="truncate"
+                        style={{ fontWeight: 600, fontSize: "14px" }}
+                      >
+                        {invoice.name}
+                      </p>
+                      <p
+                        style={{
+                          fontSize: "12px",
+                          color: "var(--foreground-muted)",
+                        }}
+                      >
                         {(invoice.size / 1024).toFixed(1)} KB
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={removeInvoice}
-                      className="btn btn-ghost btn-sm p-1 text-error"
+                      className="flex items-center justify-center rounded-lg"
+                      style={{
+                        width: "32px",
+                        height: "32px",
+                        backgroundColor: "rgba(239, 68, 68, 0.1)",
+                      }}
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-4 h-4" style={{ color: "#ef4444" }} />
                     </button>
                   </motion.div>
                 ) : (
                   <div
                     {...getRootProps()}
-                    className={`dropzone ${
-                      isDragActive ? "dropzone-active" : ""
-                    }`}
+                    className="rounded-xl text-center cursor-pointer transition-colors"
+                    style={{
+                      padding: "32px",
+                      border: "2px dashed var(--border)",
+                      backgroundColor: isDragActive
+                        ? "var(--background-secondary)"
+                        : "transparent",
+                    }}
                   >
                     <input {...getInputProps()} />
-                    <Upload className="w-10 h-10 text-foreground-muted mx-auto mb-3" />
-                    <p className="text-foreground-muted font-medium">
+                    <Upload
+                      className="w-10 h-10 mx-auto"
+                      style={{
+                        color: "var(--foreground-muted)",
+                        marginBottom: "12px",
+                      }}
+                    />
+                    <p
+                      style={{
+                        color: "var(--foreground-muted)",
+                        fontWeight: 500,
+                        fontSize: "14px",
+                      }}
+                    >
                       {isDragActive
                         ? "Drop the file here..."
                         : "Drag & drop an image or PDF"}
                     </p>
-                    <p className="text-xs text-foreground-muted mt-1">
+                    <p
+                      style={{
+                        fontSize: "12px",
+                        color: "var(--foreground-muted)",
+                        marginTop: "4px",
+                      }}
+                    >
                       or click to select (Max 10MB)
                     </p>
                   </div>
                 )}
               </div>
 
-              <div className="flex gap-3 mt-6">
+              <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="btn btn-outline flex-1"
                   disabled={loading}
+                  className="flex-1 flex items-center justify-center rounded-xl transition-colors"
+                  style={{
+                    padding: "14px",
+                    backgroundColor: "var(--background-secondary)",
+                    border: "2px solid var(--border)",
+                    fontSize: "15px",
+                    fontWeight: 600,
+                  }}
                 >
                   Cancel
                 </button>
                 <motion.button
                   type="submit"
-                  className="btn btn-primary flex-1"
                   disabled={loading}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl text-white"
+                  style={{
+                    padding: "14px",
+                    background:
+                      "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    boxShadow: "0 8px 25px rgba(139, 92, 246, 0.4)",
+                    opacity: loading ? 0.7 : 1,
+                  }}
+                  whileHover={{ scale: loading ? 1 : 1.02 }}
+                  whileTap={{ scale: loading ? 1 : 0.98 }}
                 >
                   {loading ? (
                     <LoadingSpinner size="sm" />
