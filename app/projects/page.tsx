@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
-import { ProjectWithStats, CurrencyCode } from "@/types";
+import { ProjectWithStats, CurrencyCode, Project } from "@/types";
 import { api } from "@/lib/api";
 import { formatCurrency, DEFAULT_CURRENCY } from "@/lib/currency";
 
@@ -31,6 +31,7 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<ProjectWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchProjects = async () => {
@@ -57,22 +58,27 @@ export default function ProjectsPage() {
     fetchProjects();
   }, [user, authLoading, router]);
 
-  const handleCreateProject = async (projectData: {
-    name: string;
-    description: string;
-    estimatedBudget: number;
-    currency: CurrencyCode;
-    startDate: string;
-    endDate?: string;
-  }) => {
+  const handleCreateOrUpdateProject = async (projectData: any) => {
     try {
-      await api.projects.create(projectData);
-      toast.success("Project created successfully!");
+      if (editingProject) {
+        await api.projects.update(editingProject.id, projectData);
+        toast.success("Project updated successfully!");
+      } else {
+        await api.projects.create(projectData);
+        toast.success("Project created successfully!");
+      }
       fetchProjects();
+      setShowCreateModal(false);
+      setEditingProject(null);
     } catch (error) {
-      console.error("Error creating project:", error);
-      toast.error("Failed to create project");
+      console.error("Error saving project:", error);
+      toast.error("Failed to save project");
     }
+  };
+
+  const handleEditProject = (project: Project) => {
+    setEditingProject(project);
+    setShowCreateModal(true);
   };
 
   const handleDeleteProject = async (projectId: string) => {
@@ -201,7 +207,7 @@ export default function ProjectsPage() {
 
         {/* Stats Cards */}
         <motion.div
-          className="grid grid-cols-2 lg:grid-cols-4 gap-5"
+          className="flex flex-row justify-between flex-wrap gap-5"
           style={{ marginBottom: "40px" }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -210,7 +216,7 @@ export default function ProjectsPage() {
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
-              className="rounded-2xl"
+              className="rounded-2xl w-fit"
               style={{
                 padding: "24px",
                 backgroundColor: "var(--card)",
@@ -233,7 +239,7 @@ export default function ProjectsPage() {
                 >
                   <stat.icon className="w-6 h-6 text-white" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <p
                     style={{
                       fontSize: "13px",
@@ -243,7 +249,14 @@ export default function ProjectsPage() {
                   >
                     {stat.label}
                   </p>
-                  <p style={{ fontSize: "22px", fontWeight: 900 }}>
+                  <p
+                    className="wrap-break-word"
+                    style={{
+                      fontSize: "22px",
+                      fontWeight: 900,
+                      lineHeight: "1.2",
+                    }}
+                  >
                     {stat.value}
                   </p>
                 </div>
@@ -289,6 +302,7 @@ export default function ProjectsPage() {
                 key={project.id}
                 project={project}
                 onDelete={handleDeleteProject}
+                onEdit={handleEditProject}
                 index={index}
               />
             ))}
@@ -362,8 +376,12 @@ export default function ProjectsPage() {
 
       <CreateProjectModal
         isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSubmit={handleCreateProject}
+        onClose={() => {
+          setShowCreateModal(false);
+          setEditingProject(null);
+        }}
+        onSubmit={handleCreateOrUpdateProject}
+        initialData={editingProject || undefined}
       />
     </div>
   );

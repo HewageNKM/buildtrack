@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -19,7 +19,7 @@ import {
 } from "@/lib/currency";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
-interface CreateProjectModalProps {
+interface ProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (project: {
@@ -30,6 +30,14 @@ interface CreateProjectModalProps {
     startDate: string;
     endDate?: string;
   }) => Promise<void>;
+  initialData?: {
+    name: string;
+    description: string;
+    estimatedBudget: number;
+    currency: CurrencyCode;
+    startDate: string;
+    endDate?: string;
+  };
 }
 
 const inputStyle = {
@@ -50,21 +58,43 @@ const labelStyle = {
   color: "var(--foreground)",
 };
 
-export default function CreateProjectModal({
+export default function ProjectModal({
   isOpen,
   onClose,
   onSubmit,
-}: CreateProjectModalProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [estimatedBudget, setEstimatedBudget] = useState("");
-  const [currency, setCurrency] = useState<CurrencyCode>(DEFAULT_CURRENCY);
-  const [startDate, setStartDate] = useState(
-    new Date().toISOString().split("T")[0]
+  initialData,
+}: ProjectModalProps) {
+  const [name, setName] = useState(initialData?.name || "");
+  const [description, setDescription] = useState(
+    initialData?.description || ""
   );
-  const [endDate, setEndDate] = useState("");
+  const [estimatedBudget, setEstimatedBudget] = useState(
+    initialData?.estimatedBudget?.toString() || ""
+  );
+  const [currency, setCurrency] = useState<CurrencyCode>(
+    initialData?.currency || DEFAULT_CURRENCY
+  );
+  const [startDate, setStartDate] = useState(
+    initialData?.startDate || new Date().toISOString().split("T")[0]
+  );
+  const [endDate, setEndDate] = useState(initialData?.endDate || "");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Update effect to reset or populate form when opening/changing initialData
+  useEffect(() => {
+    if (isOpen) {
+      setName(initialData?.name || "");
+      setDescription(initialData?.description || "");
+      setEstimatedBudget(initialData?.estimatedBudget?.toString() || "");
+      setCurrency(initialData?.currency || DEFAULT_CURRENCY);
+      setStartDate(
+        initialData?.startDate || new Date().toISOString().split("T")[0]
+      );
+      setEndDate(initialData?.endDate || "");
+      setError("");
+    }
+  }, [isOpen, initialData]);
 
   useBodyScrollLock(isOpen);
 
@@ -95,15 +125,18 @@ export default function CreateProjectModal({
         endDate: endDate || undefined,
       });
 
-      setName("");
-      setDescription("");
-      setEstimatedBudget("");
-      setCurrency(DEFAULT_CURRENCY);
-      setStartDate(new Date().toISOString().split("T")[0]);
-      setEndDate("");
+      if (!initialData) {
+        // Reset only on create, for edit we might want to keep or just close
+        setName("");
+        setDescription("");
+        setEstimatedBudget("");
+        setCurrency(DEFAULT_CURRENCY);
+        setStartDate(new Date().toISOString().split("T")[0]);
+        setEndDate("");
+      }
       onClose();
     } catch (err) {
-      setError("Failed to create project. Please try again.");
+      setError("Failed to save project. Please try again.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -126,13 +159,13 @@ export default function CreateProjectModal({
           onClick={onClose}
         >
           <motion.div
-            className="w-full rounded-3xl"
+            className="w-full rounded-3xl hide-scrollbar"
             style={{
               maxWidth: "500px",
               backgroundColor: "var(--card)",
               border: "1px solid var(--border)",
               maxHeight: "90vh",
-              overflow: "auto",
+              overflowY: "auto",
             }}
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -161,7 +194,7 @@ export default function CreateProjectModal({
                   <HardHat className="w-5 h-5 text-white" />
                 </div>
                 <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
-                  New Project
+                  {initialData ? "Edit Project" : "New Project"}
                 </h2>
               </div>
               <button
@@ -348,7 +381,7 @@ export default function CreateProjectModal({
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4" />
-                      Create Project
+                      {initialData ? "Save Changes" : "Create Project"}
                     </>
                   )}
                 </motion.button>

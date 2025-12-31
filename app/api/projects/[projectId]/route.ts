@@ -43,6 +43,30 @@ export async function GET(
   }
 }
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ projectId: string }> }
+) {
+  try {
+    const user = await verifyAuth(request);
+    if (!user)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const { projectId } = await params;
+    const body = await request.json();
+
+    const updatedProject = await projectService.updateProject(
+      projectId,
+      user.uid,
+      body
+    );
+
+    return NextResponse.json({ project: updatedProject });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ projectId: string }> }

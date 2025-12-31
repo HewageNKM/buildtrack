@@ -31,6 +31,11 @@ export const projectsApi = {
     return response.data;
   },
 
+  update: async (projectId: string, data: Partial<Project>) => {
+    const response = await api.patch(`/projects/${projectId}`, data);
+    return response.data.project;
+  },
+
   delete: async (projectId: string) => {
     await api.delete(`/projects/${projectId}`);
   },

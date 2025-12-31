@@ -50,6 +50,31 @@ export class ProjectService {
     return project;
   }
 
+  async updateProject(
+    projectId: string,
+    userId: string,
+    data: Partial<Project>
+  ): Promise<Project> {
+    const project = await this.projectRepo.getById(projectId);
+    if (!project) throw new Error("Project not found");
+
+    if (project.userId !== userId) {
+      throw new Error("Unauthorized: Only owner can update project");
+    }
+
+    // Filter allowed fields
+    const safeData: Partial<Project> = {
+      ...(data.name && { name: data.name }),
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.estimatedBudget && { estimatedBudget: data.estimatedBudget }),
+      ...(data.currency && { currency: data.currency }),
+      ...(data.startDate && { startDate: data.startDate }),
+      ...(data.endDate !== undefined && { endDate: data.endDate }),
+    };
+
+    return await this.projectRepo.update(projectId, safeData);
+  }
+
   async deleteProject(projectId: string, userId: string): Promise<void> {
     const project = await this.projectRepo.getById(projectId);
     if (!project) throw new Error("Project not found");

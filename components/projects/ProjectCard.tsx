@@ -12,12 +12,14 @@ import {
   Trash2,
   ChevronRight,
   AlertTriangle,
+  Edit,
 } from "lucide-react";
 import { useState } from "react";
 
 interface ProjectCardProps {
   project: Project & { totalSpent?: number };
   onDelete?: (projectId: string) => void;
+  onEdit?: (project: Project) => void;
   index?: number;
 }
 
@@ -33,6 +35,7 @@ const gradientColors = [
 export default function ProjectCard({
   project,
   onDelete,
+  onEdit,
   index = 0,
 }: ProjectCardProps) {
   const [showMenu, setShowMenu] = useState(false);
@@ -85,7 +88,7 @@ export default function ProjectCard({
 
   return (
     <motion.div
-      className="relative rounded-3xl group"
+      className="relative rounded-3xl group overflow-hidden"
       style={{
         backgroundColor: "var(--card)",
         border: "1px solid var(--border)",
@@ -140,6 +143,22 @@ export default function ProjectCard({
                 initial={{ opacity: 0, scale: 0.95, y: -10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
               >
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowMenu(false);
+                    onEdit?.(project);
+                  }}
+                  className="flex items-center gap-2 w-full transition-colors hover:bg-[var(--background-secondary)]"
+                  style={{
+                    padding: "12px 16px",
+                    fontSize: "14px",
+                    color: "var(--foreground)",
+                  }}
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit
+                </button>
                 {onDelete && (
                   <button
                     onClick={(e) => {
@@ -147,7 +166,7 @@ export default function ProjectCard({
                       setShowMenu(false);
                       onDelete(project.id);
                     }}
-                    className="flex items-center gap-2 w-full transition-colors"
+                    className="flex items-center gap-2 w-full transition-colors hover:bg-[var(--background-secondary)]"
                     style={{
                       padding: "12px 16px",
                       fontSize: "14px",
