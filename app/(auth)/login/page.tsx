@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -56,27 +58,38 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-background relative overflow-hidden">
+    <div
+      className="min-h-screen flex items-center justify-center px-4 py-12"
+      style={{ backgroundColor: "var(--background)" }}
+    >
       {/* Animated Background */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute top-20 -left-20 w-72 h-72 bg-purple-500/20 rounded-full mix-blend-multiply filter blur-3xl animate-float" />
+      <div className="fixed inset-0 -z-10 overflow-hidden">
         <div
-          className="absolute bottom-20 -right-20 w-72 h-72 bg-cyan-500/20 rounded-full mix-blend-multiply filter blur-3xl animate-float"
-          style={{ animationDelay: "2s" }}
+          className="absolute top-20 -left-20 w-72 h-72 rounded-full opacity-30 blur-3xl animate-float"
+          style={{
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          }}
+        />
+        <div
+          className="absolute bottom-20 -right-20 w-72 h-72 rounded-full opacity-20 blur-3xl animate-float"
+          style={{
+            background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+            animationDelay: "2s",
+          }}
         />
       </div>
 
       {/* Theme Toggle */}
       <motion.button
         onClick={toggleTheme}
-        className="fixed top-6 right-6 btn btn-icon btn-ghost"
+        className="fixed top-6 right-6 btn btn-icon btn-ghost z-50"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >
         {theme === "dark" ? (
-          <Sun className="w-5 h-5 text-warning" />
+          <Sun className="w-5 h-5" style={{ color: "var(--warning)" }} />
         ) : (
-          <Moon className="w-5 h-5 text-primary" />
+          <Moon className="w-5 h-5" style={{ color: "var(--primary)" }} />
         )}
       </motion.button>
 
@@ -90,23 +103,27 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
             <motion.div
-              className="stat-icon-primary p-4 mx-auto mb-4"
+              className="stat-icon-primary mx-auto mb-4"
+              style={{ width: "72px", height: "72px" }}
               whileHover={{ scale: 1.1, rotate: 5 }}
             >
-              <HardHat className="w-10 h-10 text-white" />
+              <HardHat className="w-9 h-9 text-white" />
             </motion.div>
           </Link>
-          <h1 className="text-3xl font-black">
+          <h1
+            className="text-3xl font-black"
+            style={{ color: "var(--foreground)" }}
+          >
             Welcome <span className="text-gradient">back</span>
           </h1>
-          <p className="mt-2 text-foreground-muted">
+          <p className="mt-2" style={{ color: "var(--foreground-muted)" }}>
             Sign in to your account to continue
           </p>
         </div>
 
         {/* Form */}
         <motion.div
-          className="card card-gradient p-8"
+          className="card card-gradient p-6 sm:p-8"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
@@ -114,12 +131,17 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <motion.div
-                className="flex items-center gap-2 p-4 rounded-xl bg-error-bg text-error text-sm border border-error/20"
+                className="flex items-center gap-3 p-4 rounded-xl"
+                style={{
+                  backgroundColor: "var(--error-bg)",
+                  color: "var(--error)",
+                  border: "1px solid var(--error)",
+                }}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
               >
                 <AlertCircle className="w-5 h-5 shrink-0" />
-                {error}
+                <span className="text-sm">{error}</span>
               </motion.div>
             )}
 
@@ -128,13 +150,19 @@ export default function LoginPage() {
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Mail
+                    className="w-5 h-5"
+                    style={{ color: "var(--foreground-muted)" }}
+                  />
+                </div>
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="form-input pl-12"
+                  className="form-input"
+                  style={{ paddingLeft: "3rem" }}
                   placeholder="you@example.com"
                   required
                 />
@@ -146,13 +174,19 @@ export default function LoginPage() {
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Lock
+                    className="w-5 h-5"
+                    style={{ color: "var(--foreground-muted)" }}
+                  />
+                </div>
                 <input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="form-input pl-12"
+                  className="form-input"
+                  style={{ paddingLeft: "3rem" }}
                   placeholder="••••••••"
                   required
                 />
@@ -179,11 +213,12 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-8 text-center">
-            <p className="text-foreground-muted text-sm">
+            <p style={{ color: "var(--foreground-muted)" }} className="text-sm">
               Don&apos;t have an account?{" "}
               <Link
                 href="/register"
-                className="text-primary hover:text-primary-hover font-semibold transition-colors"
+                className="font-semibold transition-colors"
+                style={{ color: "var(--primary)" }}
               >
                 Create one
               </Link>

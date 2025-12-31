@@ -4,6 +4,7 @@
    COLORFUL CONSTRUCTION THEME
    ============================================ */
 
+/* Default: Dark Theme */
 :root {
   /* Vibrant Color Palette */
   --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -12,62 +13,8 @@
   --gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   --gradient-warning: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
   --gradient-danger: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
-  --gradient-hero: linear-gradient(
-    135deg,
-    #667eea 0%,
-    #764ba2 50%,
-    #f093fb 100%
-  );
 
-  /* Light Theme Colors */
-  --background: #fafbff;
-  --background-secondary: #f0f4ff;
-  --background-tertiary: #e8eeff;
-  --foreground: #1a1a2e;
-  --foreground-muted: #6b7280;
-
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-light: #818cf8;
-  --primary-bg: rgba(99, 102, 241, 0.1);
-
-  --secondary: #ec4899;
-  --secondary-hover: #db2777;
-  --secondary-light: #f472b6;
-  --secondary-bg: rgba(236, 72, 153, 0.1);
-
-  --accent: #06b6d4;
-  --accent-hover: #0891b2;
-  --accent-light: #22d3ee;
-  --accent-bg: rgba(6, 182, 212, 0.1);
-
-  --success: #10b981;
-  --success-hover: #059669;
-  --success-bg: rgba(16, 185, 129, 0.1);
-
-  --warning: #f59e0b;
-  --warning-hover: #d97706;
-  --warning-bg: rgba(245, 158, 11, 0.1);
-
-  --error: #ef4444;
-  --error-hover: #dc2626;
-  --error-bg: rgba(239, 68, 68, 0.1);
-
-  --border: #e5e7eb;
-  --border-light: #d1d5db;
-  --card: #ffffff;
-  --card-hover: #f9fafb;
-
-  --shadow-color: rgba(99, 102, 241, 0.1);
-  --shadow-sm: 0 1px 3px var(--shadow-color);
-  --shadow-md: 0 4px 15px var(--shadow-color);
-  --shadow-lg: 0 10px 30px var(--shadow-color);
-  --shadow-xl: 0 20px 50px var(--shadow-color);
-  --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.3);
-}
-
-/* Dark Theme */
-[data-theme="dark"] {
+  /* Dark Theme Colors (Default) */
   --background: #0f0f23;
   --background-secondary: #1a1a35;
   --background-tertiary: #252550;
@@ -107,7 +54,55 @@
   --card-hover: #2a2a55;
 
   --shadow-color: rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px var(--shadow-color);
+  --shadow-md: 0 4px 15px var(--shadow-color);
+  --shadow-lg: 0 10px 30px var(--shadow-color);
+  --shadow-xl: 0 20px 50px var(--shadow-color);
   --shadow-glow: 0 0 60px rgba(129, 140, 248, 0.2);
+}
+
+/* Light Theme */
+[data-theme="light"] {
+  --background: #fafbff;
+  --background-secondary: #f0f4ff;
+  --background-tertiary: #e8eeff;
+  --foreground: #1a1a2e;
+  --foreground-muted: #6b7280;
+
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-light: #818cf8;
+  --primary-bg: rgba(99, 102, 241, 0.1);
+
+  --secondary: #ec4899;
+  --secondary-hover: #db2777;
+  --secondary-light: #f472b6;
+  --secondary-bg: rgba(236, 72, 153, 0.1);
+
+  --accent: #06b6d4;
+  --accent-hover: #0891b2;
+  --accent-light: #22d3ee;
+  --accent-bg: rgba(6, 182, 212, 0.1);
+
+  --success: #10b981;
+  --success-hover: #059669;
+  --success-bg: rgba(16, 185, 129, 0.1);
+
+  --warning: #f59e0b;
+  --warning-hover: #d97706;
+  --warning-bg: rgba(245, 158, 11, 0.1);
+
+  --error: #ef4444;
+  --error-hover: #dc2626;
+  --error-bg: rgba(239, 68, 68, 0.1);
+
+  --border: #e5e7eb;
+  --border-light: #d1d5db;
+  --card: #ffffff;
+  --card-hover: #f9fafb;
+
+  --shadow-color: rgba(99, 102, 241, 0.1);
+  --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.3);
 }
 
 @theme inline {
@@ -138,7 +133,7 @@ html {
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
   line-height: 1.6;
@@ -285,7 +280,7 @@ body {
    CARDS
    ============================================ */
 .card {
-  background: var(--card);
+  background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 1.5rem;
@@ -305,22 +300,7 @@ body {
     var(--card) 0%,
     var(--background-secondary) 100%
   );
-  border: 1px solid transparent;
-  background-clip: padding-box;
-  position: relative;
-}
-
-.card-gradient::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 20px;
-  padding: 1px;
-  background: var(--gradient-primary);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  -webkit-mask-composite: xor;
-  pointer-events: none;
+  border: 1px solid var(--border);
 }
 
 .card-glow {
@@ -345,7 +325,7 @@ body {
 .form-input {
   width: 100%;
   padding: 0.875rem 1rem;
-  background: var(--background-secondary);
+  background-color: var(--background-secondary);
   border: 2px solid transparent;
   border-radius: 12px;
   color: var(--foreground);
@@ -356,7 +336,7 @@ body {
 .form-input:focus {
   outline: none;
   border-color: var(--primary);
-  background: var(--background);
+  background-color: var(--background);
   box-shadow: 0 0 0 4px var(--primary-bg);
 }
 
@@ -364,10 +344,16 @@ body {
   color: var(--foreground-muted);
 }
 
+/* Input with icon - ensure proper padding */
+.form-input.pl-12,
+input.pl-12 {
+  padding-left: 3rem !important;
+}
+
 .form-select {
   width: 100%;
   padding: 0.875rem 1rem;
-  background: var(--background-secondary);
+  background-color: var(--background-secondary);
   border: 2px solid transparent;
   border-radius: 12px;
   color: var(--foreground);
@@ -402,27 +388,27 @@ body {
 }
 
 .badge-primary {
-  background: var(--primary-bg);
+  background-color: var(--primary-bg);
   color: var(--primary);
 }
 
 .badge-secondary {
-  background: var(--secondary-bg);
+  background-color: var(--secondary-bg);
   color: var(--secondary);
 }
 
 .badge-success {
-  background: var(--success-bg);
+  background-color: var(--success-bg);
   color: var(--success);
 }
 
 .badge-warning {
-  background: var(--warning-bg);
+  background-color: var(--warning-bg);
   color: var(--warning);
 }
 
 .badge-error {
-  background: var(--error-bg);
+  background-color: var(--error-bg);
   color: var(--error);
 }
 
@@ -448,7 +434,7 @@ body {
 }
 
 .modal-content {
-  background: var(--card);
+  background-color: var(--card);
   border: 1px solid var(--border);
   border-radius: 24px;
   padding: 1.5rem;
@@ -477,7 +463,7 @@ body {
 }
 
 .modal-close {
-  background: var(--background-secondary);
+  background-color: var(--background-secondary);
   border: none;
   color: var(--foreground-muted);
   cursor: pointer;
@@ -487,7 +473,7 @@ body {
 }
 
 .modal-close:hover {
-  background: var(--error-bg);
+  background-color: var(--error-bg);
   color: var(--error);
 }
 
@@ -578,7 +564,7 @@ body {
    ============================================ */
 .progress-bar {
   height: 10px;
-  background: var(--background-secondary);
+  background-color: var(--background-secondary);
   border-radius: 9999px;
   overflow: hidden;
 }
@@ -605,7 +591,7 @@ body {
   overflow-x: auto;
   border: 1px solid var(--border);
   border-radius: 16px;
-  background: var(--card);
+  background-color: var(--card);
 }
 
 .table {
@@ -621,7 +607,7 @@ body {
 }
 
 .table th {
-  background: var(--background-secondary);
+  background-color: var(--background-secondary);
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -638,7 +624,7 @@ body {
 }
 
 .table tbody tr:hover {
-  background: var(--background-secondary);
+  background-color: var(--background-secondary);
 }
 
 /* ============================================
@@ -651,13 +637,13 @@ body {
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: var(--background-secondary);
+  background-color: var(--background-secondary);
 }
 
 .dropzone:hover,
 .dropzone-active {
   border-color: var(--primary);
-  background: var(--primary-bg);
+  background-color: var(--primary-bg);
 }
 
 /* ============================================
@@ -741,14 +727,13 @@ body {
 }
 
 .glass {
-  background: rgba(255, 255, 255, 0.1);
+  background-color: rgba(30, 30, 63, 0.8);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border);
 }
 
-[data-theme="dark"] .glass {
-  background: rgba(30, 30, 63, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+[data-theme="light"] .glass {
+  background-color: rgba(255, 255, 255, 0.8);
 }
 
 .glow-primary {
@@ -802,4 +787,20 @@ body {
 .stat-icon-danger {
   background: var(--gradient-danger);
   box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+/* ============================================
+   LANDING PAGE SPECIFIC
+   ============================================ */
+.landing-section {
+  position: relative;
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+
+@media (min-width: 768px) {
+  .landing-section {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+  }
 }

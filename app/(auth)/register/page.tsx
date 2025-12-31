@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -80,17 +82,31 @@ export default function RegisterPage() {
   ];
 
   return (
-    <div className="min-h-screen flex bg-background relative overflow-hidden">
+    <div
+      className="min-h-screen flex"
+      style={{ backgroundColor: "var(--background)" }}
+    >
       {/* Animated Background */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute top-20 left-1/4 w-72 h-72 bg-purple-500/20 rounded-full mix-blend-multiply filter blur-3xl animate-float" />
+      <div className="fixed inset-0 -z-10 overflow-hidden">
         <div
-          className="absolute bottom-20 right-1/4 w-72 h-72 bg-pink-500/20 rounded-full mix-blend-multiply filter blur-3xl animate-float"
-          style={{ animationDelay: "2s" }}
+          className="absolute top-20 left-1/4 w-72 h-72 rounded-full opacity-30 blur-3xl animate-float"
+          style={{
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          }}
         />
         <div
-          className="absolute top-1/2 left-10 w-48 h-48 bg-cyan-500/20 rounded-full mix-blend-multiply filter blur-3xl animate-float"
-          style={{ animationDelay: "4s" }}
+          className="absolute bottom-20 right-1/4 w-72 h-72 rounded-full opacity-20 blur-3xl animate-float"
+          style={{
+            background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+            animationDelay: "2s",
+          }}
+        />
+        <div
+          className="absolute top-1/2 left-10 w-48 h-48 rounded-full opacity-20 blur-3xl animate-float"
+          style={{
+            background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+            animationDelay: "4s",
+          }}
         />
       </div>
 
@@ -102,9 +118,9 @@ export default function RegisterPage() {
         whileTap={{ scale: 0.9 }}
       >
         {theme === "dark" ? (
-          <Sun className="w-5 h-5 text-warning" />
+          <Sun className="w-5 h-5" style={{ color: "var(--warning)" }} />
         ) : (
-          <Moon className="w-5 h-5 text-primary" />
+          <Moon className="w-5 h-5" style={{ color: "var(--primary)" }} />
         )}
       </motion.button>
 
@@ -116,15 +132,24 @@ export default function RegisterPage() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="stat-icon-secondary p-4 mb-8 w-fit">
-            <HardHat className="w-12 h-12 text-white" />
+          <div
+            className="stat-icon-secondary mb-8"
+            style={{ width: "72px", height: "72px" }}
+          >
+            <HardHat className="w-9 h-9 text-white" />
           </div>
-          <h2 className="text-4xl font-black mb-4">
+          <h2
+            className="text-3xl lg:text-4xl font-black mb-4"
+            style={{ color: "var(--foreground)" }}
+          >
             Start Tracking Your{" "}
             <span className="text-gradient-secondary">Construction</span>{" "}
             <span className="text-gradient-accent">Budgets</span>
           </h2>
-          <p className="text-foreground-muted text-lg mb-8">
+          <p
+            className="text-lg mb-8"
+            style={{ color: "var(--foreground-muted)" }}
+          >
             Join thousands of construction professionals managing their project
             finances with BuildTrack Pro.
           </p>
@@ -133,12 +158,19 @@ export default function RegisterPage() {
               <motion.li
                 key={benefit}
                 className="flex items-center gap-3 text-lg"
+                style={{ color: "var(--foreground)" }}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 + index * 0.1 }}
               >
-                <div className="w-8 h-8 rounded-lg bg-success-bg flex items-center justify-center">
-                  <CheckCircle2 className="w-5 h-5 text-success" />
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: "var(--success-bg)" }}
+                >
+                  <CheckCircle2
+                    className="w-5 h-5"
+                    style={{ color: "var(--success)" }}
+                  />
                 </div>
                 {benefit}
               </motion.li>
@@ -159,19 +191,23 @@ export default function RegisterPage() {
           <div className="text-center mb-8 lg:hidden">
             <Link href="/" className="inline-block">
               <motion.div
-                className="stat-icon-primary p-4 mx-auto mb-4"
+                className="stat-icon-primary mx-auto mb-4"
+                style={{ width: "72px", height: "72px" }}
                 whileHover={{ scale: 1.1, rotate: 5 }}
               >
-                <HardHat className="w-10 h-10 text-white" />
+                <HardHat className="w-9 h-9 text-white" />
               </motion.div>
             </Link>
           </div>
 
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-black">
+            <h1
+              className="text-3xl font-black"
+              style={{ color: "var(--foreground)" }}
+            >
               Create your <span className="text-gradient">account</span>
             </h1>
-            <p className="mt-2 text-foreground-muted">
+            <p className="mt-2" style={{ color: "var(--foreground-muted)" }}>
               Start tracking your budgets today
             </p>
           </div>
@@ -186,12 +222,17 @@ export default function RegisterPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <motion.div
-                  className="flex items-center gap-2 p-4 rounded-xl bg-error-bg text-error text-sm border border-error/20"
+                  className="flex items-center gap-3 p-4 rounded-xl"
+                  style={{
+                    backgroundColor: "var(--error-bg)",
+                    color: "var(--error)",
+                    border: "1px solid var(--error)",
+                  }}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                 >
                   <AlertCircle className="w-5 h-5 shrink-0" />
-                  {error}
+                  <span className="text-sm">{error}</span>
                 </motion.div>
               )}
 
@@ -200,13 +241,19 @@ export default function RegisterPage() {
                   Full Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <User
+                      className="w-5 h-5"
+                      style={{ color: "var(--foreground-muted)" }}
+                    />
+                  </div>
                   <input
                     id="displayName"
                     type="text"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    className="form-input pl-12"
+                    className="form-input"
+                    style={{ paddingLeft: "3rem" }}
                     placeholder="John Doe"
                     required
                   />
@@ -218,13 +265,19 @@ export default function RegisterPage() {
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <Mail
+                      className="w-5 h-5"
+                      style={{ color: "var(--foreground-muted)" }}
+                    />
+                  </div>
                   <input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="form-input pl-12"
+                    className="form-input"
+                    style={{ paddingLeft: "3rem" }}
                     placeholder="you@example.com"
                     required
                   />
@@ -237,13 +290,19 @@ export default function RegisterPage() {
                     Password
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <Lock
+                        className="w-5 h-5"
+                        style={{ color: "var(--foreground-muted)" }}
+                      />
+                    </div>
                     <input
                       id="password"
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="form-input pl-12"
+                      className="form-input"
+                      style={{ paddingLeft: "3rem" }}
                       placeholder="••••••••"
                       required
                     />
@@ -255,13 +314,19 @@ export default function RegisterPage() {
                     Confirm
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <Lock
+                        className="w-5 h-5"
+                        style={{ color: "var(--foreground-muted)" }}
+                      />
+                    </div>
                     <input
                       id="confirmPassword"
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="form-input pl-12"
+                      className="form-input"
+                      style={{ paddingLeft: "3rem" }}
                       placeholder="••••••••"
                       required
                     />
@@ -289,11 +354,15 @@ export default function RegisterPage() {
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-foreground-muted text-sm">
+              <p
+                style={{ color: "var(--foreground-muted)" }}
+                className="text-sm"
+              >
                 Already have an account?{" "}
                 <Link
                   href="/login"
-                  className="text-primary hover:text-primary-hover font-semibold transition-colors"
+                  className="font-semibold transition-colors"
+                  style={{ color: "var(--primary)" }}
                 >
                   Sign in
                 </Link>
