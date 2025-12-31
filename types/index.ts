@@ -1,5 +1,7 @@
 // TypeScript interfaces for the Construction Budget Tracker
 
+import type { CurrencyCode } from "@/lib/currency";
+
 export interface User {
   id: string;
   email: string;
@@ -35,6 +37,7 @@ export interface Project {
   name: string;
   description: string;
   estimatedBudget: number;
+  currency?: CurrencyCode; // Default: LKR
   startDate: string;
   endDate?: string;
   status: "active" | "completed" | "on-hold";
@@ -43,6 +46,9 @@ export interface Project {
   // Team collaboration
   teamMembers?: TeamMember[];
 }
+
+// Re-export currency types
+export type { CurrencyCode } from "@/lib/currency";
 
 export interface BudgetEntry {
   id: string;

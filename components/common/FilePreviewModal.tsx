@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Download, ZoomIn, ZoomOut, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 interface FilePreviewModalProps {
   isOpen: boolean;
@@ -20,6 +21,8 @@ export default function FilePreviewModal({
   fileType,
 }: FilePreviewModalProps) {
   const [zoom, setZoom] = useState(1);
+
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 

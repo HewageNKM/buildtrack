@@ -17,6 +17,10 @@ import {
 } from "lucide-react";
 import { TeamMember, TeamMemberRole } from "@/types";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
+import toast from "react-hot-toast";
 
 interface TeamManagementModalProps {
   isOpen: boolean;
@@ -25,9 +29,7 @@ interface TeamManagementModalProps {
   projectName: string;
   teamMembers: TeamMember[];
   currentUserRole: TeamMemberRole;
-  onInviteMember: (email: string, role: TeamMemberRole) => Promise<void>;
-  onRemoveMember: (userId: string) => Promise<void>;
-  onUpdateRole: (userId: string, role: TeamMemberRole) => Promise<void>;
+  onUpdate: () => void;
 }
 
 const roleLabels: Record<
@@ -43,18 +45,21 @@ export default function TeamManagementModal({
   isOpen,
   onClose,
   projectName,
+  projectId,
   teamMembers,
   currentUserRole,
-  onInviteMember,
-  onRemoveMember,
-}: // onUpdateRole - reserved for future use
-TeamManagementModalProps) {
+  onUpdate,
+}: TeamManagementModalProps) {
+  const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [selectedRole, setSelectedRole] = useState<TeamMemberRole>("editor");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [inviteError, setInviteError] = useState("");
   const [copied, setCopied] = useState(false);
+
+  useBodyScrollLock(isOpen);
 
   const canManageTeam = currentUserRole === "owner";
 
@@ -77,10 +82,12 @@ TeamManagementModalProps) {
 
     setLoading(true);
     try {
-      await onInviteMember(email.trim(), selectedRole);
+      await api.team.invite(projectId, email.trim(), selectedRole);
+      toast.success(`Invite sent to ${email}`);
       setEmail("");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to invite member");
+      onUpdate();
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to invite member");
     } finally {
       setLoading(false);
     }
@@ -91,8 +98,20 @@ TeamManagementModalProps) {
 
     setRemovingId(userId);
     try {
-      await onRemoveMember(userId);
+      if (userId === user?.uid) {
+        // Leaving project logic if needed, usually handled separately or same API
+        // API supports removing self if not owner (or owner deleting project)
+        await api.team.remove(projectId, userId);
+        toast.success("Left project successfully");
+        onClose();
+        window.location.href = "/projects";
+      } else {
+        await api.team.remove(projectId, userId);
+        toast.success("Team member removed");
+        onUpdate();
+      }
     } catch (err) {
+      toast.error("Failed to remove member");
       console.error(err);
     } finally {
       setRemovingId(null);

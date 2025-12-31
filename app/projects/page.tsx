@@ -5,20 +5,11 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { db } from "@/lib/firebase/config";
 import { motion } from "framer-motion";
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  addDoc,
-  deleteDoc,
-  doc,
-  getDocs,
-} from "firebase/firestore";
-import { Project, ProjectWithStats, TeamMember } from "@/types";
+import { ProjectWithStats, CurrencyCode } from "@/types";
+import { api } from "@/lib/api";
+import { formatCurrency, DEFAULT_CURRENCY } from "@/lib/currency";
+
 import Navbar from "@/components/common/Navbar";
 import { PageLoader } from "@/components/common/LoadingSpinner";
 import CreateProjectModal from "@/components/projects/CreateProjectModal";
@@ -42,6 +33,19 @@ export default function ProjectsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const data = await api.projects.list();
+      setProjects(data.projects);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      toast.error("Failed to load projects");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (authLoading) return;
 
@@ -50,80 +54,25 @@ export default function ProjectsPage() {
       return;
     }
 
-    const projectsQuery = query(
-      collection(db, "projects"),
-      where("userId", "==", user.uid),
-      orderBy("createdAt", "desc")
-    );
-
-    const unsubscribe = onSnapshot(
-      projectsQuery,
-      async (snapshot) => {
-        const projectsData: ProjectWithStats[] = [];
-
-        for (const projectDoc of snapshot.docs) {
-          const project = {
-            id: projectDoc.id,
-            ...projectDoc.data(),
-          } as Project;
-
-          const entriesQuery = query(
-            collection(db, "entries"),
-            where("projectId", "==", project.id)
-          );
-          const entriesSnapshot = await getDocs(entriesQuery);
-          const totalSpent = entriesSnapshot.docs.reduce((sum, doc) => {
-            return sum + (doc.data().amount || 0);
-          }, 0);
-
-          projectsData.push({
-            ...project,
-            totalSpent,
-            entryCount: entriesSnapshot.docs.length,
-          });
-        }
-
-        setProjects(projectsData);
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Error fetching projects:", error);
-        toast.error("Failed to load projects");
-        setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
+    fetchProjects();
   }, [user, authLoading, router]);
 
   const handleCreateProject = async (projectData: {
     name: string;
     description: string;
     estimatedBudget: number;
+    currency: CurrencyCode;
     startDate: string;
     endDate?: string;
   }) => {
-    if (!user) return;
-
-    // Create owner as first team member
-    const ownerMember: TeamMember = {
-      userId: user.uid,
-      email: user.email || "",
-      displayName: user.displayName || undefined,
-      role: "owner",
-      joinedAt: new Date().toISOString(),
-    };
-
-    await addDoc(collection(db, "projects"), {
-      ...projectData,
-      userId: user.uid,
-      status: "active",
-      teamMembers: [ownerMember],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-
-    toast.success("Project created successfully!");
+    try {
+      await api.projects.create(projectData);
+      toast.success("Project created successfully!");
+      fetchProjects();
+    } catch (error) {
+      console.error("Error creating project:", error);
+      toast.error("Failed to create project");
+    }
   };
 
   const handleDeleteProject = async (projectId: string) => {
@@ -136,17 +85,9 @@ export default function ProjectsPage() {
     }
 
     try {
-      const entriesQuery = query(
-        collection(db, "entries"),
-        where("projectId", "==", projectId)
-      );
-      const entriesSnapshot = await getDocs(entriesQuery);
-      for (const entryDoc of entriesSnapshot.docs) {
-        await deleteDoc(doc(db, "entries", entryDoc.id));
-      }
-
-      await deleteDoc(doc(db, "projects", projectId));
+      await api.projects.delete(projectId);
       toast.success("Project deleted successfully");
+      setProjects((prev) => prev.filter((p) => p.id !== projectId));
     } catch (error) {
       console.error("Error deleting project:", error);
       toast.error("Failed to delete project");
@@ -163,21 +104,15 @@ export default function ProjectsPage() {
       project.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const totalBudget = projects.reduce((sum, p) => sum + p.estimatedBudget, 0);
+  const totalBudget = projects.reduce(
+    (sum, p) => sum + (p.estimatedBudget || 0),
+    0
+  );
   const totalSpent = projects.reduce((sum, p) => sum + (p.totalSpent || 0), 0);
   const activeProjects = projects.filter((p) => p.status === "active").length;
   const overBudgetProjects = projects.filter(
-    (p) => (p.totalSpent || 0) > p.estimatedBudget
+    (p) => (p.totalSpent || 0) > (p.estimatedBudget || 0)
   ).length;
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   const stats = [
     {
@@ -189,13 +124,13 @@ export default function ProjectsPage() {
     {
       icon: DollarSign,
       label: "Total Budget",
-      value: formatCurrency(totalBudget),
+      value: formatCurrency(totalBudget, DEFAULT_CURRENCY),
       color: "#ec4899",
     },
     {
       icon: TrendingUp,
       label: "Total Spent",
-      value: formatCurrency(totalSpent),
+      value: formatCurrency(totalSpent, DEFAULT_CURRENCY),
       color: "#06b6d4",
     },
     {

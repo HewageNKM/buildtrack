@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Project } from "@/types";
+import { formatCurrency, DEFAULT_CURRENCY } from "@/lib/currency";
 import {
   FolderKanban,
   Calendar,
@@ -43,6 +44,7 @@ export default function ProjectCard({
       : 0;
   const remaining = project.estimatedBudget - totalSpent;
   const isOverBudget = remaining < 0;
+  const projectCurrency = project.currency || DEFAULT_CURRENCY;
 
   const gradientColor = gradientColors[index % gradientColors.length];
 
@@ -79,15 +81,6 @@ export default function ProjectCard({
         {labels[project.status] || "Active"}
       </span>
     );
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
   };
 
   return (
@@ -286,7 +279,7 @@ export default function ProjectCard({
                 Spent
               </p>
               <p style={{ fontSize: "18px", fontWeight: 700 }}>
-                {formatCurrency(totalSpent)}
+                {formatCurrency(totalSpent, projectCurrency)}
               </p>
             </div>
             <div style={{ textAlign: "right" }}>
@@ -307,7 +300,7 @@ export default function ProjectCard({
                 }}
               >
                 {isOverBudget ? "+" : ""}
-                {formatCurrency(Math.abs(remaining))}
+                {formatCurrency(Math.abs(remaining), projectCurrency)}
               </p>
             </div>
           </div>

@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,18 +13,24 @@ import {
 } from "lucide-react";
 import { BUDGET_CATEGORIES, BudgetCategory } from "@/types";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { api } from "@/lib/api";
+import toast from "react-hot-toast";
 
 interface AddEntryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (entry: {
-    category: BudgetCategory;
-    description: string;
-    amount: number;
-    date: string;
-    invoice?: File;
-  }) => Promise<void>;
+  projectId: string; // Added projectId prop
+  onSubmit?: never; // Deprecate onSubmit prop in favor of internal handling or keep if parent wrapper handles it?
+  // Actually parent might want to refresh. Let's keep a onEntryAdded callback.
+  onEntryAdded: () => void;
 }
+
+// Updating props interface to match new usage or keeping compatible?
+// The modal was previously receiving onSubmit which handled the API call.
+// Now the modal should handle the API call internally or we update the parent to use the API client.
+// Current Instruction says "Replace logic with api.entries.create" IN THE MODAL.
+// So I will change onSubmit to onEntryAdded.
 
 const inputStyle = {
   width: "100%",
@@ -49,7 +53,8 @@ const labelStyle = {
 export default function AddEntryModal({
   isOpen,
   onClose,
-  onSubmit,
+  projectId,
+  onEntryAdded,
 }: AddEntryModalProps) {
   const [category, setCategory] = useState<BudgetCategory>("materials");
   const [description, setDescription] = useState("");
@@ -58,6 +63,8 @@ export default function AddEntryModal({
   const [invoice, setInvoice] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useBodyScrollLock(isOpen);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -98,7 +105,7 @@ export default function AddEntryModal({
     setLoading(true);
 
     try {
-      await onSubmit({
+      await api.entries.create(projectId, {
         category,
         description: description.trim(),
         amount: parsedAmount,
@@ -106,11 +113,15 @@ export default function AddEntryModal({
         invoice: invoice || undefined,
       });
 
+      toast.success("Entry added successfully");
+
       setCategory("materials");
       setDescription("");
       setAmount("");
       setDate(new Date().toISOString().split("T")[0]);
       setInvoice(null);
+
+      onEntryAdded();
       onClose();
     } catch (err) {
       setError("Failed to add entry. Please try again.");

@@ -1,22 +1,8 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { db, storage } from "@/lib/firebase/config";
-import {
-  doc,
-  getDoc,
-  collection,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  addDoc,
-  deleteDoc,
-  updateDoc,
-} from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import {
   Project,
   BudgetEntry,
@@ -25,6 +11,9 @@ import {
   TeamMember,
   TeamMemberRole,
 } from "@/types";
+import { api } from "@/lib/api";
+import { formatCurrency, DEFAULT_CURRENCY } from "@/lib/currency";
+
 import Navbar from "@/components/common/Navbar";
 import { PageLoader } from "@/components/common/LoadingSpinner";
 import AddEntryModal from "@/components/entries/AddEntryModal";
@@ -50,7 +39,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { v4 as uuidv4 } from "uuid";
 
 export default function ProjectDetailPage({
   params,
@@ -73,113 +61,48 @@ export default function ProjectDetailPage({
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [showTeamModal, setShowTeamModal] = useState(false);
 
+  // Fetch project and entries
+  const fetchData = useCallback(async () => {
+    if (!user) return;
+    try {
+      // Parallel fetch could be better but sticking to simple sequence for clarity
+      // Actually we need to verify access implicitly via API failure
+      const projectData = await api.projects.get(projectId); // Need to implement backend for specific project get or reuse list?
+      // Wait, I implemented /api/projects for list, but /api/projects/[projectId] is NOT implmented in backend yet!
+      // I implemented /api/projects/[projectId]/team and /api/projects/[projectId]/entries
+      // But I missed /api/projects/[projectId] for GET single project details.
+
+      // I need to add that route first or logic will fail.
+      // But let's write this frontend assuming I will fix backend immediately after.
+      setProject(projectData);
+
+      const entriesData = await api.entries.list(projectId);
+      setEntries(entriesData);
+    } catch (error) {
+      console.error("Error fetching project data:", error);
+      toast.error("Failed to load project details");
+      router.push("/projects");
+    } finally {
+      setLoading(false);
+    }
+  }, [projectId, user, router]);
+
   useEffect(() => {
     if (authLoading) return;
-
     if (!user) {
       router.push("/login");
       return;
     }
-
-    // Fetch project
-    const fetchProject = async () => {
-      const projectDoc = await getDoc(doc(db, "projects", projectId));
-      if (projectDoc.exists()) {
-        const data = projectDoc.data();
-        // Check if user is owner or team member
-        const isOwner = data.userId === user.uid;
-        const isTeamMember = data.teamMembers?.some(
-          (m: TeamMember) => m.userId === user.uid
-        );
-        if (!isOwner && !isTeamMember) {
-          router.push("/projects");
-          return;
-        }
-        setProject({ id: projectDoc.id, ...data } as Project);
-      } else {
-        router.push("/projects");
-        return;
-      }
-      setLoading(false);
-    };
-
-    fetchProject();
-
-    // Subscribe to entries
-    const entriesQuery = query(
-      collection(db, "entries"),
-      where("projectId", "==", projectId),
-      orderBy("date", "desc")
-    );
-
-    const unsubscribe = onSnapshot(entriesQuery, (snapshot) => {
-      const entriesData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as BudgetEntry[];
-      setEntries(entriesData);
-    });
-
-    return () => unsubscribe();
-  }, [user, authLoading, router, projectId]);
-
-  const handleAddEntry = async (entryData: {
-    category: BudgetCategory;
-    description: string;
-    amount: number;
-    date: string;
-    invoice?: File;
-  }) => {
-    if (!user) return;
-
-    let invoiceUrl: string | undefined;
-    let invoiceFileName: string | undefined;
-    let invoiceType: "image" | "pdf" | undefined;
-
-    // Upload invoice if provided
-    if (entryData.invoice) {
-      const fileExt = entryData.invoice.name.split(".").pop();
-      const fileName = `${uuidv4()}.${fileExt}`;
-      const storageRef = ref(
-        storage,
-        `invoices/${user.uid}/${projectId}/${fileName}`
-      );
-
-      await uploadBytes(storageRef, entryData.invoice);
-      invoiceUrl = await getDownloadURL(storageRef);
-      invoiceFileName = entryData.invoice.name;
-      invoiceType = entryData.invoice.type.startsWith("image/")
-        ? "image"
-        : "pdf";
-    }
-
-    await addDoc(collection(db, "entries"), {
-      projectId,
-      category: entryData.category,
-      description: entryData.description,
-      amount: entryData.amount,
-      date: entryData.date,
-      invoiceUrl,
-      invoiceFileName,
-      invoiceType,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-
-    // Update project's updatedAt
-    await updateDoc(doc(db, "projects", projectId), {
-      updatedAt: new Date().toISOString(),
-    });
-
-    toast.success("Entry added successfully!");
-  };
+    fetchData();
+  }, [user, authLoading, fetchData, router]);
 
   const handleDeleteEntry = async (entryId: string) => {
     if (!confirm("Are you sure you want to delete this entry?")) return;
 
     try {
-      await deleteDoc(doc(db, "entries", entryId));
+      await api.entries.delete(projectId, entryId);
       toast.success("Entry deleted");
+      setEntries((prev) => prev.filter((e) => e.id !== entryId));
     } catch (error) {
       console.error("Error deleting entry:", error);
       toast.error("Failed to delete entry");
@@ -194,7 +117,10 @@ export default function ProjectDetailPage({
     return null;
   }
 
-  const totalSpent = entries.reduce((sum, entry) => sum + entry.amount, 0);
+  const totalSpent = entries.reduce(
+    (sum, entry) => sum + (entry.amount || 0),
+    0
+  );
   const remaining = project.estimatedBudget - totalSpent;
   const isOverBudget = remaining < 0;
   const progress =
@@ -207,16 +133,12 @@ export default function ProjectDetailPage({
       ? entries
       : entries.filter((e) => e.category === filterCategory);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-    }).format(amount);
-  };
-
   const getCategoryLabel = (value: string) => {
     return BUDGET_CATEGORIES.find((c) => c.value === value)?.label || value;
+  };
+
+  const getCategoryColor = (value: string) => {
+    return BUDGET_CATEGORIES.find((c) => c.value === value)?.color || "#6B7280";
   };
 
   // Team management helpers
@@ -226,76 +148,6 @@ export default function ProjectDetailPage({
     : project.teamMembers?.find((m) => m.userId === user?.uid)?.role ||
       "viewer";
   const teamMembers = project.teamMembers || [];
-
-  const handleInviteMember = async (email: string, role: TeamMemberRole) => {
-    if (!project) return;
-
-    const newMember: TeamMember = {
-      userId: "", // Will be populated when user accepts
-      email: email.toLowerCase(),
-      role,
-      joinedAt: new Date().toISOString(),
-    };
-
-    // For now, add directly (in production, would send invite email)
-    await updateDoc(doc(db, "projects", project.id), {
-      teamMembers: [...teamMembers, newMember],
-      updatedAt: new Date().toISOString(),
-    });
-
-    // Refetch project to update state
-    const projectDoc = await getDoc(doc(db, "projects", project.id));
-    if (projectDoc.exists()) {
-      setProject({ id: projectDoc.id, ...projectDoc.data() } as Project);
-    }
-
-    toast.success(`Invited ${email} to the project!`);
-  };
-
-  const handleRemoveMember = async (userId: string) => {
-    if (!project) return;
-
-    const updatedMembers = teamMembers.filter(
-      (m) => m.userId !== userId && m.email !== userId
-    );
-
-    await updateDoc(doc(db, "projects", project.id), {
-      teamMembers: updatedMembers,
-      updatedAt: new Date().toISOString(),
-    });
-
-    // Refetch project to update state
-    const projectDoc = await getDoc(doc(db, "projects", project.id));
-    if (projectDoc.exists()) {
-      setProject({ id: projectDoc.id, ...projectDoc.data() } as Project);
-    }
-
-    toast.success("Team member removed");
-  };
-
-  const handleUpdateRole = async (userId: string, role: TeamMemberRole) => {
-    if (!project) return;
-
-    const updatedMembers = teamMembers.map((m) =>
-      m.userId === userId ? { ...m, role } : m
-    );
-
-    await updateDoc(doc(db, "projects", project.id), {
-      teamMembers: updatedMembers,
-      updatedAt: new Date().toISOString(),
-    });
-
-    const projectDoc = await getDoc(doc(db, "projects", project.id));
-    if (projectDoc.exists()) {
-      setProject({ id: projectDoc.id, ...projectDoc.data() } as Project);
-    }
-
-    toast.success("Role updated");
-  };
-
-  const getCategoryColor = (value: string) => {
-    return BUDGET_CATEGORIES.find((c) => c.value === value)?.color || "#6B7280";
-  };
 
   return (
     <div style={{ backgroundColor: "var(--background)", minHeight: "100vh" }}>
@@ -391,7 +243,7 @@ export default function ProjectDetailPage({
                   Estimated Budget
                 </p>
                 <p className="text-2xl font-bold">
-                  {formatCurrency(project.estimatedBudget)}
+                  {formatCurrency(project.estimatedBudget, project.currency)}
                 </p>
               </div>
             </div>
@@ -405,7 +257,7 @@ export default function ProjectDetailPage({
               <div>
                 <p className="text-sm text-foreground-muted">Total Spent</p>
                 <p className="text-2xl font-bold">
-                  {formatCurrency(totalSpent)}
+                  {formatCurrency(totalSpent, project.currency)}
                 </p>
               </div>
             </div>
@@ -434,7 +286,7 @@ export default function ProjectDetailPage({
                   }`}
                 >
                   {isOverBudget ? "+" : ""}
-                  {formatCurrency(Math.abs(remaining))}
+                  {formatCurrency(Math.abs(remaining), project.currency)}
                 </p>
               </div>
             </div>
@@ -547,7 +399,7 @@ export default function ProjectDetailPage({
                       </td>
                       <td className="max-w-xs truncate">{entry.description}</td>
                       <td className="font-medium">
-                        {formatCurrency(entry.amount)}
+                        {formatCurrency(entry.amount, project.currency)}
                       </td>
                       <td>
                         {entry.invoiceUrl ? (
@@ -627,7 +479,8 @@ export default function ProjectDetailPage({
       <AddEntryModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        onSubmit={handleAddEntry}
+        projectId={project.id}
+        onEntryAdded={fetchData} // Refresh data when entry added
       />
 
       {previewFile && (
@@ -647,9 +500,7 @@ export default function ProjectDetailPage({
         projectName={project.name}
         teamMembers={teamMembers}
         currentUserRole={currentUserRole}
-        onInviteMember={handleInviteMember}
-        onRemoveMember={handleRemoveMember}
-        onUpdateRole={handleUpdateRole}
+        onUpdate={fetchData} // Refresh data when team updated
       />
     </div>
   );

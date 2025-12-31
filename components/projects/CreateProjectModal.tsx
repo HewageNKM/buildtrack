@@ -8,9 +8,16 @@ import {
   Calendar,
   AlertCircle,
   Sparkles,
-  DollarSign,
+  Coins,
 } from "lucide-react";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import {
+  CurrencyCode,
+  CURRENCY_LIST,
+  DEFAULT_CURRENCY,
+  getCurrencySymbol,
+} from "@/lib/currency";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -19,6 +26,7 @@ interface CreateProjectModalProps {
     name: string;
     description: string;
     estimatedBudget: number;
+    currency: CurrencyCode;
     startDate: string;
     endDate?: string;
   }) => Promise<void>;
@@ -35,7 +43,7 @@ const inputStyle = {
 };
 
 const labelStyle = {
-  display: "block",
+  display: "block" as const,
   fontSize: "14px",
   fontWeight: 600,
   marginBottom: "8px",
@@ -50,12 +58,15 @@ export default function CreateProjectModal({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [estimatedBudget, setEstimatedBudget] = useState("");
+  const [currency, setCurrency] = useState<CurrencyCode>(DEFAULT_CURRENCY);
   const [startDate, setStartDate] = useState(
     new Date().toISOString().split("T")[0]
   );
   const [endDate, setEndDate] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useBodyScrollLock(isOpen);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,6 +90,7 @@ export default function CreateProjectModal({
         name: name.trim(),
         description: description.trim(),
         estimatedBudget: budget,
+        currency,
         startDate,
         endDate: endDate || undefined,
       });
@@ -86,6 +98,7 @@ export default function CreateProjectModal({
       setName("");
       setDescription("");
       setEstimatedBudget("");
+      setCurrency(DEFAULT_CURRENCY);
       setStartDate(new Date().toISOString().split("T")[0]);
       setEndDate("");
       onClose();
@@ -202,30 +215,61 @@ export default function CreateProjectModal({
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  style={{ ...inputStyle, minHeight: "100px", resize: "none" }}
+                  style={{ ...inputStyle, minHeight: "80px", resize: "none" }}
                   placeholder="Brief description of the project..."
                 />
               </div>
 
-              <div style={{ marginBottom: "20px" }}>
-                <label style={labelStyle}>Estimated Budget *</label>
-                <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <DollarSign
-                      className="w-5 h-5"
-                      style={{ color: "var(--foreground-muted)" }}
+              {/* Budget and Currency Row */}
+              <div
+                className="grid grid-cols-2 gap-4"
+                style={{ marginBottom: "20px" }}
+              >
+                <div>
+                  <label style={labelStyle}>Estimated Budget *</label>
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <span
+                        style={{
+                          color: "var(--foreground-muted)",
+                          fontWeight: 600,
+                          fontSize: "14px",
+                        }}
+                      >
+                        {getCurrencySymbol(currency)}
+                      </span>
+                    </div>
+                    <input
+                      type="number"
+                      value={estimatedBudget}
+                      onChange={(e) => setEstimatedBudget(e.target.value)}
+                      style={{ ...inputStyle, paddingLeft: "48px" }}
+                      placeholder="0.00"
+                      step="0.01"
+                      min="0"
+                      required
                     />
                   </div>
-                  <input
-                    type="number"
-                    value={estimatedBudget}
-                    onChange={(e) => setEstimatedBudget(e.target.value)}
-                    style={{ ...inputStyle, paddingLeft: "44px" }}
-                    placeholder="0.00"
-                    step="0.01"
-                    min="0"
-                    required
-                  />
+                </div>
+
+                <div>
+                  <label className="flex items-center gap-2" style={labelStyle}>
+                    <Coins className="w-4 h-4" style={{ color: "#f59e0b" }} />
+                    Currency
+                  </label>
+                  <select
+                    value={currency}
+                    onChange={(e) =>
+                      setCurrency(e.target.value as CurrencyCode)
+                    }
+                    style={inputStyle}
+                  >
+                    {CURRENCY_LIST.map((curr) => (
+                      <option key={curr.code} value={curr.code}>
+                        {curr.code} - {curr.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
