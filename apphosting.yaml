@@ -23,8 +23,8 @@ env:
 
   # --- Server-Side Secrets (Stored in Secret Manager) ---
   - variable: FIREBASE_PROJECT_ID
-    secret: FIREBASE_PROJECT_ID_SECRET
+    secret: projects/75723235538/secrets/FIREBASE_PROJECT_ID_SECRET
   - variable: FIREBASE_CLIENT_EMAIL
-    secret: FIREBASE_CLIENT_EMAIL_SECRET
+    secret: projects/75723235538/secrets/FIREBASE_CLIENT_EMAIL_SECRET
   - variable: FIREBASE_PRIVATE_KEY
-    secret: FIREBASE_PRIVATE_KEY_SECRET
+    secret: projects/75723235538/secrets/FIREBASE_PRIVATE_KEY_SECRET
