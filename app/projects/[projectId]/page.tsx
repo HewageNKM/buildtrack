@@ -11,7 +11,7 @@ import {
   TeamMemberRole,
 } from "@/types";
 import { api } from "@/lib/api";
-import { formatCurrency } from "@/lib/currency";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/currency";
 
 import Navbar from "@/components/common/Navbar";
 import { PageLoader } from "@/components/common/LoadingSpinner";
@@ -24,7 +24,6 @@ import TeamManagementModal from "@/components/projects/TeamManagementModal";
 import {
   ArrowLeft,
   Plus,
-  DollarSign,
   TrendingDown,
   TrendingUp,
   Receipt,
@@ -186,7 +185,8 @@ export default function ProjectDetailPage({
       <Navbar />
 
       <main
-        style={{ maxWidth: "1200px", margin: "0 auto", padding: "16px 24px" }}
+        className="container"
+        style={{ paddingBottom: "2rem", paddingTop: "2rem" }}
       >
         {/* Back Button & Header */}
         <div className="mb-6">
@@ -213,10 +213,10 @@ export default function ProjectDetailPage({
                 {project.description || "No description"}
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3 w-full md:w-auto">
               <button
                 onClick={() => setShowTeamModal(true)}
-                className="flex items-center gap-2 rounded-xl transition-colors"
+                className="flex items-center justify-center gap-2 rounded-xl transition-colors flex-1 md:flex-none"
                 style={{
                   padding: "12px 20px",
                   backgroundColor: "var(--background-secondary)",
@@ -226,14 +226,14 @@ export default function ProjectDetailPage({
                 }}
               >
                 <Users className="w-5 h-5" style={{ color: "#8b5cf6" }} />
-                Team ({teamMembers.length})
+                <span>Team ({teamMembers.length})</span>
               </button>
               <button
                 onClick={() => {
                   setEditingEntry(undefined);
                   setShowAddModal(true);
                 }}
-                className="flex items-center gap-2 rounded-xl text-white"
+                className="flex items-center justify-center gap-2 rounded-xl text-white flex-1 md:flex-none"
                 style={{
                   padding: "12px 20px",
                   background:
@@ -244,7 +244,7 @@ export default function ProjectDetailPage({
                 }}
               >
                 <Plus className="w-5 h-5" />
-                Add Entry
+                <span>Add Entry</span>
               </button>
             </div>
           </div>
@@ -254,15 +254,24 @@ export default function ProjectDetailPage({
         <div className="grid-cols-stats mb-6 mt-8">
           <div className="card">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-primary/10 rounded-lg">
-                <DollarSign className="w-6 h-6 text-primary" />
+              <div className="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-lg">
+                <span className="text-primary font-bold text-sm">LKR</span>
               </div>
               <div>
                 <p className="text-sm text-foreground-muted">
                   Estimated Budget
                 </p>
-                <p className="text-2xl font-bold">
-                  {formatCurrency(project.estimatedBudget, project.currency)}
+                <p
+                  className="text-2xl font-bold"
+                  title={formatCurrency(
+                    project.estimatedBudget,
+                    project.currency
+                  )}
+                >
+                  {formatCurrencyCompact(
+                    project.estimatedBudget,
+                    project.currency
+                  )}
                 </p>
               </div>
             </div>
@@ -275,8 +284,11 @@ export default function ProjectDetailPage({
               </div>
               <div>
                 <p className="text-sm text-foreground-muted">Total Spent</p>
-                <p className="text-2xl font-bold">
-                  {formatCurrency(totalSpent, project.currency)}
+                <p
+                  className="text-2xl font-bold"
+                  title={formatCurrency(totalSpent, project.currency)}
+                >
+                  {formatCurrencyCompact(totalSpent, project.currency)}
                 </p>
               </div>
             </div>
@@ -300,12 +312,11 @@ export default function ProjectDetailPage({
                   {isOverBudget ? "Over Budget" : "Remaining"}
                 </p>
                 <p
-                  className={`text-2xl font-bold ${
-                    isOverBudget ? "text-error" : "text-success"
-                  }`}
+                  className="text-2xl font-bold"
+                  title={formatCurrency(Math.abs(remaining), project.currency)}
                 >
                   {isOverBudget ? "+" : ""}
-                  {formatCurrency(Math.abs(remaining), project.currency)}
+                  {formatCurrencyCompact(Math.abs(remaining), project.currency)}
                 </p>
               </div>
             </div>
@@ -352,14 +363,19 @@ export default function ProjectDetailPage({
           <BudgetOverviewChart
             estimatedBudget={project.estimatedBudget}
             totalSpent={totalSpent}
+            currency={project.currency}
           />
-          <CategoryBreakdownChart entries={entries} />
+          <CategoryBreakdownChart
+            entries={entries}
+            currency={project.currency}
+          />
         </div>
 
         <div className="mb-6">
           <SpendingTimelineChart
             entries={entries}
             estimatedBudget={project.estimatedBudget}
+            currency={project.currency}
           />
         </div>
 
@@ -427,8 +443,11 @@ export default function ProjectDetailPage({
                         </div>
                       </td>
                       <td className="max-w-xs truncate">{entry.description}</td>
-                      <td className="font-medium">
-                        {formatCurrency(entry.amount, project.currency)}
+                      <td
+                        className="font-medium"
+                        title={formatCurrency(entry.amount, project.currency)}
+                      >
+                        {formatCurrencyCompact(entry.amount, project.currency)}
                       </td>
                       <td>
                         {entry.invoiceUrl ? (

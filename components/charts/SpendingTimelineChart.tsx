@@ -10,17 +10,19 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import { BudgetEntry } from "@/types";
+import { BudgetEntry, CurrencyCode } from "@/types";
 import { format, parseISO } from "date-fns";
 
 interface SpendingTimelineChartProps {
   entries: BudgetEntry[];
   estimatedBudget: number;
+  currency: CurrencyCode;
 }
 
 export default function SpendingTimelineChart({
   entries,
   estimatedBudget,
+  currency,
 }: SpendingTimelineChartProps) {
   // Sort entries by date and calculate cumulative spending
   const sortedEntries = [...entries].sort(
@@ -48,7 +50,7 @@ export default function SpendingTimelineChart({
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: currency || "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);

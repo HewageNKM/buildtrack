@@ -8,7 +8,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import { ProjectWithStats, CurrencyCode, Project } from "@/types";
 import { api } from "@/lib/api";
-import { formatCurrency, DEFAULT_CURRENCY } from "@/lib/currency";
+import {
+  formatCurrency,
+  formatCurrencyCompact,
+  DEFAULT_CURRENCY,
+} from "@/lib/currency";
 
 import Navbar from "@/components/common/Navbar";
 import { PageLoader } from "@/components/common/LoadingSpinner";
@@ -125,24 +129,28 @@ export default function ProjectsPage() {
       icon: FolderKanban,
       label: "Active Projects",
       value: activeProjects,
+      fullValue: activeProjects.toString(),
       color: "#8b5cf6",
     },
     {
       icon: DollarSign,
       label: "Total Budget",
-      value: formatCurrency(totalBudget, DEFAULT_CURRENCY),
+      value: formatCurrencyCompact(totalBudget, DEFAULT_CURRENCY),
+      fullValue: formatCurrency(totalBudget, DEFAULT_CURRENCY),
       color: "#ec4899",
     },
     {
       icon: TrendingUp,
       label: "Total Spent",
-      value: formatCurrency(totalSpent, DEFAULT_CURRENCY),
+      value: formatCurrencyCompact(totalSpent, DEFAULT_CURRENCY),
+      fullValue: formatCurrency(totalSpent, DEFAULT_CURRENCY),
       color: "#06b6d4",
     },
     {
       icon: AlertTriangle,
       label: "Over Budget",
       value: overBudgetProjects,
+      fullValue: overBudgetProjects.toString(),
       color: overBudgetProjects > 0 ? "#ef4444" : "#10b981",
     },
   ];
@@ -168,7 +176,8 @@ export default function ProjectsPage() {
       <Navbar />
 
       <main
-        style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 24px" }}
+        className="container"
+        style={{ paddingTop: "40px", paddingBottom: "40px" }}
       >
         {/* Header */}
         <motion.div
@@ -207,7 +216,7 @@ export default function ProjectsPage() {
 
         {/* Stats Cards */}
         <motion.div
-          className="flex flex-row justify-between flex-wrap gap-5"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
           style={{ marginBottom: "40px" }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -216,7 +225,7 @@ export default function ProjectsPage() {
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
-              className="rounded-2xl w-fit"
+              className="rounded-2xl w-full"
               style={{
                 padding: "24px",
                 backgroundColor: "var(--card)",
@@ -233,11 +242,21 @@ export default function ProjectsPage() {
                   style={{
                     width: "52px",
                     height: "52px",
-                    background: `linear-gradient(135deg, ${stat.color} 0%, ${stat.color}aa 100%)`,
-                    boxShadow: `0 8px 20px ${stat.color}35`,
+                    background:
+                      stat.label === "Total Budget"
+                        ? "rgba(129, 140, 248, 0.15)"
+                        : `linear-gradient(135deg, ${stat.color} 0%, ${stat.color}aa 100%)`,
+                    boxShadow:
+                      stat.label === "Total Budget"
+                        ? "none"
+                        : `0 8px 20px ${stat.color}35`,
                   }}
                 >
-                  <stat.icon className="w-6 h-6 text-white" />
+                  {stat.label === "Total Budget" ? (
+                    <span className="text-primary font-bold text-sm">LKR</span>
+                  ) : (
+                    <stat.icon className="w-6 h-6 text-white" />
+                  )}
                 </div>
                 <div className="flex-1">
                   <p
@@ -256,6 +275,7 @@ export default function ProjectsPage() {
                       fontWeight: 900,
                       lineHeight: "1.2",
                     }}
+                    title={stat.fullValue}
                   >
                     {stat.value}
                   </p>

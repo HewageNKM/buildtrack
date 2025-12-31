@@ -8,14 +8,16 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { BUDGET_CATEGORIES, BudgetEntry } from "@/types";
+import { BUDGET_CATEGORIES, BudgetEntry, CurrencyCode } from "@/types";
 
 interface CategoryBreakdownChartProps {
   entries: BudgetEntry[];
+  currency: CurrencyCode;
 }
 
 export default function CategoryBreakdownChart({
   entries,
+  currency,
 }: CategoryBreakdownChartProps) {
   // Aggregate spending by category
   const categoryTotals = entries.reduce((acc, entry) => {
@@ -34,7 +36,7 @@ export default function CategoryBreakdownChart({
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: currency || "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);

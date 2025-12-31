@@ -81,13 +81,13 @@ export function formatCurrencyCompact(
 ): string {
   const currency = CURRENCIES[currencyCode] || CURRENCIES[DEFAULT_CURRENCY];
 
-  if (amount >= 1000000) {
-    return `${currency.symbol} ${(amount / 1000000).toFixed(1)}M`;
-  } else if (amount >= 1000) {
-    return `${currency.symbol} ${(amount / 1000).toFixed(1)}K`;
-  }
-
-  return formatCurrency(amount, currencyCode);
+  return new Intl.NumberFormat(currency.locale, {
+    style: "currency",
+    currency: currency.code,
+    notation: "compact",
+    compactDisplay: "short",
+    maximumFractionDigits: 1,
+  }).format(amount);
 }
 
 /**

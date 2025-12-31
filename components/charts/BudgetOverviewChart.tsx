@@ -11,14 +11,18 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+import { CurrencyCode } from "@/types";
+
 interface BudgetOverviewChartProps {
   estimatedBudget: number;
   totalSpent: number;
+  currency: CurrencyCode;
 }
 
 export default function BudgetOverviewChart({
   estimatedBudget,
   totalSpent,
+  currency,
 }: BudgetOverviewChartProps) {
   const remaining = Math.max(estimatedBudget - totalSpent, 0);
   const overBudget = Math.max(totalSpent - estimatedBudget, 0);
@@ -36,7 +40,7 @@ export default function BudgetOverviewChart({
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: currency || "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);

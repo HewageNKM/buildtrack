@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Project } from "@/types";
-import { formatCurrency, DEFAULT_CURRENCY } from "@/lib/currency";
+import {
+  formatCurrency,
+  formatCurrencyCompact,
+  DEFAULT_CURRENCY,
+} from "@/lib/currency";
 import {
   FolderKanban,
   Calendar,
@@ -297,8 +301,11 @@ export default function ProjectCard({
               >
                 Spent
               </p>
-              <p style={{ fontSize: "18px", fontWeight: 700 }}>
-                {formatCurrency(totalSpent, projectCurrency)}
+              <p
+                style={{ fontSize: "18px", fontWeight: 700 }}
+                title={formatCurrency(totalSpent, projectCurrency)}
+              >
+                {formatCurrencyCompact(totalSpent, projectCurrency)}
               </p>
             </div>
             <div style={{ textAlign: "right" }}>
@@ -317,9 +324,10 @@ export default function ProjectCard({
                   fontWeight: 700,
                   color: isOverBudget ? "#ef4444" : "#10b981",
                 }}
+                title={formatCurrency(Math.abs(remaining), projectCurrency)}
               >
                 {isOverBudget ? "+" : ""}
-                {formatCurrency(Math.abs(remaining), projectCurrency)}
+                {formatCurrencyCompact(Math.abs(remaining), projectCurrency)}
               </p>
             </div>
           </div>
