@@ -6,13 +6,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   Project,
   BudgetEntry,
-  BudgetCategory,
   BUDGET_CATEGORIES,
-  TeamMember,
   TeamMemberRole,
 } from "@/types";
 import { api } from "@/lib/api";
-import { formatCurrency, DEFAULT_CURRENCY } from "@/lib/currency";
+import { formatCurrency } from "@/lib/currency";
 
 import Navbar from "@/components/common/Navbar";
 import { PageLoader } from "@/components/common/LoadingSpinner";
@@ -170,10 +168,10 @@ export default function ProjectDetailPage({
       <Navbar />
 
       <main
-        style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 24px" }}
+        style={{ maxWidth: "1200px", margin: "0 auto", padding: "16px 24px" }}
       >
         {/* Back Button & Header */}
-        <div className="mb-8">
+        <div className="mb-2">
           <Link
             href="/projects"
             className="inline-flex items-center gap-2 text-foreground-muted hover:text-foreground transition-colors mb-4"
@@ -232,7 +230,7 @@ export default function ProjectDetailPage({
         </div>
 
         {/* Stats Cards */}
-        <div className="grid-cols-stats mb-8">
+        <div className="grid-cols-stats mb-2 mt-5">
           <div className="card">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-primary/10 rounded-lg">
@@ -306,7 +304,7 @@ export default function ProjectDetailPage({
         </div>
 
         {/* Progress Bar */}
-        <div className="card mb-8">
+        <div className="card mb-2">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-foreground-muted">
               Budget Progress
@@ -329,7 +327,7 @@ export default function ProjectDetailPage({
         </div>
 
         {/* Charts */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 gap-2 mb-2">
           <BudgetOverviewChart
             estimatedBudget={project.estimatedBudget}
             totalSpent={totalSpent}
@@ -337,7 +335,7 @@ export default function ProjectDetailPage({
           <CategoryBreakdownChart entries={entries} />
         </div>
 
-        <div className="mb-8">
+        <div className="mb-2">
           <SpendingTimelineChart
             entries={entries}
             estimatedBudget={project.estimatedBudget}
