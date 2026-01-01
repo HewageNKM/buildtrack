@@ -25,12 +25,17 @@ export async function POST(
       );
     }
 
-    const release = await releaseService.createRelease(projectId, auth.uid, {
+    const release = await releaseService.createRelease(
       projectId,
-      amount: Number(amount),
-      date,
-      note,
-    });
+      auth.uid,
+      {
+        projectId,
+        amount: Number(amount),
+        date,
+        note,
+      },
+      auth.email
+    );
 
     return NextResponse.json({ release });
   } catch (error: any) {

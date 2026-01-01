@@ -15,7 +15,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await releaseService.deleteRelease(releaseId, projectId, auth.uid);
+    await releaseService.deleteRelease(
+      releaseId,
+      projectId,
+      auth.uid,
+      auth.email
+    );
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

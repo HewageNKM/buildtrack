@@ -14,7 +14,8 @@ export class BudgetReleaseService {
   async createRelease(
     projectId: string,
     userId: string,
-    data: Omit<BudgetRelease, "id" | "createdAt" | "createdBy">
+    data: Omit<BudgetRelease, "id" | "createdAt" | "createdBy">,
+    userEmail?: string
   ): Promise<BudgetRelease> {
     // 1. Verify project access (basic check)
     const project = await this.projectRepo.getById(projectId);
@@ -23,11 +24,16 @@ export class BudgetReleaseService {
     if (project.userId !== userId) {
       // In a real app, check team permissions more granularly
       // For now, assuming only owner or editors can release funds
+
       const isMember = project.teamMembers?.some(
         (m) =>
-          m.userId === userId && (m.role === "owner" || m.role === "editor")
+          (m.userId === userId || (userEmail && m.email === userEmail)) &&
+          (m.role === "owner" || m.role === "editor")
       );
-      if (!isMember) throw new Error("Unauthorized to release funds");
+      if (!isMember) {
+        console.error("Release auth failed for user:", userId, userEmail);
+        throw new Error("Unauthorized to release funds");
+      }
     }
 
     // 2. Validate against Estimated Budget
@@ -64,7 +70,8 @@ export class BudgetReleaseService {
   async deleteRelease(
     releaseId: string,
     projectId: string,
-    userId: string
+    userId: string,
+    userEmail?: string
   ): Promise<void> {
     const project = await this.projectRepo.getById(projectId);
     if (!project) throw new Error("Project not found");
@@ -73,7 +80,8 @@ export class BudgetReleaseService {
     if (project.userId !== userId) {
       const isPrivileged = project.teamMembers?.some(
         (m) =>
-          m.userId === userId && (m.role === "owner" || m.role === "editor")
+          (m.userId === userId || (userEmail && m.email === userEmail)) &&
+          (m.role === "owner" || m.role === "editor")
       );
       if (!isPrivileged) throw new Error("Unauthorized");
     }
