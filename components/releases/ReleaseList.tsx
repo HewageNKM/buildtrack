@@ -1,10 +1,10 @@
 import { BudgetRelease } from "@/types";
-import { formatCurrency, DEFAULT_CURRENCY } from "@/lib/currency";
+import { formatCurrency, DEFAULT_CURRENCY, CurrencyCode } from "@/lib/currency";
 import { Trash2, TrendingUp } from "lucide-react";
 
 interface ReleaseListProps {
   releases: BudgetRelease[];
-  currency?: string;
+  currency?: CurrencyCode;
   onDelete: (id: string) => void;
   isOwner: boolean;
 }
