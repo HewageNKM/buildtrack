@@ -21,10 +21,11 @@ env:
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
     value: 1:75723235538:web:dc65a06c80939c18180d0b
 
-  # --- Server-Side Secrets (Stored in Secret Manager) ---
+  # --- Server-Side Secrets ---
+secrets:
   - variable: FIREBASE_PROJECT_ID
-    secret: projects/75723235538/secrets/FIREBASE_PROJECT_ID_SECRET
+    secret: FIREBASE_PROJECT_ID
   - variable: FIREBASE_CLIENT_EMAIL
-    secret: projects/75723235538/secrets/FIREBASE_CLIENT_EMAIL_SECRET
+    secret: FIREBASE_CLIENT_EMAIL
   - variable: FIREBASE_PRIVATE_KEY
-    secret: projects/75723235538/secrets/FIREBASE_PRIVATE_KEY_SECRET
+    secret: FIREBASE_PRIVATE_KEY
