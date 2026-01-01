@@ -108,94 +108,59 @@ export default function LoginPage() {
     }
   };
 
+  // Shared classes matching Form Modals
+  const inputClass =
+    "w-full px-4 py-3.5 pl-12 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-xl text-sm transition-all outline-none text-foreground placeholder:text-foreground-muted/50 focus:border-accent-violet/50 focus:bg-[var(--input-focus-bg)] focus:shadow-md";
+
   return (
-    <div
-      style={{
-        backgroundColor: "var(--background)",
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "48px 24px",
-      }}
-    >
+    <div className="min-h-screen flex items-center justify-center p-6 bg-[var(--background)]">
       {/* Background Effects */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div
-          className="absolute top-20 -left-20 w-[400px] h-[400px] rounded-full opacity-25 blur-[100px]"
-          style={{
-            background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-          }}
-        />
-        <div
-          className="absolute bottom-20 -right-20 w-[400px] h-[400px] rounded-full opacity-20 blur-[100px]"
-          style={{
-            background: "linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)",
-          }}
-        />
+        <div className="absolute top-20 -left-20 w-[400px] h-[400px] rounded-full opacity-25 blur-[100px] bg-gradient-to-br from-accent-violet to-primary" />
+        <div className="absolute bottom-20 -right-20 w-[400px] h-[400px] rounded-full opacity-20 blur-[100px] bg-gradient-to-br from-accent-cyan to-blue-500" />
       </div>
 
       {/* Theme Toggle */}
       <motion.button
         onClick={toggleTheme}
-        className="fixed top-6 right-6 flex items-center justify-center rounded-xl z-50"
-        style={{
-          width: "48px",
-          height: "48px",
-          backgroundColor: "var(--card)",
-          border: "1px solid var(--border)",
-        }}
+        className="fixed top-6 right-6 w-12 h-12 flex items-center justify-center rounded-xl z-50 glass-card text-foreground"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
         {theme === "dark" ? (
-          <Sun className="w-5 h-5" style={{ color: "#fbbf24" }} />
+          <Sun className="w-5 h-5 text-amber-400" />
         ) : (
-          <Moon className="w-5 h-5" style={{ color: "#8b5cf6" }} />
+          <Moon className="w-5 h-5 text-accent-violet" />
         )}
       </motion.button>
 
       <motion.div
-        style={{ width: "100%", maxWidth: "420px" }}
+        className="w-full max-w-[420px]"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         {/* Logo */}
-        <div style={{ textAlign: "center", marginBottom: "40px" }}>
+        <div className="text-center mb-10">
           <Link href="/" className="inline-block">
             <motion.div
-              className="flex items-center justify-center rounded-2xl mx-auto"
-              style={{
-                width: "80px",
-                height: "80px",
-                marginBottom: "20px",
-                background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-                boxShadow: "0 12px 35px rgba(139, 92, 246, 0.4)",
-              }}
+              className="flex items-center justify-center w-20 h-20 rounded-2xl mx-auto mb-5 bg-gradient-to-br from-accent-violet to-primary shadow-[0_12px_35px_rgba(139,92,246,0.4)]"
               whileHover={{ scale: 1.05, rotate: 5 }}
             >
               <HardHat className="w-10 h-10 text-white" />
             </motion.div>
           </Link>
-          <h1
-            style={{ fontSize: "32px", fontWeight: 900, marginBottom: "8px" }}
-          >
-            Welcome <span className="text-gradient">back</span>
+          <h1 className="text-3xl font-black mb-2 text-foreground">
+            Welcome <span className="text-accent-violet">back</span>
           </h1>
-          <p style={{ color: "var(--foreground-muted)", fontSize: "16px" }}>
+          <p className="text-foreground-muted text-base">
             Sign in to your account to continue
           </p>
         </div>
 
         {/* Form Card */}
         <motion.div
-          className="rounded-3xl"
-          style={{
-            padding: "40px 32px",
-            backgroundColor: "var(--card)",
-            border: "1px solid var(--border)",
-          }}
+          className="glass-card rounded-3xl p-8 sm:p-10"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
@@ -205,21 +170,10 @@ export default function LoginPage() {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={googleLoading || loading}
-            className="w-full flex items-center justify-center gap-3 rounded-xl transition-all"
-            style={{
-              padding: "14px 24px",
-              backgroundColor: "var(--background-secondary)",
-              border: "2px solid var(--border)",
-              fontSize: "15px",
-              fontWeight: 600,
-              marginBottom: "24px",
-              opacity: googleLoading ? 0.7 : 1,
-            }}
-            whileHover={{
-              scale: googleLoading ? 1 : 1.02,
-              borderColor: "var(--primary)",
-            }}
+            className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] text-foreground font-semibold hover:bg-[var(--input-focus-bg)] hover:border-accent-violet/30 transition-all mb-6"
+            whileHover={{ scale: googleLoading ? 1 : 1.02 }}
             whileTap={{ scale: googleLoading ? 1 : 0.98 }}
+            style={{ opacity: googleLoading ? 0.7 : 1 }}
           >
             {googleLoading ? (
               <LoadingSpinner size="sm" />
@@ -232,41 +186,18 @@ export default function LoginPage() {
           </motion.button>
 
           {/* Divider */}
-          <div
-            className="flex items-center gap-4"
-            style={{ marginBottom: "24px" }}
-          >
-            <div
-              className="flex-1"
-              style={{ height: "1px", backgroundColor: "var(--border)" }}
-            />
-            <span
-              style={{
-                fontSize: "13px",
-                color: "var(--foreground-muted)",
-                fontWeight: 500,
-              }}
-            >
+          <div className="flex items-center gap-4 mb-6">
+            <div className="flex-1 h-px bg-[var(--input-border)]" />
+            <span className="text-xs font-medium text-foreground-muted uppercase tracking-wider">
               or
             </span>
-            <div
-              className="flex-1"
-              style={{ height: "1px", backgroundColor: "var(--border)" }}
-            />
+            <div className="flex-1 h-px bg-[var(--input-border)]" />
           </div>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <motion.div
-                className="flex items-center gap-3 rounded-xl"
-                style={{
-                  padding: "16px",
-                  marginBottom: "24px",
-                  backgroundColor: "rgba(239, 68, 68, 0.1)",
-                  border: "1px solid rgba(239, 68, 68, 0.3)",
-                  color: "#f87171",
-                  fontSize: "14px",
-                }}
+                className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-sm"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
               >
@@ -275,72 +206,38 @@ export default function LoginPage() {
               </motion.div>
             )}
 
-            <div style={{ marginBottom: "20px" }}>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  marginBottom: "8px",
-                }}
-              >
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-foreground-muted">
                 Email Address
               </label>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <Mail
-                    className="w-5 h-5"
-                    style={{ color: "var(--foreground-muted)" }}
-                  />
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-accent-violet">
+                  <Mail className="w-5 h-5 text-foreground-muted" />
                 </div>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl transition-all"
-                  style={{
-                    padding: "16px 16px 16px 48px",
-                    backgroundColor: "var(--background-secondary)",
-                    border: "2px solid transparent",
-                    fontSize: "15px",
-                    color: "var(--foreground)",
-                  }}
+                  className={inputClass}
                   placeholder="you@example.com"
                   required
                 />
               </div>
             </div>
 
-            <div style={{ marginBottom: "28px" }}>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  marginBottom: "8px",
-                }}
-              >
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-foreground-muted">
                 Password
               </label>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <Lock
-                    className="w-5 h-5"
-                    style={{ color: "var(--foreground-muted)" }}
-                  />
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-accent-violet">
+                  <Lock className="w-5 h-5 text-foreground-muted" />
                 </div>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl transition-all"
-                  style={{
-                    padding: "16px 16px 16px 48px",
-                    backgroundColor: "var(--background-secondary)",
-                    border: "2px solid transparent",
-                    fontSize: "15px",
-                    color: "var(--foreground)",
-                  }}
+                  className={inputClass}
                   placeholder="••••••••"
                   required
                 />
@@ -350,15 +247,7 @@ export default function LoginPage() {
             <motion.button
               type="submit"
               disabled={loading || googleLoading}
-              className="w-full flex items-center justify-center gap-2 rounded-xl text-white transition-all"
-              style={{
-                padding: "16px 24px",
-                background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-                fontSize: "16px",
-                fontWeight: 700,
-                boxShadow: "0 8px 25px rgba(139, 92, 246, 0.4)",
-                opacity: loading ? 0.7 : 1,
-              }}
+              className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-gradient-to-r from-accent-violet to-primary text-white font-bold shadow-[0_8px_25px_rgba(139,92,246,0.4)] hover:shadow-[0_12px_30px_rgba(139,92,246,0.6)] hover:from-accent-violet hover:to-indigo-500 transition-all mt-2"
               whileHover={{ scale: loading ? 1 : 1.02 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
             >
@@ -374,12 +263,12 @@ export default function LoginPage() {
             </motion.button>
           </form>
 
-          <div style={{ marginTop: "32px", textAlign: "center" }}>
-            <p style={{ color: "var(--foreground-muted)", fontSize: "14px" }}>
+          <div className="mt-8 text-center text-sm text-foreground-muted">
+            <p>
               Don&apos;t have an account?{" "}
               <Link
                 href="/register"
-                style={{ color: "#8b5cf6", fontWeight: 600 }}
+                className="font-bold text-accent-violet hover:text-primary transition-colors"
               >
                 Create one
               </Link>

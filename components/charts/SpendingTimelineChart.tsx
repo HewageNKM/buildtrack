@@ -150,7 +150,12 @@ export default function SpendingTimelineChart({
               dataKey="cumulative"
               stroke="#8b5cf6" // accent-violet
               strokeWidth={3}
-              dot={{ fill: "#8b5cf6", stroke: "#0f172a", strokeWidth: 2, r: 4 }}
+              dot={{
+                fill: "#8b5cf6",
+                stroke: "#0f172a",
+                strokeWidth: 2,
+                r: 4,
+              }}
               activeDot={{
                 r: 6,
                 fill: "#8b5cf6",

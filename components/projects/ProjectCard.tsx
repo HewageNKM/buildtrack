@@ -20,8 +20,6 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-// Let's check imports. No clsx/cn in original file. I will avoid adding new imports that might break if files don't exist. I'll use standard template literals.
-
 interface ProjectCardProps {
   project: Project & { totalSpent?: number };
   onDelete?: (projectId: string) => void;
@@ -101,11 +99,11 @@ export default function ProjectCard({
 
   return (
     <motion.div
-      className="relative rounded-3xl group glass-card hover:border-white/10 transition-all duration-300"
+      className="relative rounded-3xl group glass-card hover:border-[var(--card-border)] transition-all duration-300 overflow-hidden"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      whileHover={{ y: -6, boxShadow: "0 20px 40px -10px rgba(0,0,0,0.3)" }}
+      whileHover={{ y: -6, boxShadow: "var(--shadow-glow)" }}
     >
       {/* Gradient Top Bar */}
       <div
@@ -119,7 +117,7 @@ export default function ProjectCard({
             e.preventDefault();
             setShowMenu(!showMenu);
           }}
-          className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-foreground-muted hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+          className="flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--input-bg)] hover:bg-[var(--input-focus-bg)] text-foreground-muted hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
         >
           <MoreVertical className="w-4 h-4" />
         </button>
@@ -134,7 +132,7 @@ export default function ProjectCard({
               }}
             />
             <motion.div
-              className="absolute right-0 top-10 w-36 rounded-xl overflow-hidden bg-[#0f172a] border border-white/10 shadow-xl z-20"
+              className="absolute right-0 top-10 w-36 rounded-xl overflow-hidden bg-[var(--card)] border border-[var(--card-border)] shadow-xl z-20 backdrop-blur-xl"
               initial={{ opacity: 0, scale: 0.95, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
             >
@@ -144,7 +142,7 @@ export default function ProjectCard({
                   setShowMenu(false);
                   onEdit?.(project);
                 }}
-                className="flex items-center gap-2 w-full p-3 text-sm text-foreground hover:bg-white/5 transition-colors"
+                className="flex items-center gap-2 w-full p-3 text-sm text-foreground hover:bg-[var(--input-bg)] transition-colors"
               >
                 <Edit className="w-4 h-4" />
                 Edit
@@ -175,91 +173,95 @@ export default function ProjectCard({
             <FolderKanban className="w-7 h-7" />
           </div>
           <div className="flex-1 min-w-0 pt-1">
-            <h3 className="text-lg font-bold text-white truncate pr-6 mb-1 group-hover:text-accent-violet transition-colors">
+            <h3 className="text-lg font-bold text-foreground truncate pr-6 mb-1 group-hover:text-accent-violet transition-colors">
               {project.name}
             </h3>
-            <p className="text-sm text-foreground-muted line-clamp-1">
-              {project.description || "No description provided"}
+            <p className="text-sm text-foreground-muted line-clamp-2 leading-relaxed">
+              {project.description || "No description"}
             </p>
           </div>
         </div>
 
-        <div className="space-y-4">
-          {/* Status & Date */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span
-                className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusBadgeStyles()}`}
-              >
-                {getStatusLabel()}
-              </span>
-              {isOverBudget && (
-                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
-                  <AlertTriangle className="w-3 h-3" />
-                  Over
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-foreground-muted font-medium">
-              <Calendar className="w-3.5 h-3.5" />
-              {new Date(project.startDate).toLocaleDateString()}
-            </div>
-          </div>
-
-          {/* Budget Progress */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-foreground-muted font-medium">
-                Budget Used
-              </span>
-              <span className="text-sm font-bold text-white">
-                {progress.toFixed(0)}%
-              </span>
-            </div>
-            <div className="h-2 rounded-full bg-white/5 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${getProgressColorClass()}`}
-                style={{ width: `${Math.min(progress, 100)}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Amounts */}
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
-            <div>
-              <p className="text-xs text-foreground-muted mb-1 font-medium">
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-[var(--input-bg)] rounded-xl p-3 border border-[var(--input-border)]">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">
+                <TrendingUp className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-xs font-bold text-foreground-muted">
                 Spent
-              </p>
-              <p
-                className="text-lg font-bold text-white tracking-tight"
-                title={formatCurrency(totalSpent, projectCurrency)}
-              >
-                {formatCurrencyCompact(totalSpent, projectCurrency)}
-              </p>
+              </span>
             </div>
-            <div className="text-right">
-              <p className="text-xs text-foreground-muted mb-1 font-medium">
-                {isOverBudget ? "Over Budget" : "Remaining"}
-              </p>
-              <p
-                className={`text-lg font-bold tracking-tight ${
-                  isOverBudget ? "text-red-400" : "text-emerald-400"
-                }`}
-                title={formatCurrency(Math.abs(remaining), projectCurrency)}
-              >
-                {isOverBudget ? "+" : ""}
-                {formatCurrencyCompact(Math.abs(remaining), projectCurrency)}
-              </p>
+            <p className="text-lg font-bold text-foreground">
+              {formatCurrencyCompact(totalSpent, projectCurrency)}
+            </p>
+          </div>
+          <div className="bg-[var(--input-bg)] rounded-xl p-3 border border-[var(--input-border)]">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="p-1.5 rounded-lg bg-accent-cyan/10 text-accent-cyan">
+                <Calendar className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-xs font-bold text-foreground-muted">
+                Budget
+              </span>
             </div>
+            <p className="text-lg font-bold text-foreground">
+              {formatCurrencyCompact(project.estimatedBudget, projectCurrency)}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs font-medium">
+            <span
+              className={
+                isOverBudget
+                  ? "text-red-400 font-bold"
+                  : "text-foreground-muted"
+              }
+            >
+              {Math.round(progress)}% utilized
+            </span>
+            <span
+              className={
+                isOverBudget
+                  ? "text-red-400 font-bold"
+                  : "text-foreground-muted"
+              }
+            >
+              {remaining < 0 ? (
+                <span className="flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  {formatCurrencyCompact(
+                    Math.abs(remaining),
+                    projectCurrency
+                  )}{" "}
+                  over
+                </span>
+              ) : (
+                `${formatCurrencyCompact(remaining, projectCurrency)} left`
+              )}
+            </span>
           </div>
 
-          {/* View Project Link */}
-          <div className="flex items-center justify-between pt-3 border-t border-white/5 mt-2">
-            <span className="flex items-center gap-2 text-sm font-semibold text-accent-violet group-hover:text-white transition-colors">
-              <TrendingUp className="w-4 h-4" />
-              View Details
-            </span>
-            <ChevronRight className="w-5 h-5 text-foreground-muted group-hover:text-white group-hover:translate-x-1 transition-all" />
+          <div className="h-2 bg-[var(--input-bg)] rounded-full overflow-hidden">
+            <motion.div
+              className={`h-full ${getProgressColorClass()} shadow-[0_0_10px_rgba(0,0,0,0.2)]`}
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between mt-6 pt-6 border-t border-[var(--card-border)]">
+          <span
+            className={`px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-wider border ${getStatusBadgeStyles()}`}
+          >
+            {getStatusLabel()}
+          </span>
+          <div className="flex items-center gap-1 text-xs font-bold text-accent-violet opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0">
+            View Details <ChevronRight className="w-3 h-3" />
           </div>
         </div>
       </Link>

@@ -34,7 +34,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 bg-background/60 backdrop-blur-md">
+    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-[var(--card-border)] bg-[var(--background)]/60 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
         {/* Logo */}
         <Link
@@ -42,14 +42,14 @@ export default function Navbar() {
           className="flex items-center gap-3 group"
         >
           <motion.div
-            className="flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-tr from-accent-violet to-primary shadow-[0_0_20px_rgba(139,92,246,0.5)] border border-white/20"
+            className="flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-tr from-accent-violet to-primary shadow-[0_0_20px_rgba(139,92,246,0.5)] border border-[var(--card-border)]"
             whileHover={{ scale: 1.05, rotate: 5 }}
             whileTap={{ scale: 0.95 }}
           >
             <HardHat className="w-6 h-6 text-white drop-shadow-md" />
           </motion.div>
           <div className="hidden sm:flex flex-col">
-            <span className="text-xl font-bold tracking-tight text-white leading-none">
+            <span className="text-xl font-bold tracking-tight text-foreground leading-none">
               Build<span className="text-accent-cyan">Track</span>
             </span>
             <span className="text-[10px] font-medium text-foreground-muted tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity -mt-3.5 translate-y-3.5">
@@ -64,18 +64,18 @@ export default function Navbar() {
             <>
               <Link
                 href="/projects"
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-accent-violet/50 transition-all group"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--input-bg)] hover:bg-[var(--input-focus-bg)] border border-[var(--input-border)] hover:border-accent-violet/50 transition-all group"
               >
-                <FolderKanban className="w-4 h-4 text-accent-violet group-hover:text-white transition-colors" />
-                <span className="text-sm font-semibold text-foreground group-hover:text-white">
+                <FolderKanban className="w-4 h-4 text-accent-violet group-hover:text-foreground transition-colors" />
+                <span className="text-sm font-semibold text-foreground group-hover:text-foreground">
                   Projects
                 </span>
               </Link>
 
-              <div className="h-8 w-px bg-white/10" />
+              <div className="h-8 w-px bg-[var(--card-border)]" />
 
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-3 px-3 py-1.5 rounded-full border border-white/5 bg-white/5">
+                <div className="flex items-center gap-3 px-3 py-1.5 rounded-full border border-[var(--card-border)] bg-[var(--input-bg)]">
                   <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-accent-violet to-accent-pink shadow-lg">
                     <User className="w-4 h-4 text-white" />
                   </div>
@@ -100,7 +100,7 @@ export default function Navbar() {
             <>
               <Link
                 href="/login"
-                className="text-sm font-semibold text-foreground-muted hover:text-white transition-colors"
+                className="text-sm font-semibold text-foreground-muted hover:text-foreground transition-colors"
               >
                 Log in
               </Link>
@@ -119,7 +119,7 @@ export default function Navbar() {
         <div className="flex md:hidden items-center gap-3">
           <motion.button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex items-center justify-center w-11 h-11 rounded-xl bg-white/5 border border-white/10 text-foreground"
+            className="flex items-center justify-center w-11 h-11 rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] text-foreground"
             whileTap={{ scale: 0.95 }}
           >
             {mobileMenuOpen ? (
@@ -139,17 +139,17 @@ export default function Navbar() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden overflow-hidden border-t border-white/5 bg-background/95 backdrop-blur-xl"
+            className="md:hidden overflow-hidden border-t border-[var(--card-border)] bg-[var(--background)]/95 backdrop-blur-xl"
           >
             <div className="p-4 space-y-4">
               {user ? (
                 <>
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)]">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-accent-violet to-accent-pink flex items-center justify-center">
                       <User className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="font-semibold text-white">
+                      <p className="font-semibold text-foreground">
                         {user.displayName || "User"}
                       </p>
                       <p className="text-xs text-foreground-muted">
@@ -184,7 +184,7 @@ export default function Navbar() {
                   <Link
                     href="/login"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="w-full p-3.5 rounded-xl bg-white/5 text-center font-semibold text-foreground hover:bg-white/10"
+                    className="w-full p-3.5 rounded-xl bg-[var(--input-bg)] text-center font-semibold text-foreground hover:bg-[var(--input-focus-bg)]"
                   >
                     Log in
                   </Link>

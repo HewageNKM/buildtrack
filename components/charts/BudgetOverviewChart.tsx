@@ -5,13 +5,12 @@ import {
   Bar,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
-
 import { CurrencyCode } from "@/types";
+import { formatCurrency } from "@/lib/currency";
 
 interface BudgetOverviewChartProps {
   estimatedBudget: number;
@@ -24,48 +23,39 @@ export default function BudgetOverviewChart({
   totalSpent,
   currency,
 }: BudgetOverviewChartProps) {
-  const remaining = Math.max(estimatedBudget - totalSpent, 0);
-  const overBudget = Math.max(totalSpent - estimatedBudget, 0);
+  const estimated = estimatedBudget || 0;
+  const spent = totalSpent || 0;
+  const overBudget = Math.max(0, spent - estimated);
+  const spentWithinBudget = Math.min(spent, estimated);
 
+  // Data for the chart
   const data = [
     {
-      name: "Budget",
-      Estimated: estimatedBudget,
-      Spent: totalSpent,
-      Remaining: remaining,
+      name: "Budget vs Spent",
+      Estimated: estimated,
+      Spent: spentWithinBudget,
       "Over Budget": overBudget,
     },
   ];
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency || "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
+  const formatValue = (val: number) => formatCurrency(val, currency);
+
+  const containerClasses = "glass-card p-6 rounded-3xl";
 
   return (
-    <div className="glass-card p-6 rounded-3xl">
-      <h3 className="text-lg font-bold mb-6 text-white">Budget vs. Spending</h3>
+    <div className={containerClasses}>
+      <h3 className="text-lg font-bold mb-6 text-white">Budget Overview</h3>
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
-            data={data}
             layout="vertical"
-            margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+            data={data}
+            margin={{ top: 0, right: 20, left: 0, bottom: 0 }}
+            barGap={8}
           >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              horizontal={false}
-              stroke="rgba(255,255,255,0.1)"
-              opacity={0.5}
-            />
-
             <XAxis
               type="number"
-              tickFormatter={formatCurrency}
+              tickFormatter={formatValue}
               tick={{ fill: "#94a3b8", fontSize: 12 }}
               axisLine={false}
               tickLine={false}
@@ -75,7 +65,7 @@ export default function BudgetOverviewChart({
 
             <Tooltip
               cursor={{ fill: "transparent" }}
-              formatter={(value) => formatCurrency(value as number)}
+              formatter={(value) => formatValue(value as number)}
               contentStyle={{
                 backgroundColor: "#030712", // midnight base
                 border: "1px solid rgba(255,255,255,0.1)",

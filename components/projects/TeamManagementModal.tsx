@@ -38,8 +38,8 @@ const roleLabels: Record<
 > = {
   owner: {
     label: "Owner",
-    color: "text-amber-400",
-    bg: "bg-amber-400/10",
+    color: "text-amber-400 dark:text-amber-400 text-amber-600",
+    bg: "bg-amber-500/10",
     icon: Crown,
   },
   editor: {
@@ -137,7 +137,7 @@ export default function TeamManagementModal({
 
   // Shared classes
   const inputClass =
-    "w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-sm transition-all outline-none text-foreground placeholder:text-foreground-muted/50 focus:border-accent-violet/50 focus:bg-white/10 focus:shadow-[0_0_15px_rgba(139,92,246,0.1)]";
+    "w-full px-4 py-3.5 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-xl text-sm transition-all outline-none text-foreground placeholder:text-foreground-muted/50 focus:border-accent-violet/50 focus:bg-[var(--input-focus-bg)] focus:shadow-md";
 
   return (
     <AnimatePresence>
@@ -150,20 +150,20 @@ export default function TeamManagementModal({
           onClick={onClose}
         >
           <motion.div
-            className="w-full max-w-[520px] glass-card border-white/10 rounded-3xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl"
+            className="w-full max-w-[520px] glass-card rounded-3xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5 shrink-0 backdrop-blur-xl">
+            <div className="flex items-center justify-between p-6 border-b border-[var(--card-border)] bg-[var(--card)] shrink-0 backdrop-blur-xl">
               <div className="flex items-center gap-4">
                 <div className="w-11 h-11 flex items-center justify-center rounded-xl bg-gradient-to-br from-accent-violet to-indigo-600 shadow-lg shadow-indigo-500/30 text-white">
                   <Users className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="text-lg font-bold text-white leading-tight">
+                  <h2 className="text-lg font-bold text-foreground leading-tight">
                     Team Management
                   </h2>
                   <p className="text-xs text-foreground-muted truncate">
@@ -173,7 +173,7 @@ export default function TeamManagementModal({
               </div>
               <button
                 onClick={onClose}
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 text-foreground-muted hover:bg-white/10 hover:text-white transition-colors"
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--input-bg)] text-foreground-muted hover:bg-[var(--input-focus-bg)] hover:text-foreground transition-colors border border-[var(--input-border)]"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -186,7 +186,7 @@ export default function TeamManagementModal({
                   <form onSubmit={handleInvite} className="space-y-3">
                     {error && (
                       <motion.div
-                        className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm"
+                        className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-sm"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                       >
@@ -249,7 +249,7 @@ export default function TeamManagementModal({
                       <motion.button
                         type="button"
                         onClick={handleCopyInvite}
-                        className="px-5 py-3.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 text-foreground-muted transition-all"
+                        className="px-5 py-3.5 rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] hover:bg-[var(--input-focus-bg)] text-foreground-muted transition-all"
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.98 }}
                       >
@@ -277,11 +277,11 @@ export default function TeamManagementModal({
                     return (
                       <motion.div
                         key={member.userId}
-                        className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-accent-violet/30 transition-colors group"
+                        className="flex items-center gap-4 p-4 rounded-2xl bg-[var(--input-bg)] border border-[var(--input-border)] hover:border-accent-violet/30 transition-colors group"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                       >
-                        <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 border border-white/10 text-white font-black text-sm shadow-sm shrink-0">
+                        <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--input-focus-bg)] border border-[var(--input-border)] text-foreground font-black text-sm shadow-sm shrink-0">
                           {(member.displayName || member.email)
                             .charAt(0)
                             .toUpperCase()}
@@ -325,7 +325,7 @@ export default function TeamManagementModal({
               </div>
 
               {/* Role Permissions Legend */}
-              <div className="mt-8 p-5 rounded-2xl bg-white/5 border border-white/5">
+              <div className="mt-8 p-5 rounded-2xl bg-[var(--input-bg)] border border-[var(--input-border)]">
                 <p className="text-xs font-black uppercase tracking-widest text-foreground-muted mb-4">
                   Permission Matrix
                 </p>
@@ -335,7 +335,8 @@ export default function TeamManagementModal({
                       icon: Crown,
                       label: "Owner",
                       desc: "Full administrative access & billing control.",
-                      color: "text-amber-400",
+                      color:
+                        "text-amber-400 dark:text-amber-400 text-amber-600",
                     },
                     {
                       icon: Edit3,

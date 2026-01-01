@@ -154,7 +154,7 @@ export default function AddEntryModal({
   const labelClass =
     "flex items-center gap-2 text-sm font-semibold mb-2 text-foreground-muted";
   const inputClass =
-    "w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-accent-violet/50 focus:bg-white/10 focus:shadow-[0_0_15px_rgba(139,92,246,0.1)] outline-none transition-all";
+    "w-full px-4 py-3.5 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-xl text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-accent-violet/50 focus:bg-[var(--input-focus-bg)] focus:shadow-md outline-none transition-all";
 
   return (
     <AnimatePresence>
@@ -167,25 +167,25 @@ export default function AddEntryModal({
           onClick={onClose}
         >
           <motion.div
-            className="w-full max-w-[520px] glass-card border-white/10 rounded-3xl overflow-y-auto max-h-[90vh] shadow-2xl scrollbar-hide"
+            className="w-full max-w-[520px] glass-card rounded-3xl overflow-y-auto max-h-[90vh] shadow-2xl scrollbar-hide"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5 sticky top-0 z-10 backdrop-blur-xl">
+            <div className="flex items-center justify-between p-6 border-b border-[var(--card-border)] bg-[var(--card)] sticky top-0 z-10 backdrop-blur-xl">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 flex items-center justify-center rounded-xl bg-gradient-to-br from-accent-violet to-indigo-600 shadow-lg shadow-indigo-500/30 text-white">
                   <DollarSign className="w-5 h-5" />
                 </div>
-                <h2 className="text-xl font-bold text-white">
+                <h2 className="text-xl font-bold text-foreground">
                   {initialData ? "Edit Entry" : "Add Entry"}
                 </h2>
               </div>
               <button
                 onClick={onClose}
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 text-foreground-muted hover:bg-white/10 hover:text-white transition-colors"
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--input-bg)] text-foreground-muted hover:bg-[var(--input-focus-bg)] hover:text-foreground transition-colors border border-[var(--input-border)]"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -195,7 +195,7 @@ export default function AddEntryModal({
             <form onSubmit={handleSubmit} className="p-6">
               {error && (
                 <motion.div
-                  className="flex items-center gap-3 p-4 mb-6 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm"
+                  className="flex items-center gap-3 p-4 mb-6 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-sm"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                 >
@@ -316,7 +316,6 @@ export default function AddEntryModal({
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     className={inputClass}
-                    style={{ colorScheme: "dark" }}
                   />
                 </div>
               </div>
@@ -330,7 +329,7 @@ export default function AddEntryModal({
 
                 {invoice ? (
                   <motion.div
-                    className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-xl"
+                    className="flex items-center gap-4 p-4 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-xl"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                   >
@@ -369,7 +368,7 @@ export default function AddEntryModal({
                     className={`p-8 rounded-xl border-2 border-dashed transition-all cursor-pointer ${
                       isDragActive
                         ? "bg-accent-violet/10 border-accent-violet"
-                        : "bg-white/5 border-white/10 hover:border-white/30 hover:bg-white/10"
+                        : "bg-[var(--input-bg)] border-[var(--input-border)] hover:border-foreground-muted hover:bg-[var(--input-focus-bg)]"
                     }`}
                   >
                     <input {...getInputProps()} />
@@ -393,12 +392,12 @@ export default function AddEntryModal({
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3">
+              <div className="flex gap-3 pt-4">
                 <button
                   type="button"
                   onClick={onClose}
                   disabled={loading}
-                  className="flex-1 py-3.5 rounded-xl bg-white/5 text-foreground hover:bg-white/10 font-bold transition-all text-sm border border-white/5"
+                  className="flex-1 py-3.5 rounded-xl bg-[var(--input-bg)] text-foreground hover:bg-[var(--input-focus-bg)] border border-[var(--input-border)] font-bold transition-all text-sm"
                 >
                   Cancel
                 </button>
