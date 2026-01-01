@@ -395,9 +395,18 @@ export default function ProjectDetailPage({
                 onChange={(e) => setFilterCategory(e.target.value)}
                 className="bg-[var(--input-bg)] border border-[var(--input-border)] text-foreground rounded-xl px-4 py-2 text-sm focus:border-accent-violet outline-none"
               >
-                <option value="all">All Categories</option>
+                <option
+                  value="all"
+                  className="bg-background-secondary text-foreground"
+                >
+                  All Categories
+                </option>
                 {BUDGET_CATEGORIES.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
+                  <option
+                    key={cat.value}
+                    value={cat.value}
+                    className="bg-background-secondary text-foreground"
+                  >
                     {cat.label}
                   </option>
                 ))}
@@ -522,10 +531,16 @@ export default function ProjectDetailPage({
                     onChange={(e) => setLimit(Number(e.target.value))}
                     className="bg-transparent font-bold focus:outline-none text-foreground cursor-pointer"
                   >
-                    <option value={20} className="bg-[var(--card)]">
+                    <option
+                      value={20}
+                      className="bg-background-secondary text-foreground"
+                    >
                       20
                     </option>
-                    <option value={50} className="bg-[var(--card)]">
+                    <option
+                      value={50}
+                      className="bg-background-secondary text-foreground"
+                    >
                       50
                     </option>
                   </select>

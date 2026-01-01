@@ -132,7 +132,7 @@ export default function ProjectCard({
               }}
             />
             <motion.div
-              className="absolute right-0 top-10 w-36 rounded-xl overflow-hidden bg-[var(--card)] border border-[var(--card-border)] shadow-xl z-20 backdrop-blur-xl"
+              className="absolute right-0 top-10 w-36 rounded-xl overflow-hidden bg-[var(--background)] border border-[var(--input-border)] shadow-xl z-20"
               initial={{ opacity: 0, scale: 0.95, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
             >
