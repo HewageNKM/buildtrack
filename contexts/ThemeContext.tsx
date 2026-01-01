@@ -28,7 +28,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (mounted) {
-      document.documentElement.setAttribute("data-theme", theme);
+      const root = document.documentElement;
+      root.classList.remove("light", "dark");
+      root.classList.add(theme);
+      // Also keep data-theme depending on if it's used elsewhere, but class is key for Tailwind
+      root.setAttribute("data-theme", theme);
       localStorage.setItem("theme", theme);
     }
   }, [theme, mounted]);

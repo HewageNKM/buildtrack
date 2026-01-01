@@ -10,13 +10,17 @@ import {
   Menu,
   X,
   Sparkles,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -60,6 +64,21 @@ export default function Navbar() {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-6">
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="w-10 h-10 flex items-center justify-center rounded-xl glass-card text-foreground cursor-pointer relative z-50 hover:scale-105 active:scale-95 transition-transform duration-200"
+            title={
+              theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"
+            }
+          >
+            {theme === "dark" ? (
+              <Sun className="w-5 h-5 text-amber-400" />
+            ) : (
+              <Moon className="w-5 h-5 text-accent-violet" />
+            )}
+          </button>
+
           {user ? (
             <>
               <Link
@@ -117,6 +136,21 @@ export default function Navbar() {
 
         {/* Mobile Menu Button */}
         <div className="flex md:hidden items-center gap-3">
+          {/* Theme Toggle (Mobile) */}
+          <button
+            onClick={toggleTheme}
+            className="w-11 h-11 flex items-center justify-center rounded-xl glass-card text-foreground cursor-pointer relative z-50 hover:scale-105 active:scale-95 transition-transform duration-200"
+            title={
+              theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"
+            }
+          >
+            {theme === "dark" ? (
+              <Sun className="w-5 h-5 text-amber-400" />
+            ) : (
+              <Moon className="w-5 h-5 text-accent-violet" />
+            )}
+          </button>
+
           <motion.button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="flex items-center justify-center w-11 h-11 rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] text-foreground"
