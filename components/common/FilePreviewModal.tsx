@@ -39,159 +39,96 @@ export default function FilePreviewModal({
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.25, 3));
   const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.25, 0.5));
 
-  const buttonStyle = {
-    width: "36px",
-    height: "36px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: "10px",
-    backgroundColor: "var(--background-secondary)",
-  };
-
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-50 flex items-center justify-center"
-        style={{
-          backgroundColor: "rgba(0, 0, 0, 0.7)",
-          backdropFilter: "blur(8px)",
-          padding: "24px",
-        }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
       >
         <motion.div
-          className="w-full rounded-3xl flex flex-col"
-          style={{
-            maxWidth: "900px",
-            maxHeight: "90vh",
-            backgroundColor: "var(--card)",
-            border: "1px solid var(--border)",
-            overflow: "hidden",
-          }}
+          className="w-full max-w-4xl max-h-[90vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden flex flex-col shadow-2xl"
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div
-            className="flex items-center justify-between shrink-0"
-            style={{
-              padding: "20px 24px",
-              borderBottom: "1px solid var(--border)",
-            }}
-          >
+          <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900">
             <div className="flex items-center gap-3 min-w-0">
-              <div
-                className="flex items-center justify-center rounded-xl shrink-0"
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  background:
-                    "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-                }}
-              >
+              <div className="w-10 h-10 flex items-center justify-center rounded-xl shrink-0 bg-gradient-to-br from-violet-500 to-indigo-600 shadow-lg shadow-indigo-500/20">
                 <FileText className="w-5 h-5 text-white" />
               </div>
-              <span
-                className="truncate"
-                style={{ fontWeight: 600, fontSize: "15px" }}
-              >
+              <span className="truncate font-bold text-sm md:text-base text-slate-900 dark:text-slate-50">
                 {fileName}
               </span>
             </div>
+
             <div className="flex items-center gap-2">
               {fileType === "image" && (
-                <>
+                <div className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1 mr-2">
                   <button
                     onClick={handleZoomOut}
-                    style={buttonStyle}
+                    className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-500 transition-all"
                     title="Zoom out"
                   >
                     <ZoomOut className="w-4 h-4" />
                   </button>
-                  <span
-                    className="text-center"
-                    style={{
-                      minWidth: "52px",
-                      fontSize: "13px",
-                      color: "var(--foreground-muted)",
-                      fontWeight: 600,
-                    }}
-                  >
+                  <span className="min-w-[48px] text-center text-[11px] font-black text-slate-500 uppercase tracking-tighter">
                     {Math.round(zoom * 100)}%
                   </span>
                   <button
                     onClick={handleZoomIn}
-                    style={buttonStyle}
+                    className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-500 transition-all"
                     title="Zoom in"
                   >
                     <ZoomIn className="w-4 h-4" />
                   </button>
-                </>
+                </div>
               )}
+
               <button
                 onClick={handleDownload}
-                className="flex items-center gap-2 rounded-xl transition-colors"
-                style={{
-                  padding: "8px 14px",
-                  backgroundColor: "var(--background-secondary)",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors"
                 title="Download"
               >
                 <Download className="w-4 h-4" />
-                Download
+                <span className="hidden sm:inline">Download</span>
               </button>
+
               <button
                 onClick={onClose}
-                className="flex items-center justify-center rounded-xl transition-colors"
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  backgroundColor: "var(--background-secondary)",
-                }}
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-500 hover:text-red-500 transition-all"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
           </div>
 
-          {/* Content */}
-          <div
-            className="flex-1 overflow-auto"
-            style={{
-              backgroundColor: "var(--background-secondary)",
-              minHeight: "400px",
-            }}
-          >
+          {/* Content Area */}
+          <div className="flex-1 overflow-auto bg-slate-50 dark:bg-slate-950 min-h-[400px]">
             {fileType === "image" ? (
-              <div
-                className="flex items-center justify-center min-h-full"
-                style={{ padding: "24px" }}
-              >
+              <div className="flex items-center justify-center min-h-full p-6 md:p-12">
                 <img
                   src={fileUrl}
                   alt={fileName}
                   style={{
                     transform: `scale(${zoom})`,
-                    transition: "transform 0.2s ease",
+                    transition: "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                   }}
-                  className="max-w-full h-auto rounded-xl"
+                  className="max-w-full h-auto rounded-xl shadow-xl ring-1 ring-black/5"
                 />
               </div>
             ) : (
-              <iframe
-                src={`${fileUrl}#toolbar=1&navpanes=0`}
-                title={fileName}
-                className="w-full h-full rounded-xl"
-                style={{ minHeight: "500px" }}
-              />
+              <div className="w-full h-full min-h-[500px] p-4">
+                <iframe
+                  src={`${fileUrl}#toolbar=1&navpanes=0`}
+                  title={fileName}
+                  className="w-full h-full rounded-xl border-none bg-white shadow-inner"
+                />
+              </div>
             )}
           </div>
         </motion.div>

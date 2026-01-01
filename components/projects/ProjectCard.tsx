@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+// Let's check imports. No clsx/cn in original file. I will avoid adding new imports that might break if files don't exist. I'll use standard template literals.
+
 interface ProjectCardProps {
   project: Project & { totalSpent?: number };
   onDelete?: (projectId: string) => void;
@@ -27,13 +29,22 @@ interface ProjectCardProps {
   index?: number;
 }
 
-const gradientColors = [
-  { from: "#8b5cf6", to: "#6366f1" }, // violet
-  { from: "#ec4899", to: "#f472b6" }, // pink
-  { from: "#06b6d4", to: "#3b82f6" }, // cyan
-  { from: "#10b981", to: "#14b8a6" }, // emerald
-  { from: "#f59e0b", to: "#f97316" }, // amber
-  { from: "#6366f1", to: "#8b5cf6" }, // indigo
+const gradientVariants = [
+  "from-accent-violet to-primary", // violet
+  "from-accent-pink to-rose-400", // pink
+  "from-accent-cyan to-blue-500", // cyan
+  "from-emerald-400 to-teal-500", // emerald
+  "from-amber-400 to-orange-500", // amber
+  "from-indigo-500 to-purple-600", // indigo
+];
+
+const shadowVariants = [
+  "shadow-accent-violet/20",
+  "shadow-accent-pink/20",
+  "shadow-accent-cyan/20",
+  "shadow-emerald-400/20",
+  "shadow-amber-400/20",
+  "shadow-indigo-500/20",
 ];
 
 export default function ProjectCard({
@@ -53,277 +64,187 @@ export default function ProjectCard({
   const isOverBudget = remaining < 0;
   const projectCurrency = project.currency || DEFAULT_CURRENCY;
 
-  const gradientColor = gradientColors[index % gradientColors.length];
+  const gradientClass = gradientVariants[index % gradientVariants.length];
+  const shadowClass = shadowVariants[index % shadowVariants.length];
 
-  const getProgressColor = () => {
-    if (isOverBudget) return "#ef4444";
-    if (progress > 80) return "#f59e0b";
-    return "#10b981";
+  const getProgressColorClass = () => {
+    if (isOverBudget) return "bg-red-500";
+    if (progress > 80) return "bg-amber-500";
+    return "bg-emerald-500";
   };
 
-  const getStatusBadge = () => {
-    const styles = {
-      active: { bg: "rgba(16, 185, 129, 0.15)", color: "#10b981" },
-      completed: { bg: "rgba(139, 92, 246, 0.15)", color: "#8b5cf6" },
-      "on-hold": { bg: "rgba(245, 158, 11, 0.15)", color: "#f59e0b" },
-    };
-    const style = styles[project.status] || styles.active;
-    const labels = {
-      active: "Active",
-      completed: "Completed",
-      "on-hold": "On Hold",
-    };
+  const getStatusBadgeStyles = () => {
+    switch (project.status) {
+      case "active":
+        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+      case "completed":
+        return "bg-accent-violet/10 text-accent-violet border-accent-violet/20";
+      case "on-hold":
+        return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+      default:
+        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+    }
+  };
 
-    return (
-      <span
-        className="rounded-full"
-        style={{
-          padding: "4px 12px",
-          fontSize: "12px",
-          fontWeight: 600,
-          backgroundColor: style.bg,
-          color: style.color,
-        }}
-      >
-        {labels[project.status] || "Active"}
-      </span>
-    );
+  const getStatusLabel = () => {
+    switch (project.status) {
+      case "active":
+        return "Active";
+      case "completed":
+        return "Completed";
+      case "on-hold":
+        return "On Hold";
+      default:
+        return "Active";
+    }
   };
 
   return (
     <motion.div
-      className="relative rounded-3xl group overflow-hidden"
-      style={{
-        backgroundColor: "var(--card)",
-        border: "1px solid var(--border)",
-        padding: "24px",
-      }}
+      className="relative rounded-3xl group glass-card hover:border-white/10 transition-all duration-300"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      whileHover={{ y: -6, boxShadow: "0 20px 40px rgba(0,0,0,0.15)" }}
+      whileHover={{ y: -6, boxShadow: "0 20px 40px -10px rgba(0,0,0,0.3)" }}
     >
       {/* Gradient Top Bar */}
       <div
-        className="absolute top-0 left-0 right-0 rounded-t-3xl"
-        style={{
-          height: "4px",
-          background: `linear-gradient(135deg, ${gradientColor.from} 0%, ${gradientColor.to} 100%)`,
-        }}
+        className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${gradientClass}`}
       />
 
       {/* Menu Button */}
-      <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="relative">
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              setShowMenu(!showMenu);
-            }}
-            className="flex items-center justify-center rounded-lg transition-colors"
-            style={{
-              width: "32px",
-              height: "32px",
-              backgroundColor: "var(--background-secondary)",
-            }}
-          >
-            <MoreVertical className="w-4 h-4" />
-          </button>
+      <div className="absolute top-4 right-4 z-20">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            setShowMenu(!showMenu);
+          }}
+          className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-foreground-muted hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+        >
+          <MoreVertical className="w-4 h-4" />
+        </button>
 
-          {showMenu && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setShowMenu(false)}
-              />
-              <motion.div
-                className="absolute right-0 top-10 z-20 rounded-xl overflow-hidden"
-                style={{
-                  width: "140px",
-                  backgroundColor: "var(--card)",
-                  border: "1px solid var(--border)",
-                  boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
+        {showMenu && (
+          <>
+            <div
+              className="fixed inset-0 z-10"
+              onClick={(e) => {
+                e.preventDefault();
+                setShowMenu(false);
+              }}
+            />
+            <motion.div
+              className="absolute right-0 top-10 w-36 rounded-xl overflow-hidden bg-[#0f172a] border border-white/10 shadow-xl z-20"
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+            >
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowMenu(false);
+                  onEdit?.(project);
                 }}
-                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="flex items-center gap-2 w-full p-3 text-sm text-foreground hover:bg-white/5 transition-colors"
               >
+                <Edit className="w-4 h-4" />
+                Edit
+              </button>
+              {onDelete && (
                 <button
                   onClick={(e) => {
                     e.preventDefault();
                     setShowMenu(false);
-                    onEdit?.(project);
+                    onDelete(project.id);
                   }}
-                  className="flex items-center gap-2 w-full transition-colors hover:bg-[var(--background-secondary)]"
-                  style={{
-                    padding: "12px 16px",
-                    fontSize: "14px",
-                    color: "var(--foreground)",
-                  }}
+                  className="flex items-center gap-2 w-full p-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
                 >
-                  <Edit className="w-4 h-4" />
-                  Edit
+                  <Trash2 className="w-4 h-4" />
+                  Delete
                 </button>
-                {onDelete && (
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setShowMenu(false);
-                      onDelete(project.id);
-                    }}
-                    className="flex items-center gap-2 w-full transition-colors hover:bg-[var(--background-secondary)]"
-                    style={{
-                      padding: "12px 16px",
-                      fontSize: "14px",
-                      color: "#ef4444",
-                    }}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </button>
-                )}
-              </motion.div>
-            </>
-          )}
-        </div>
+              )}
+            </motion.div>
+          </>
+        )}
       </div>
 
-      <Link href={`/projects/${project.id}`}>
-        <div
-          className="flex items-start gap-4"
-          style={{ marginBottom: "20px" }}
-        >
+      <Link href={`/projects/${project.id}`} className="block p-6">
+        <div className="flex items-start gap-4 mb-6">
           <div
-            className="flex items-center justify-center rounded-2xl shrink-0"
-            style={{
-              width: "56px",
-              height: "56px",
-              background: `linear-gradient(135deg, ${gradientColor.from} 0%, ${gradientColor.to} 100%)`,
-              boxShadow: `0 8px 20px ${gradientColor.from}40`,
-            }}
+            className={`flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${gradientClass} shadow-lg ${shadowClass} text-white shrink-0`}
           >
-            <FolderKanban className="w-7 h-7 text-white" />
+            <FolderKanban className="w-7 h-7" />
           </div>
-          <div className="flex-1 min-w-0" style={{ paddingTop: "4px" }}>
-            <h3
-              className="truncate"
-              style={{
-                fontSize: "18px",
-                fontWeight: 700,
-                paddingRight: "32px",
-              }}
-            >
+          <div className="flex-1 min-w-0 pt-1">
+            <h3 className="text-lg font-bold text-white truncate pr-6 mb-1 group-hover:text-accent-violet transition-colors">
               {project.name}
             </h3>
-            <p
-              className="line-clamp-1"
-              style={{ fontSize: "14px", color: "var(--foreground-muted)" }}
-            >
-              {project.description || "No description"}
+            <p className="text-sm text-foreground-muted line-clamp-1">
+              {project.description || "No description provided"}
             </p>
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div className="space-y-4">
           {/* Status & Date */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {getStatusBadge()}
+              <span
+                className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusBadgeStyles()}`}
+              >
+                {getStatusLabel()}
+              </span>
               {isOverBudget && (
-                <span
-                  className="flex items-center gap-1 rounded-full"
-                  style={{
-                    padding: "4px 10px",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    backgroundColor: "rgba(239, 68, 68, 0.15)",
-                    color: "#ef4444",
-                  }}
-                >
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
                   <AlertTriangle className="w-3 h-3" />
                   Over
                 </span>
               )}
             </div>
-            <div
-              className="flex items-center gap-1"
-              style={{ fontSize: "12px", color: "var(--foreground-muted)" }}
-            >
-              <Calendar className="w-3 h-3" />
+            <div className="flex items-center gap-1.5 text-xs text-foreground-muted font-medium">
+              <Calendar className="w-3.5 h-3.5" />
               {new Date(project.startDate).toLocaleDateString()}
             </div>
           </div>
 
           {/* Budget Progress */}
           <div>
-            <div
-              className="flex items-center justify-between"
-              style={{ marginBottom: "10px" }}
-            >
-              <span
-                style={{ fontSize: "13px", color: "var(--foreground-muted)" }}
-              >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-foreground-muted font-medium">
                 Budget Used
               </span>
-              <span style={{ fontSize: "14px", fontWeight: 700 }}>
+              <span className="text-sm font-bold text-white">
                 {progress.toFixed(0)}%
               </span>
             </div>
-            <div
-              className="rounded-full overflow-hidden"
-              style={{
-                height: "8px",
-                backgroundColor: "var(--background-secondary)",
-              }}
-            >
+            <div className="h-2 rounded-full bg-white/5 overflow-hidden">
               <div
-                className="rounded-full transition-all"
-                style={{
-                  height: "100%",
-                  width: `${Math.min(progress, 100)}%`,
-                  background: `linear-gradient(90deg, ${getProgressColor()} 0%, ${getProgressColor()}cc 100%)`,
-                }}
+                className={`h-full rounded-full transition-all duration-500 ${getProgressColorClass()}`}
+                style={{ width: `${Math.min(progress, 100)}%` }}
               />
             </div>
           </div>
 
           {/* Amounts */}
-          <div
-            className="grid grid-cols-2 gap-4"
-            style={{ paddingTop: "16px", borderTop: "1px solid var(--border)" }}
-          >
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
             <div>
-              <p
-                style={{
-                  fontSize: "12px",
-                  color: "var(--foreground-muted)",
-                  marginBottom: "4px",
-                }}
-              >
+              <p className="text-xs text-foreground-muted mb-1 font-medium">
                 Spent
               </p>
               <p
-                style={{ fontSize: "18px", fontWeight: 700 }}
+                className="text-lg font-bold text-white tracking-tight"
                 title={formatCurrency(totalSpent, projectCurrency)}
               >
                 {formatCurrencyCompact(totalSpent, projectCurrency)}
               </p>
             </div>
-            <div style={{ textAlign: "right" }}>
-              <p
-                style={{
-                  fontSize: "12px",
-                  color: "var(--foreground-muted)",
-                  marginBottom: "4px",
-                }}
-              >
+            <div className="text-right">
+              <p className="text-xs text-foreground-muted mb-1 font-medium">
                 {isOverBudget ? "Over Budget" : "Remaining"}
               </p>
               <p
-                style={{
-                  fontSize: "18px",
-                  fontWeight: 700,
-                  color: isOverBudget ? "#ef4444" : "#10b981",
-                }}
+                className={`text-lg font-bold tracking-tight ${
+                  isOverBudget ? "text-red-400" : "text-emerald-400"
+                }`}
                 title={formatCurrency(Math.abs(remaining), projectCurrency)}
               >
                 {isOverBudget ? "+" : ""}
@@ -333,21 +254,12 @@ export default function ProjectCard({
           </div>
 
           {/* View Project Link */}
-          <div
-            className="flex items-center justify-between"
-            style={{ paddingTop: "12px", borderTop: "1px solid var(--border)" }}
-          >
-            <span
-              className="flex items-center gap-2"
-              style={{ fontSize: "14px", fontWeight: 600, color: "#8b5cf6" }}
-            >
+          <div className="flex items-center justify-between pt-3 border-t border-white/5 mt-2">
+            <span className="flex items-center gap-2 text-sm font-semibold text-accent-violet group-hover:text-white transition-colors">
               <TrendingUp className="w-4 h-4" />
               View Details
             </span>
-            <ChevronRight
-              className="w-5 h-5 group-hover:translate-x-1 transition-transform"
-              style={{ color: "var(--foreground-muted)" }}
-            />
+            <ChevronRight className="w-5 h-5 text-foreground-muted group-hover:text-white group-hover:translate-x-1 transition-all" />
           </div>
         </div>
       </Link>

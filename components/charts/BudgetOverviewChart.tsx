@@ -47,41 +47,76 @@ export default function BudgetOverviewChart({
   };
 
   return (
-    <div className="card">
-      <h3 className="text-lg font-semibold mb-4">Budget Overview</h3>
-      <div className="h-64">
+    <div className="glass-card p-6 rounded-3xl">
+      <h3 className="text-lg font-bold mb-6 text-white">Budget vs. Spending</h3>
+      <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
             layout="vertical"
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              horizontal={false}
+              stroke="rgba(255,255,255,0.1)"
+              opacity={0.5}
+            />
+
             <XAxis
               type="number"
               tickFormatter={formatCurrency}
-              tick={{ fill: "var(--foreground-muted)", fontSize: 12 }}
+              tick={{ fill: "#94a3b8", fontSize: 12 }}
+              axisLine={false}
+              tickLine={false}
             />
-            <YAxis
-              type="category"
-              dataKey="name"
-              tick={{ fill: "var(--foreground-muted)", fontSize: 12 }}
-              hide
-            />
+
+            <YAxis type="category" dataKey="name" hide />
+
             <Tooltip
+              cursor={{ fill: "transparent" }}
               formatter={(value) => formatCurrency(value as number)}
               contentStyle={{
-                backgroundColor: "var(--card)",
-                border: "1px solid var(--border)",
-                borderRadius: "8px",
+                backgroundColor: "#030712", // midnight base
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: "16px",
+                padding: "16px",
+                color: "#f8fafc",
+                boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.5)",
               }}
-              labelStyle={{ color: "var(--foreground)" }}
+              itemStyle={{ fontSize: "12px", fontWeight: "bold" }}
+              labelStyle={{ display: "none" }}
             />
-            <Legend wrapperStyle={{ paddingTop: "20px" }} />
-            <Bar dataKey="Estimated" fill="#3b82f6" radius={[4, 4, 4, 4]} />
-            <Bar dataKey="Spent" fill="#f97316" radius={[4, 4, 4, 4]} />
+
+            <Legend
+              verticalAlign="bottom"
+              align="left"
+              wrapperStyle={{
+                paddingTop: "24px",
+                fontSize: "12px",
+                fontWeight: "600",
+              }}
+            />
+
+            <Bar
+              dataKey="Estimated"
+              fill="#8b5cf6" // accent-violet
+              radius={[0, 6, 6, 0]}
+              barSize={32}
+            />
+            <Bar
+              dataKey="Spent"
+              fill="#06b6d4" // accent-cyan
+              radius={[0, 6, 6, 0]}
+              barSize={32}
+            />
             {overBudget > 0 && (
-              <Bar dataKey="Over Budget" fill="#ef4444" radius={[4, 4, 4, 4]} />
+              <Bar
+                dataKey="Over Budget"
+                fill="#f43f5e" // rose-500
+                radius={[0, 6, 6, 0]}
+                barSize={32}
+              />
             )}
           </BarChart>
         </ResponsiveContainer>

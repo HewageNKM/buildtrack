@@ -37,12 +37,18 @@ export class ProjectService {
     return await this.projectRepo.getProjectsForUser(userId, email);
   }
 
-  async getProject(projectId: string, userId: string): Promise<Project | null> {
+  async getProject(
+    projectId: string,
+    userId: string,
+    email?: string
+  ): Promise<Project | null> {
     const project = await this.projectRepo.getById(projectId);
     if (!project) return null;
 
     const isOwner = project.userId === userId;
-    const isMember = project.teamMembers?.some((m) => m.userId === userId);
+    const isMember = project.teamMembers?.some(
+      (m) => m.userId === userId || (email && m.email === email.toLowerCase())
+    );
 
     if (!isOwner && !isMember) return null;
 
@@ -87,7 +93,8 @@ export class ProjectService {
 
   async verifyAccess(
     projectId: string,
-    userId: string
+    userId: string,
+    email?: string
   ): Promise<{
     hasAccess: boolean;
     role?: TeamMemberRole;
@@ -100,7 +107,9 @@ export class ProjectService {
       return { hasAccess: true, role: "owner", isOwner: true };
     }
 
-    const member = project.teamMembers?.find((m) => m.userId === userId);
+    const member = project.teamMembers?.find(
+      (m) => m.userId === userId || (email && m.email === email.toLowerCase())
+    );
     if (member) {
       return { hasAccess: true, role: member.role, isOwner: false };
     }

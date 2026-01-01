@@ -2,16 +2,14 @@
 
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTheme } from "@/contexts/ThemeContext";
 import {
   HardHat,
   LogOut,
   FolderKanban,
   User,
-  Sun,
-  Moon,
   Menu,
   X,
+  Sparkles,
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -19,7 +17,6 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -37,343 +34,173 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="glass sticky top-0 z-40">
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}>
-        <div
-          className="flex items-center justify-between"
-          style={{ height: "72px" }}
+    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 bg-background/60 backdrop-blur-md">
+      <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
+        {/* Logo */}
+        <Link
+          href={user ? "/projects" : "/"}
+          className="flex items-center gap-3 group"
         >
-          {/* Logo */}
-          <Link
-            href={user ? "/projects" : "/"}
-            className="flex items-center gap-3"
+          <motion.div
+            className="flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-tr from-accent-violet to-primary shadow-[0_0_20px_rgba(139,92,246,0.5)] border border-white/20"
+            whileHover={{ scale: 1.05, rotate: 5 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <motion.div
-              className="flex items-center justify-center rounded-xl"
-              style={{
-                width: "44px",
-                height: "44px",
-                background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-                boxShadow: "0 4px 15px rgba(139, 92, 246, 0.4)",
-              }}
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <HardHat className="w-5 h-5 text-white" />
-            </motion.div>
-            <span
-              style={{ fontSize: "20px", fontWeight: 800 }}
-              className="hidden sm:block"
-            >
-              <span className="text-gradient">Build</span>
-              <span className="text-gradient-secondary">Track</span>
+            <HardHat className="w-6 h-6 text-white drop-shadow-md" />
+          </motion.div>
+          <div className="hidden sm:flex flex-col">
+            <span className="text-xl font-bold tracking-tight text-white leading-none">
+              Build<span className="text-accent-cyan">Track</span>
             </span>
-          </Link>
+            <span className="text-[10px] font-medium text-foreground-muted tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity -mt-3.5 translate-y-3.5">
+              Pro
+            </span>
+          </div>
+        </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-3">
-            {/* Theme Toggle */}
-            <motion.button
-              onClick={toggleTheme}
-              className="flex items-center justify-center rounded-xl"
-              style={{
-                width: "44px",
-                height: "44px",
-                backgroundColor: "var(--background-secondary)",
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-            >
-              <AnimatePresence mode="wait">
-                {theme === "dark" ? (
-                  <motion.div
-                    key="sun"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Sun className="w-5 h-5" style={{ color: "#fbbf24" }} />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="moon"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Moon className="w-5 h-5" style={{ color: "#8b5cf6" }} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.button>
-
-            {user ? (
-              <>
-                <Link
-                  href="/projects"
-                  className="flex items-center gap-2 rounded-xl transition-colors"
-                  style={{
-                    padding: "10px 16px",
-                    backgroundColor: "var(--background-secondary)",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                  }}
-                >
-                  <FolderKanban
-                    className="w-4 h-4"
-                    style={{ color: "#8b5cf6" }}
-                  />
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-6">
+          {user ? (
+            <>
+              <Link
+                href="/projects"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-accent-violet/50 transition-all group"
+              >
+                <FolderKanban className="w-4 h-4 text-accent-violet group-hover:text-white transition-colors" />
+                <span className="text-sm font-semibold text-foreground group-hover:text-white">
                   Projects
-                </Link>
+                </span>
+              </Link>
 
-                <div
-                  className="flex items-center gap-3"
-                  style={{
-                    paddingLeft: "16px",
-                    borderLeft: "1px solid var(--border)",
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="flex items-center justify-center rounded-full"
-                      style={{
-                        width: "36px",
-                        height: "36px",
-                        background:
-                          "linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)",
-                      }}
-                    >
-                      <User className="w-4 h-4 text-white" />
-                    </div>
-                    <span
-                      className="hidden lg:block"
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: 500,
-                        maxWidth: "120px",
-                      }}
-                    >
-                      {user.displayName || user.email?.split("@")[0]}
-                    </span>
+              <div className="h-8 w-px bg-white/10" />
+
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 px-3 py-1.5 rounded-full border border-white/5 bg-white/5">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-accent-violet to-accent-pink shadow-lg">
+                    <User className="w-4 h-4 text-white" />
                   </div>
-
-                  <motion.button
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                    className="flex items-center justify-center rounded-xl transition-colors"
-                    style={{
-                      width: "40px",
-                      height: "40px",
-                      backgroundColor: "rgba(239, 68, 68, 0.1)",
-                    }}
-                    title="Logout"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <LogOut className="w-4 h-4" style={{ color: "#ef4444" }} />
-                  </motion.button>
+                  <span className="text-sm font-medium text-foreground pr-2">
+                    {user.displayName || user.email?.split("@")[0]}
+                  </span>
                 </div>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="flex items-center justify-center rounded-xl transition-colors"
-                  style={{
-                    padding: "10px 20px",
-                    backgroundColor: "var(--background-secondary)",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                  }}
-                >
-                  Log in
-                </Link>
-                <Link
-                  href="/register"
-                  className="flex items-center gap-2 rounded-xl text-white transition-all"
-                  style={{
-                    padding: "10px 20px",
-                    background:
-                      "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    boxShadow: "0 4px 15px rgba(139, 92, 246, 0.3)",
-                  }}
-                >
-                  Get Started
-                </Link>
-              </>
-            )}
-          </div>
 
-          {/* Mobile Menu Button */}
-          <div className="flex md:hidden items-center gap-2">
-            <motion.button
-              onClick={toggleTheme}
-              className="flex items-center justify-center rounded-xl"
-              style={{
-                width: "44px",
-                height: "44px",
-                backgroundColor: "var(--background-secondary)",
-              }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {theme === "dark" ? (
-                <Sun className="w-5 h-5" style={{ color: "#fbbf24" }} />
-              ) : (
-                <Moon className="w-5 h-5" style={{ color: "#8b5cf6" }} />
-              )}
-            </motion.button>
-            <motion.button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="flex items-center justify-center rounded-xl"
-              style={{
-                width: "44px",
-                height: "44px",
-                backgroundColor: "var(--background-secondary)",
-              }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {mobileMenuOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <Menu className="w-5 h-5" />
-              )}
-            </motion.button>
-          </div>
+                <motion.button
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 transition-all"
+                  title="Logout"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <LogOut className="w-4 h-4" />
+                </motion.button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-sm font-semibold text-foreground-muted hover:text-white transition-colors"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/register"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-accent-violet to-primary text-white text-sm font-bold shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)] border border-white/10 transition-all"
+              >
+                <Sparkles className="w-4 h-4" />
+                Get Started
+              </Link>
+            </>
+          )}
         </div>
 
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="md:hidden overflow-hidden"
-              style={{ borderTop: "1px solid var(--border)" }}
-            >
-              <div style={{ padding: "16px 0" }}>
-                {user ? (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "8px",
-                    }}
-                  >
-                    <div
-                      className="flex items-center gap-3 rounded-xl"
-                      style={{ padding: "12px" }}
-                    >
-                      <div
-                        className="flex items-center justify-center rounded-full"
-                        style={{
-                          width: "44px",
-                          height: "44px",
-                          background:
-                            "linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)",
-                        }}
-                      >
-                        <User className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <p style={{ fontWeight: 600, fontSize: "15px" }}>
-                          {user.displayName || "User"}
-                        </p>
-                        <p
-                          style={{
-                            fontSize: "13px",
-                            color: "var(--foreground-muted)",
-                          }}
-                        >
-                          {user.email}
-                        </p>
-                      </div>
-                    </div>
-                    <Link
-                      href="/projects"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 rounded-xl transition-colors"
-                      style={{
-                        padding: "12px 16px",
-                        backgroundColor: "var(--background-secondary)",
-                        fontSize: "15px",
-                        fontWeight: 500,
-                      }}
-                    >
-                      <FolderKanban
-                        className="w-5 h-5"
-                        style={{ color: "#8b5cf6" }}
-                      />
-                      My Projects
-                    </Link>
-                    <button
-                      onClick={() => {
-                        handleLogout();
-                        setMobileMenuOpen(false);
-                      }}
-                      disabled={isLoggingOut}
-                      className="flex items-center gap-3 rounded-xl transition-colors w-full text-left"
-                      style={{
-                        padding: "12px 16px",
-                        backgroundColor: "rgba(239, 68, 68, 0.1)",
-                        fontSize: "15px",
-                        fontWeight: 500,
-                        color: "#ef4444",
-                      }}
-                    >
-                      <LogOut className="w-5 h-5" />
-                      Logout
-                    </button>
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "8px",
-                    }}
-                  >
-                    <Link
-                      href="/login"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center justify-center rounded-xl transition-colors"
-                      style={{
-                        padding: "14px",
-                        backgroundColor: "var(--background-secondary)",
-                        fontSize: "15px",
-                        fontWeight: 600,
-                      }}
-                    >
-                      Log in
-                    </Link>
-                    <Link
-                      href="/register"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center justify-center rounded-xl text-white"
-                      style={{
-                        padding: "14px",
-                        background:
-                          "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-                        fontSize: "15px",
-                        fontWeight: 600,
-                        boxShadow: "0 4px 15px rgba(139, 92, 246, 0.3)",
-                      }}
-                    >
-                      Get Started Free
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Mobile Menu Button */}
+        <div className="flex md:hidden items-center gap-3">
+          <motion.button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="flex items-center justify-center w-11 h-11 rounded-xl bg-white/5 border border-white/10 text-foreground"
+            whileTap={{ scale: 0.95 }}
+          >
+            {mobileMenuOpen ? (
+              <X className="w-5 h-5" />
+            ) : (
+              <Menu className="w-5 h-5" />
+            )}
+          </motion.button>
+        </div>
       </div>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden overflow-hidden border-t border-white/5 bg-background/95 backdrop-blur-xl"
+          >
+            <div className="p-4 space-y-4">
+              {user ? (
+                <>
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-accent-violet to-accent-pink flex items-center justify-center">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white">
+                        {user.displayName || "User"}
+                      </p>
+                      <p className="text-xs text-foreground-muted">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Link
+                    href="/projects"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-accent-violet/10 text-accent-violet font-medium hover:bg-accent-violet/20"
+                  >
+                    <FolderKanban className="w-5 h-5" />
+                    My Projects
+                  </Link>
+
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setMobileMenuOpen(false);
+                    }}
+                    disabled={isLoggingOut}
+                    className="flex items-center gap-3 w-full p-3 rounded-xl bg-red-500/10 text-red-400 font-medium hover:bg-red-500/20"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full p-3.5 rounded-xl bg-white/5 text-center font-semibold text-foreground hover:bg-white/10"
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full p-3.5 rounded-xl bg-gradient-to-r from-accent-violet to-primary text-white text-center font-bold"
+                  >
+                    Get Started Free
+                  </Link>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }

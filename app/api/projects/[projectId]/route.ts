@@ -26,7 +26,11 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { projectId } = await params;
-    const project = await projectService.getProject(projectId, user.uid);
+    const project = await projectService.getProject(
+      projectId,
+      user.uid,
+      user.email
+    );
 
     if (!project)
       return NextResponse.json(

@@ -34,11 +34,26 @@ interface TeamManagementModalProps {
 
 const roleLabels: Record<
   TeamMemberRole,
-  { label: string; color: string; icon: typeof Crown }
+  { label: string; color: string; bg: string; icon: typeof Crown }
 > = {
-  owner: { label: "Owner", color: "#fbbf24", icon: Crown },
-  editor: { label: "Editor", color: "#8b5cf6", icon: Edit3 },
-  viewer: { label: "Viewer", color: "#06b6d4", icon: Eye },
+  owner: {
+    label: "Owner",
+    color: "text-amber-400",
+    bg: "bg-amber-400/10",
+    icon: Crown,
+  },
+  editor: {
+    label: "Editor",
+    color: "text-accent-violet",
+    bg: "bg-accent-violet/10",
+    icon: Edit3,
+  },
+  viewer: {
+    label: "Viewer",
+    color: "text-accent-cyan",
+    bg: "bg-accent-cyan/10",
+    icon: Eye,
+  },
 };
 
 export default function TeamManagementModal({
@@ -56,7 +71,6 @@ export default function TeamManagementModal({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
-  const [inviteError, setInviteError] = useState("");
   const [copied, setCopied] = useState(false);
 
   useBodyScrollLock(isOpen);
@@ -72,7 +86,6 @@ export default function TeamManagementModal({
       return;
     }
 
-    // Check if already a member
     if (
       teamMembers.some((m) => m.email.toLowerCase() === email.toLowerCase())
     ) {
@@ -98,21 +111,17 @@ export default function TeamManagementModal({
 
     setRemovingId(userId);
     try {
+      await api.team.remove(projectId, userId);
       if (userId === user?.uid) {
-        // Leaving project logic if needed, usually handled separately or same API
-        // API supports removing self if not owner (or owner deleting project)
-        await api.team.remove(projectId, userId);
         toast.success("Left project successfully");
         onClose();
         window.location.href = "/projects";
       } else {
-        await api.team.remove(projectId, userId);
         toast.success("Team member removed");
         onUpdate();
       }
     } catch (err) {
       toast.error("Failed to remove member");
-      console.error(err);
     } finally {
       setRemovingId(null);
     }
@@ -126,221 +135,141 @@ export default function TeamManagementModal({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const inputStyle = {
-    width: "100%",
-    padding: "14px 16px",
-    backgroundColor: "var(--background-secondary)",
-    border: "2px solid transparent",
-    borderRadius: "12px",
-    fontSize: "15px",
-    color: "var(--foreground)",
-  };
+  // Shared classes
+  const inputClass =
+    "w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-sm transition-all outline-none text-foreground placeholder:text-foreground-muted/50 focus:border-accent-violet/50 focus:bg-white/10 focus:shadow-[0_0_15px_rgba(139,92,246,0.1)]";
 
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{
-            backgroundColor: "rgba(0, 0, 0, 0.6)",
-            backdropFilter: "blur(4px)",
-            padding: "24px",
-          }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
         >
           <motion.div
-            className="w-full rounded-3xl"
-            style={{
-              maxWidth: "520px",
-              backgroundColor: "var(--card)",
-              border: "1px solid var(--border)",
-              maxHeight: "90vh",
-              overflow: "auto",
-            }}
+            className="w-full max-w-[520px] glass-card border-white/10 rounded-3xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div
-              className="flex items-center justify-between"
-              style={{
-                padding: "24px",
-                borderBottom: "1px solid var(--border)",
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex items-center justify-center rounded-xl"
-                  style={{
-                    width: "44px",
-                    height: "44px",
-                    background:
-                      "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-                    boxShadow: "0 8px 20px rgba(139, 92, 246, 0.3)",
-                  }}
-                >
-                  <Users className="w-5 h-5 text-white" />
+            <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5 shrink-0 backdrop-blur-xl">
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 flex items-center justify-center rounded-xl bg-gradient-to-br from-accent-violet to-indigo-600 shadow-lg shadow-indigo-500/30 text-white">
+                  <Users className="w-5 h-5" />
                 </div>
-                <div>
-                  <h2 style={{ fontSize: "18px", fontWeight: 700 }}>
-                    Team Members
+                <div className="min-w-0">
+                  <h2 className="text-lg font-bold text-white leading-tight">
+                    Team Management
                   </h2>
-                  <p
-                    style={{
-                      fontSize: "13px",
-                      color: "var(--foreground-muted)",
-                    }}
-                  >
+                  <p className="text-xs text-foreground-muted truncate">
                     {projectName}
                   </p>
                 </div>
               </div>
               <button
                 onClick={onClose}
-                className="flex items-center justify-center rounded-xl transition-colors"
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  backgroundColor: "var(--background-secondary)",
-                }}
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 text-foreground-muted hover:bg-white/10 hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div style={{ padding: "24px" }}>
+            <div className="p-6 overflow-y-auto">
               {/* Invite Form */}
               {canManageTeam && (
-                <form onSubmit={handleInvite} style={{ marginBottom: "24px" }}>
-                  {error && (
-                    <motion.div
-                      className="flex items-center gap-3 rounded-xl"
-                      style={{
-                        padding: "14px",
-                        marginBottom: "16px",
-                        backgroundColor: "rgba(239, 68, 68, 0.1)",
-                        border: "1px solid rgba(239, 68, 68, 0.3)",
-                        color: "#f87171",
-                        fontSize: "14px",
-                      }}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                    >
-                      <AlertCircle className="w-5 h-5 shrink-0" />
-                      {error}
-                    </motion.div>
-                  )}
+                <div className="mb-8">
+                  <form onSubmit={handleInvite} className="space-y-3">
+                    {error && (
+                      <motion.div
+                        className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                      >
+                        <AlertCircle className="w-5 h-5 shrink-0" />
+                        {error}
+                      </motion.div>
+                    )}
 
-                  <div className="flex gap-3">
-                    <div className="flex-1 relative">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <Mail
-                          className="w-5 h-5"
-                          style={{ color: "var(--foreground-muted)" }}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="flex-1 relative group">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted group-focus-within:text-accent-violet transition-colors" />
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className={`${inputClass} pl-12`}
+                          placeholder="teammate@example.com"
                         />
                       </div>
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        style={{ ...inputStyle, paddingLeft: "44px" }}
-                        placeholder="teammate@example.com"
-                      />
+                      <select
+                        value={selectedRole}
+                        onChange={(e) =>
+                          setSelectedRole(e.target.value as TeamMemberRole)
+                        }
+                        className={`${inputClass} sm:w-32`}
+                        style={{ appearance: "none" }}
+                      >
+                        <option
+                          value="editor"
+                          className="bg-background-secondary text-foreground"
+                        >
+                          Editor
+                        </option>
+                        <option
+                          value="viewer"
+                          className="bg-background-secondary text-foreground"
+                        >
+                          Viewer
+                        </option>
+                      </select>
                     </div>
-                    <select
-                      value={selectedRole}
-                      onChange={(e) =>
-                        setSelectedRole(e.target.value as TeamMemberRole)
-                      }
-                      style={{
-                        ...inputStyle,
-                        width: "auto",
-                        paddingLeft: "12px",
-                        paddingRight: "12px",
-                      }}
-                    >
-                      <option value="editor">Editor</option>
-                      <option value="viewer">Viewer</option>
-                    </select>
-                  </div>
 
-                  <div className="flex gap-3" style={{ marginTop: "12px" }}>
-                    <motion.button
-                      type="submit"
-                      disabled={loading}
-                      className="flex-1 flex items-center justify-center gap-2 rounded-xl text-white"
-                      style={{
-                        padding: "14px",
-                        background:
-                          "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-                        fontSize: "15px",
-                        fontWeight: 700,
-                        boxShadow: "0 8px 20px rgba(139, 92, 246, 0.3)",
-                        opacity: loading ? 0.7 : 1,
-                      }}
-                      whileHover={{ scale: loading ? 1 : 1.02 }}
-                      whileTap={{ scale: loading ? 1 : 0.98 }}
-                    >
-                      {loading ? (
-                        <LoadingSpinner size="sm" />
-                      ) : (
-                        <>
-                          <UserPlus className="w-4 h-4" />
-                          Invite
-                        </>
-                      )}
-                    </motion.button>
-                    <motion.button
-                      type="button"
-                      onClick={handleCopyInvite}
-                      className="flex items-center justify-center gap-2 rounded-xl"
-                      style={{
-                        padding: "14px 20px",
-                        backgroundColor: "var(--background-secondary)",
-                        border: "2px solid var(--border)",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                      }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      {copied ? (
-                        <Check
-                          className="w-4 h-4"
-                          style={{ color: "#10b981" }}
-                        />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </motion.button>
-                  </div>
-                </form>
+                    <div className="flex gap-2">
+                      <motion.button
+                        type="submit"
+                        disabled={loading}
+                        className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-accent-violet to-indigo-600 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 hover:from-accent-violet hover:to-indigo-500 transition-all disabled:opacity-50"
+                        whileHover={{ scale: loading ? 1 : 1.01 }}
+                        whileTap={{ scale: loading ? 1 : 0.98 }}
+                      >
+                        {loading ? (
+                          <LoadingSpinner size="sm" />
+                        ) : (
+                          <>
+                            <UserPlus className="w-4 h-4" /> Invite Member
+                          </>
+                        )}
+                      </motion.button>
+
+                      <motion.button
+                        type="button"
+                        onClick={handleCopyInvite}
+                        className="px-5 py-3.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 text-foreground-muted transition-all"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {copied ? (
+                          <Check className="w-5 h-5 text-emerald-400" />
+                        ) : (
+                          <Copy className="w-5 h-5" />
+                        )}
+                      </motion.button>
+                    </div>
+                  </form>
+                </div>
               )}
 
               {/* Team Members List */}
-              <div>
-                <h3
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    marginBottom: "16px",
-                    color: "var(--foreground-muted)",
-                  }}
-                >
+              <div className="space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-widest text-foreground-muted/70">
                   Current Members ({teamMembers.length})
                 </h3>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "12px",
-                  }}
-                >
+                <div className="space-y-2">
                   {teamMembers.map((member) => {
                     const roleInfo = roleLabels[member.role];
                     const RoleIcon = roleInfo.icon;
@@ -348,78 +277,43 @@ export default function TeamManagementModal({
                     return (
                       <motion.div
                         key={member.userId}
-                        className="flex items-center gap-3 rounded-xl"
-                        style={{
-                          padding: "14px",
-                          backgroundColor: "var(--background-secondary)",
-                          border: "1px solid var(--border)",
-                        }}
+                        className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-accent-violet/30 transition-colors group"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                       >
-                        <div
-                          className="flex items-center justify-center rounded-full shrink-0"
-                          style={{
-                            width: "40px",
-                            height: "40px",
-                            background: `linear-gradient(135deg, ${roleInfo.color} 0%, ${roleInfo.color}99 100%)`,
-                          }}
-                        >
-                          <span className="text-white text-sm font-bold">
-                            {(member.displayName || member.email)
-                              .charAt(0)
-                              .toUpperCase()}
-                          </span>
+                        <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 border border-white/10 text-white font-black text-sm shadow-sm shrink-0">
+                          {(member.displayName || member.email)
+                            .charAt(0)
+                            .toUpperCase()}
                         </div>
+
                         <div className="flex-1 min-w-0">
-                          <p
-                            className="truncate"
-                            style={{ fontSize: "14px", fontWeight: 600 }}
-                          >
+                          <p className="text-sm font-bold text-foreground truncate">
                             {member.displayName || member.email.split("@")[0]}
                           </p>
-                          <p
-                            className="truncate"
-                            style={{
-                              fontSize: "12px",
-                              color: "var(--foreground-muted)",
-                            }}
-                          >
+                          <p className="text-[11px] text-foreground-muted truncate">
                             {member.email}
                           </p>
                         </div>
+
                         <div className="flex items-center gap-2">
                           <div
-                            className="flex items-center gap-1 rounded-full"
-                            style={{
-                              padding: "4px 10px",
-                              backgroundColor: `${roleInfo.color}20`,
-                              fontSize: "12px",
-                              fontWeight: 600,
-                              color: roleInfo.color,
-                            }}
+                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter ${roleInfo.bg} ${roleInfo.color}`}
                           >
                             <RoleIcon className="w-3 h-3" />
                             {roleInfo.label}
                           </div>
+
                           {canManageTeam && member.role !== "owner" && (
                             <button
                               onClick={() => handleRemove(member.userId)}
                               disabled={removingId === member.userId}
-                              className="flex items-center justify-center rounded-lg transition-colors"
-                              style={{
-                                width: "32px",
-                                height: "32px",
-                                backgroundColor: "rgba(239, 68, 68, 0.1)",
-                              }}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100"
                             >
                               {removingId === member.userId ? (
                                 <LoadingSpinner size="sm" />
                               ) : (
-                                <Trash2
-                                  className="w-4 h-4"
-                                  style={{ color: "#ef4444" }}
-                                />
+                                <Trash2 className="w-4 h-4" />
                               )}
                             </button>
                           )}
@@ -430,52 +324,45 @@ export default function TeamManagementModal({
                 </div>
               </div>
 
-              {/* Roles Legend */}
-              <div
-                className="rounded-xl"
-                style={{
-                  marginTop: "24px",
-                  padding: "16px",
-                  backgroundColor: "var(--background-secondary)",
-                  border: "1px solid var(--border)",
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    marginBottom: "12px",
-                  }}
-                >
-                  Role Permissions
+              {/* Role Permissions Legend */}
+              <div className="mt-8 p-5 rounded-2xl bg-white/5 border border-white/5">
+                <p className="text-xs font-black uppercase tracking-widest text-foreground-muted mb-4">
+                  Permission Matrix
                 </p>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "8px",
-                    fontSize: "12px",
-                    color: "var(--foreground-muted)",
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Crown className="w-4 h-4" style={{ color: "#fbbf24" }} />
-                    <span>
-                      <strong>Owner</strong> - Full access, can manage team
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Edit3 className="w-4 h-4" style={{ color: "#8b5cf6" }} />
-                    <span>
-                      <strong>Editor</strong> - Can add/edit entries
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Eye className="w-4 h-4" style={{ color: "#06b6d4" }} />
-                    <span>
-                      <strong>Viewer</strong> - View only access
-                    </span>
-                  </div>
+                <div className="space-y-3">
+                  {[
+                    {
+                      icon: Crown,
+                      label: "Owner",
+                      desc: "Full administrative access & billing control.",
+                      color: "text-amber-400",
+                    },
+                    {
+                      icon: Edit3,
+                      label: "Editor",
+                      desc: "Can create, edit, and delete budget entries.",
+                      color: "text-accent-violet",
+                    },
+                    {
+                      icon: Eye,
+                      label: "Viewer",
+                      desc: "Read-only access to charts and history.",
+                      color: "text-accent-cyan",
+                    },
+                  ].map((role) => (
+                    <div key={role.label} className="flex gap-3">
+                      <role.icon className={`w-4 h-4 shrink-0 ${role.color}`} />
+                      <div className="text-[11px] leading-relaxed">
+                        <span className="font-bold text-foreground">
+                          {role.label}
+                        </span>
+                        <span className="text-foreground-muted">
+                          {" "}
+                          — {role.desc}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

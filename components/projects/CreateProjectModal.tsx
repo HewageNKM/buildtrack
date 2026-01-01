@@ -42,26 +42,6 @@ interface ProjectModalProps {
   };
 }
 
-const inputStyle = {
-  width: "100%",
-  padding: "14px 16px",
-  backgroundColor: "var(--background-secondary)",
-  border: "2px solid transparent",
-  borderRadius: "12px",
-  fontSize: "15px",
-  color: "var(--foreground)",
-};
-
-const labelStyle = {
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  fontSize: "14px",
-  fontWeight: 600,
-  marginBottom: "8px",
-  color: "var(--foreground)",
-};
-
 export default function ProjectModal({
   isOpen,
   onClose,
@@ -85,7 +65,6 @@ export default function ProjectModal({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Update effect to reset or populate form when opening/changing initialData
   useEffect(() => {
     if (isOpen) {
       setName(initialData?.name || "");
@@ -130,7 +109,6 @@ export default function ProjectModal({
       });
 
       if (!initialData) {
-        // Reset only on create, for edit we might want to keep or just close
         setName("");
         setDescription("");
         setEstimatedBudget("");
@@ -147,86 +125,52 @@ export default function ProjectModal({
     }
   };
 
+  // Shared classes
+  const labelClass =
+    "flex items-center gap-2 text-sm font-semibold mb-2 text-foreground-muted";
+  const inputClass =
+    "w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-accent-pink/50 focus:bg-white/10 focus:shadow-[0_0_15px_rgba(236,72,153,0.1)] outline-none transition-all";
+
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{
-            backgroundColor: "rgba(0, 0, 0, 0.6)",
-            backdropFilter: "blur(4px)",
-            padding: "24px",
-          }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
         >
           <motion.div
-            className="w-full rounded-3xl hide-scrollbar"
-            style={{
-              maxWidth: "500px",
-              backgroundColor: "var(--card)",
-              border: "1px solid var(--border)",
-              maxHeight: "90vh",
-              overflowY: "auto",
-            }}
+            className="w-full max-w-[500px] glass-card border-white/10 rounded-3xl overflow-y-auto max-h-[90vh] scrollbar-hide"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div
-              className="flex items-center justify-between"
-              style={{
-                padding: "24px",
-                borderBottom: "1px solid var(--border)",
-              }}
-            >
+            <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5 sticky top-0 z-10 backdrop-blur-xl">
               <div className="flex items-center gap-3">
-                <div
-                  className="flex items-center justify-center rounded-xl"
-                  style={{
-                    width: "44px",
-                    height: "44px",
-                    background:
-                      "linear-gradient(135deg, #ec4899 0%, #f472b6 100%)",
-                    boxShadow: "0 8px 20px rgba(236, 72, 153, 0.3)",
-                  }}
-                >
-                  <HardHat className="w-5 h-5 text-white" />
+                <div className="w-11 h-11 flex items-center justify-center rounded-xl bg-gradient-to-br from-accent-pink to-rose-400 shadow-lg shadow-pink-500/30 text-white">
+                  <HardHat className="w-5 h-5" />
                 </div>
-                <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
+                <h2 className="text-xl font-bold text-white">
                   {initialData ? "Edit Project" : "New Project"}
                 </h2>
               </div>
               <button
                 onClick={onClose}
-                className="flex items-center justify-center rounded-xl transition-colors"
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  backgroundColor: "var(--background-secondary)",
-                }}
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 text-foreground-muted hover:bg-white/10 hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} style={{ padding: "24px" }}>
+            <form onSubmit={handleSubmit} className="p-6">
               {error && (
                 <motion.div
-                  className="flex items-center gap-3 rounded-xl"
-                  style={{
-                    padding: "14px",
-                    marginBottom: "20px",
-                    backgroundColor: "rgba(239, 68, 68, 0.1)",
-                    border: "1px solid rgba(239, 68, 68, 0.3)",
-                    color: "#f87171",
-                    fontSize: "14px",
-                  }}
+                  className="flex items-center gap-3 p-4 mb-6 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                 >
@@ -235,53 +179,44 @@ export default function ProjectModal({
                 </motion.div>
               )}
 
-              <div style={{ marginBottom: "20px" }}>
-                <label style={labelStyle}>
-                  <Tag className="w-4 h-4 text-blue-500" />
+              <div className="mb-5">
+                <label className={labelClass}>
+                  <Tag className="w-4 h-4 text-accent-cyan" />
                   Project Name *
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  style={inputStyle}
+                  className={inputClass}
                   placeholder="e.g., Office Renovation 2024"
                   required
                 />
               </div>
 
-              <div style={{ marginBottom: "20px" }}>
-                <label style={labelStyle}>
-                  <FileText className="w-4 h-4 text-purple-500" />
+              <div className="mb-5">
+                <label className={labelClass}>
+                  <FileText className="w-4 h-4 text-accent-violet" />
                   Description
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  style={{ ...inputStyle, minHeight: "80px", resize: "none" }}
+                  className={`${inputClass} min-h-[80px] resize-none`}
                   placeholder="Brief description of the project..."
                 />
               </div>
 
               {/* Budget and Currency Row */}
-              <div
-                className="grid grid-cols-2 gap-4"
-                style={{ marginBottom: "20px" }}
-              >
+              <div className="grid grid-cols-2 gap-4 mb-5">
                 <div>
-                  <label style={labelStyle}>
-                    <Coins className="w-4 h-4 text-green-500" />
+                  <label className={labelClass}>
+                    <Coins className="w-4 h-4 text-emerald-400" />
                     Estimated Budget *
                   </label>
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <span
-                        style={{
-                          color: "var(--foreground-muted)",
-                          fontWeight: 600,
-                          fontSize: "14px",
-                        }}
-                      >
+                      <span className="text-foreground-muted font-bold text-sm">
                         {getCurrencySymbol(currency)}
                       </span>
                     </div>
@@ -289,7 +224,7 @@ export default function ProjectModal({
                       type="number"
                       value={estimatedBudget}
                       onChange={(e) => setEstimatedBudget(e.target.value)}
-                      style={{ ...inputStyle, paddingLeft: "48px" }}
+                      className={`${inputClass} pl-12`}
                       placeholder="0.00"
                       step="0.01"
                       min="0"
@@ -299,8 +234,8 @@ export default function ProjectModal({
                 </div>
 
                 <div>
-                  <label style={labelStyle}>
-                    <Coins className="w-4 h-4 text-amber-500" />
+                  <label className={labelClass}>
+                    <Coins className="w-4 h-4 text-amber-400" />
                     Currency
                   </label>
                   <select
@@ -308,10 +243,15 @@ export default function ProjectModal({
                     onChange={(e) =>
                       setCurrency(e.target.value as CurrencyCode)
                     }
-                    style={inputStyle}
+                    className={inputClass}
+                    style={{ appearance: "none" }} // Ensure default arrow doesn't look weird, can add custom arrow if needed but standard select is okay with this class
                   >
                     {CURRENCY_LIST.map((curr) => (
-                      <option key={curr.code} value={curr.code}>
+                      <option
+                        key={curr.code}
+                        value={curr.code}
+                        className="bg-background-secondary text-foreground"
+                      >
                         {curr.code} - {curr.name}
                       </option>
                     ))}
@@ -319,67 +259,51 @@ export default function ProjectModal({
                 </div>
               </div>
 
-              <div
-                className="grid grid-cols-2 gap-4"
-                style={{ marginBottom: "24px" }}
-              >
+              <div className="grid grid-cols-2 gap-4 mb-8">
                 <div>
-                  <label style={labelStyle}>
-                    <Calendar className="w-4 h-4 text-violet-500" />
+                  <label className={labelClass}>
+                    <Calendar className="w-4 h-4 text-accent-violet" />
                     Start Date
                   </label>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    style={inputStyle}
+                    className={inputClass}
+                    style={{ colorScheme: "dark" }}
                   />
                 </div>
 
                 <div>
-                  <label style={labelStyle}>
-                    <Calendar className="w-4 h-4 text-pink-500" />
+                  <label className={labelClass}>
+                    <Calendar className="w-4 h-4 text-accent-pink" />
                     End Date
                   </label>
                   <input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    style={inputStyle}
+                    className={inputClass}
                     min={startDate}
+                    style={{ colorScheme: "dark" }}
                   />
                 </div>
               </div>
 
+              {/* Actions */}
               <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={onClose}
                   disabled={loading}
-                  className="flex-1 flex items-center justify-center rounded-xl transition-colors"
-                  style={{
-                    padding: "14px",
-                    backgroundColor: "var(--background-secondary)",
-                    border: "2px solid var(--border)",
-                    fontSize: "15px",
-                    fontWeight: 600,
-                  }}
+                  className="flex-1 py-3.5 rounded-xl bg-white/5 text-foreground hover:bg-white/10 font-bold transition-all text-sm border border-white/5"
                 >
                   Cancel
                 </button>
                 <motion.button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl text-white"
-                  style={{
-                    padding: "14px",
-                    background:
-                      "linear-gradient(135deg, #ec4899 0%, #f472b6 100%)",
-                    fontSize: "15px",
-                    fontWeight: 700,
-                    boxShadow: "0 8px 25px rgba(236, 72, 153, 0.4)",
-                    opacity: loading ? 0.7 : 1,
-                  }}
+                  className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-accent-pink to-rose-500 text-white font-bold shadow-lg shadow-pink-500/25 hover:from-pink-500 hover:to-rose-400 transition-all text-sm flex items-center justify-center gap-2"
                   whileHover={{ scale: loading ? 1 : 1.02 }}
                   whileTap={{ scale: loading ? 1 : 0.98 }}
                 >
@@ -388,7 +312,9 @@ export default function ProjectModal({
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4" />
-                      {initialData ? "Save Changes" : "Create Project"}
+                      <span>
+                        {initialData ? "Save Changes" : "Create Project"}
+                      </span>
                     </>
                   )}
                 </motion.button>

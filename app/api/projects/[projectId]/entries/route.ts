@@ -45,14 +45,19 @@ export async function GET(
       limit,
       cursor,
       startDate,
-      endDate
+      endDate,
+      user.email
     );
 
     // Get total spent (we need a service method for this, or just quick hack: repo access?)
     // I should add getTotalSpent to Service.
     // But I'm in the middle of a thought process. I need to make a tool call.
     // I will replace this step with Updating EntryService.
-    const totalSpent = await entryService.getTotalSpent(projectId, user.uid);
+    const totalSpent = await entryService.getTotalSpent(
+      projectId,
+      user.uid,
+      user.email
+    );
 
     // Determine next cursor
     let nextCursor = null;
@@ -155,7 +160,8 @@ export async function PUT(
       entryId,
       user.uid,
       { category, subCategory, description, amount, date },
-      fileData
+      fileData,
+      user.email
     );
 
     return NextResponse.json({ message: "Updated", entry });
@@ -181,7 +187,7 @@ export async function DELETE(
     if (!entryId)
       return NextResponse.json({ error: "Entry ID required" }, { status: 400 });
 
-    await entryService.deleteEntry(projectId, entryId, user.uid);
+    await entryService.deleteEntry(projectId, entryId, user.uid, user.email);
 
     return NextResponse.json({ message: "Deleted" });
   } catch (error: any) {

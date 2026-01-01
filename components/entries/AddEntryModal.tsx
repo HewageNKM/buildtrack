@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,26 +33,6 @@ interface AddEntryModalProps {
   onEntryAdded: () => void;
   initialData?: BudgetEntry;
 }
-
-const inputStyle = {
-  width: "100%",
-  padding: "14px 16px",
-  backgroundColor: "var(--background-secondary)",
-  border: "2px solid transparent",
-  borderRadius: "12px",
-  fontSize: "15px",
-  color: "var(--foreground)",
-};
-
-const labelStyle = {
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  fontSize: "14px",
-  fontWeight: 600,
-  marginBottom: "8px",
-  color: "var(--foreground)",
-};
 
 export default function AddEntryModal({
   isOpen,
@@ -166,90 +148,54 @@ export default function AddEntryModal({
   };
 
   const removeInvoice = () => setInvoice(null);
-
-  // Filter subcategories logic or just constant
   const showSubCategory = category === "materials";
+
+  // Shared classes
+  const labelClass =
+    "flex items-center gap-2 text-sm font-semibold mb-2 text-foreground-muted";
+  const inputClass =
+    "w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-sm text-foreground placeholder:text-foreground-muted/50 focus:border-accent-violet/50 focus:bg-white/10 focus:shadow-[0_0_15px_rgba(139,92,246,0.1)] outline-none transition-all";
 
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{
-            backgroundColor: "rgba(0, 0, 0, 0.6)",
-            backdropFilter: "blur(4px)",
-            padding: "24px",
-          }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
         >
           <motion.div
-            className="w-full rounded-3xl"
-            style={{
-              maxWidth: "520px",
-              backgroundColor: "var(--card)",
-              border: "1px solid var(--border)",
-              maxHeight: "90vh",
-              overflow: "auto",
-            }}
+            className="w-full max-w-[520px] glass-card border-white/10 rounded-3xl overflow-y-auto max-h-[90vh] shadow-2xl scrollbar-hide"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div
-              className="flex items-center justify-between"
-              style={{
-                padding: "24px",
-                borderBottom: "1px solid var(--border)",
-              }}
-            >
+            <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5 sticky top-0 z-10 backdrop-blur-xl">
               <div className="flex items-center gap-3">
-                <div
-                  className="flex items-center justify-center rounded-xl"
-                  style={{
-                    width: "44px",
-                    height: "44px",
-                    background:
-                      "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-                    boxShadow: "0 8px 20px rgba(139, 92, 246, 0.3)",
-                  }}
-                >
-                  <DollarSign className="w-5 h-5 text-white" />
+                <div className="w-11 h-11 flex items-center justify-center rounded-xl bg-gradient-to-br from-accent-violet to-indigo-600 shadow-lg shadow-indigo-500/30 text-white">
+                  <DollarSign className="w-5 h-5" />
                 </div>
-                <h2 style={{ fontSize: "20px", fontWeight: 700 }}>
+                <h2 className="text-xl font-bold text-white">
                   {initialData ? "Edit Entry" : "Add Entry"}
                 </h2>
               </div>
               <button
                 onClick={onClose}
-                className="flex items-center justify-center rounded-xl transition-colors"
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  backgroundColor: "var(--background-secondary)",
-                }}
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 text-foreground-muted hover:bg-white/10 hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} style={{ padding: "24px" }}>
+            <form onSubmit={handleSubmit} className="p-6">
               {error && (
                 <motion.div
-                  className="flex items-center gap-3 rounded-xl"
-                  style={{
-                    padding: "14px",
-                    marginBottom: "20px",
-                    backgroundColor: "rgba(239, 68, 68, 0.1)",
-                    border: "1px solid rgba(239, 68, 68, 0.3)",
-                    color: "#f87171",
-                    fontSize: "14px",
-                  }}
+                  className="flex items-center gap-3 p-4 mb-6 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                 >
@@ -258,25 +204,27 @@ export default function AddEntryModal({
                 </motion.div>
               )}
 
-              <div
-                className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                style={{ marginBottom: "20px" }}
-              >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
                 <div>
-                  <label style={labelStyle}>
-                    <Tag className="w-4 h-4 text-blue-500" />
+                  <label className={labelClass}>
+                    <Tag className="w-4 h-4 text-accent-cyan" />
                     Category
                   </label>
                   <select
                     value={category}
                     onChange={(e) => {
                       setCategory(e.target.value as BudgetCategory);
-                      setSubCategory(""); // Reset subcategory when category changes
+                      setSubCategory("");
                     }}
-                    style={inputStyle}
+                    className={inputClass}
+                    style={{ appearance: "none" }}
                   >
                     {BUDGET_CATEGORIES.map((cat) => (
-                      <option key={cat.value} value={cat.value}>
+                      <option
+                        key={cat.value}
+                        value={cat.value}
+                        className="bg-background-secondary text-foreground"
+                      >
                         {cat.label}
                       </option>
                     ))}
@@ -288,18 +236,28 @@ export default function AddEntryModal({
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                   >
-                    <label style={labelStyle}>
-                      <Tag className="w-4 h-4 text-indigo-500" />
+                    <label className={labelClass}>
+                      <Tag className="w-4 h-4 text-indigo-400" />
                       Material Type
                     </label>
                     <select
                       value={subCategory}
                       onChange={(e) => setSubCategory(e.target.value)}
-                      style={inputStyle}
+                      className={inputClass}
+                      style={{ appearance: "none" }}
                     >
-                      <option value="">Select Material...</option>
+                      <option
+                        value=""
+                        className="bg-background-secondary text-foreground"
+                      >
+                        Select Material...
+                      </option>
                       {MATERIAL_TYPES.map((type) => (
-                        <option key={type.value} value={type.value}>
+                        <option
+                          key={type.value}
+                          value={type.value}
+                          className="bg-background-secondary text-foreground"
+                        >
                           {type.label}
                         </option>
                       ))}
@@ -308,42 +266,38 @@ export default function AddEntryModal({
                 )}
               </div>
 
-              <div style={{ marginBottom: "20px" }}>
-                <label style={labelStyle}>
-                  <FileText className="w-4 h-4 text-purple-500" />
+              <div className="mb-5">
+                <label className={labelClass}>
+                  <FileText className="w-4 h-4 text-accent-violet" />
                   Description *
                 </label>
                 <input
                   type="text"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  style={inputStyle}
+                  className={inputClass}
                   placeholder="e.g., Cement bags for foundation"
                   required
                 />
               </div>
 
-              <div
-                className="grid grid-cols-2 gap-4"
-                style={{ marginBottom: "20px" }}
-              >
+              <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
-                  <label style={labelStyle}>
-                    <DollarSign className="w-4 h-4 text-green-500" />
+                  <label className={labelClass}>
+                    <DollarSign className="w-4 h-4 text-emerald-400" />
                     Amount *
                   </label>
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <DollarSign
-                        className="w-5 h-5"
-                        style={{ color: "var(--foreground-muted)" }}
-                      />
+                      <span className="text-foreground-muted font-bold text-sm">
+                        LKR
+                      </span>
                     </div>
                     <input
                       type="number"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      style={{ ...inputStyle, paddingLeft: "44px" }}
+                      className={`${inputClass} pl-12`}
                       placeholder="0.00"
                       step="0.01"
                       min="0"
@@ -353,155 +307,105 @@ export default function AddEntryModal({
                 </div>
 
                 <div>
-                  <label style={labelStyle}>
-                    <Calendar className="w-4 h-4 text-violet-500" />
+                  <label className={labelClass}>
+                    <Calendar className="w-4 h-4 text-accent-pink" />
                     Date
                   </label>
                   <input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    style={inputStyle}
+                    className={inputClass}
+                    style={{ colorScheme: "dark" }}
                   />
                 </div>
               </div>
 
               {/* Invoice Upload */}
-              <div style={{ marginBottom: "24px" }}>
-                <label style={labelStyle}>
-                  <Paperclip className="w-4 h-4 text-amber-500" />
+              <div className="mb-8">
+                <label className={labelClass}>
+                  <Paperclip className="w-4 h-4 text-amber-400" />
                   Invoice (Optional)
                 </label>
 
                 {invoice ? (
                   <motion.div
-                    className="flex items-center gap-4 rounded-xl"
-                    style={{
-                      padding: "16px",
-                      backgroundColor: "var(--background-secondary)",
-                      border: "1px solid var(--border)",
-                    }}
+                    className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-xl"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                   >
                     <div
-                      className="flex items-center justify-center rounded-xl shrink-0"
-                      style={{
-                        width: "44px",
-                        height: "44px",
-                        background: invoice.type.startsWith("image/")
-                          ? "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)"
-                          : "linear-gradient(135deg, #ef4444 0%, #f87171 100%)",
-                      }}
+                      className={`w-11 h-11 flex items-center justify-center rounded-xl shrink-0 text-white shadow-lg ${
+                        invoice.type.startsWith("image/")
+                          ? "bg-gradient-to-br from-accent-violet to-indigo-600"
+                          : "bg-gradient-to-br from-red-500 to-rose-600"
+                      }`}
                     >
                       {invoice.type.startsWith("image/") ? (
-                        <ImageIcon className="w-5 h-5 text-white" />
+                        <ImageIcon className="w-5 h-5" />
                       ) : (
-                        <FileText className="w-5 h-5 text-white" />
+                        <FileText className="w-5 h-5" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p
-                        className="truncate"
-                        style={{ fontWeight: 600, fontSize: "14px" }}
-                      >
+                      <p className="truncate font-bold text-sm text-foreground">
                         {invoice.name}
                       </p>
-                      <p
-                        style={{
-                          fontSize: "12px",
-                          color: "var(--foreground-muted)",
-                        }}
-                      >
+                      <p className="text-xs text-foreground-muted">
                         {(invoice.size / 1024).toFixed(1)} KB
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={removeInvoice}
-                      className="flex items-center justify-center rounded-lg"
-                      style={{
-                        width: "32px",
-                        height: "32px",
-                        backgroundColor: "rgba(239, 68, 68, 0.1)",
-                      }}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all"
                     >
-                      <X className="w-4 h-4" style={{ color: "#ef4444" }} />
+                      <X className="w-4 h-4" />
                     </button>
                   </motion.div>
                 ) : (
                   <div
                     {...getRootProps()}
-                    className="rounded-xl text-center cursor-pointer transition-colors"
-                    style={{
-                      padding: "32px",
-                      border: "2px dashed var(--border)",
-                      backgroundColor: isDragActive
-                        ? "var(--background-secondary)"
-                        : "transparent",
-                    }}
+                    className={`p-8 rounded-xl border-2 border-dashed transition-all cursor-pointer ${
+                      isDragActive
+                        ? "bg-accent-violet/10 border-accent-violet"
+                        : "bg-white/5 border-white/10 hover:border-white/30 hover:bg-white/10"
+                    }`}
                   >
                     <input {...getInputProps()} />
                     <Upload
-                      className="w-10 h-10 mx-auto"
-                      style={{
-                        color: "var(--foreground-muted)",
-                        marginBottom: "12px",
-                      }}
+                      className={`w-10 h-10 mx-auto mb-3 transition-colors ${
+                        isDragActive
+                          ? "text-accent-violet"
+                          : "text-foreground-muted"
+                      }`}
                     />
-                    <p
-                      style={{
-                        color: "var(--foreground-muted)",
-                        fontWeight: 500,
-                        fontSize: "14px",
-                      }}
-                    >
+                    <p className="text-sm font-bold text-foreground">
                       {isDragActive
-                        ? "Drop the file here..."
-                        : "Drag & drop an image or PDF"}
+                        ? "Drop the file here"
+                        : "Drag & drop invoice"}
                     </p>
-                    <p
-                      style={{
-                        fontSize: "12px",
-                        color: "var(--foreground-muted)",
-                        marginTop: "4px",
-                      }}
-                    >
-                      or click to select (Max 10MB)
+                    <p className="text-xs text-foreground-muted mt-1">
+                      Image or PDF (Max 10MB)
                     </p>
                   </div>
                 )}
               </div>
 
+              {/* Actions */}
               <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={onClose}
                   disabled={loading}
-                  className="flex-1 flex items-center justify-center rounded-xl transition-colors"
-                  style={{
-                    padding: "14px",
-                    backgroundColor: "var(--background-secondary)",
-                    border: "2px solid var(--border)",
-                    fontSize: "15px",
-                    fontWeight: 600,
-                  }}
+                  className="flex-1 py-3.5 rounded-xl bg-white/5 text-foreground hover:bg-white/10 font-bold transition-all text-sm border border-white/5"
                 >
                   Cancel
                 </button>
                 <motion.button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl text-white"
-                  style={{
-                    padding: "14px",
-                    background:
-                      "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-                    fontSize: "15px",
-                    fontWeight: 700,
-                    boxShadow: "0 8px 25px rgba(139, 92, 246, 0.4)",
-                    opacity: loading ? 0.7 : 1,
-                  }}
+                  className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-accent-violet to-indigo-600 text-white font-bold shadow-lg shadow-indigo-500/25 hover:from-accent-violet hover:to-indigo-500 transition-all text-sm flex items-center justify-center gap-2"
                   whileHover={{ scale: loading ? 1 : 1.02 }}
                   whileTap={{ scale: loading ? 1 : 0.98 }}
                 >
@@ -510,7 +414,7 @@ export default function AddEntryModal({
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4" />
-                      {initialData ? "Save Changes" : "Add Entry"}
+                      <span>{initialData ? "Save Changes" : "Add Entry"}</span>
                     </>
                   )}
                 </motion.button>

@@ -56,65 +56,108 @@ export default function SpendingTimelineChart({
     }).format(value);
   };
 
+  const containerClasses = "glass-card p-6 rounded-3xl";
+
   if (data.length === 0) {
     return (
-      <div className="card">
-        <h3 className="text-lg font-semibold mb-4">Spending Timeline</h3>
-        <div className="h-64 flex items-center justify-center text-foreground-muted">
-          No entries yet
+      <div className={containerClasses}>
+        <h3 className="text-lg font-bold mb-6 text-white">Spending Timeline</h3>
+        <div className="h-64 flex flex-col items-center justify-center text-foreground-muted space-y-2">
+          <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+            <span className="text-xl">📈</span>
+          </div>
+          <p className="text-sm font-medium">
+            Add entries to see your spending trend
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="card">
-      <h3 className="text-lg font-semibold mb-4">Spending Timeline</h3>
-      <div className="h-64">
+    <div className={containerClasses}>
+      <h3 className="text-lg font-bold mb-6 text-white">Spending Timeline</h3>
+      <div className="h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={data}
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="rgba(255,255,255,0.1)"
+              opacity={0.5}
+            />
+
             <XAxis
               dataKey="formattedDate"
-              tick={{ fill: "var(--foreground-muted)", fontSize: 12 }}
+              tick={{ fill: "#94a3b8", fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+              dy={10}
             />
+
             <YAxis
               tickFormatter={formatCurrency}
-              tick={{ fill: "var(--foreground-muted)", fontSize: 12 }}
+              tick={{ fill: "#94a3b8", fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+              dx={-10}
             />
+
             <Tooltip
               formatter={(value, name) => [
                 formatCurrency(value as number),
                 name === "cumulative" ? "Total Spent" : "Entry Amount",
               ]}
               contentStyle={{
-                backgroundColor: "var(--card)",
-                border: "1px solid var(--border)",
-                borderRadius: "8px",
+                backgroundColor: "#030712", // midnight base
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: "16px",
+                padding: "16px",
+                boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.5)",
               }}
-              labelStyle={{ color: "var(--foreground)" }}
+              itemStyle={{
+                color: "#f8fafc",
+                fontSize: "12px",
+                fontWeight: "bold",
+              }}
+              labelStyle={{
+                color: "#94a3b8",
+                marginBottom: "4px",
+                fontSize: "11px",
+              }}
             />
+
             <ReferenceLine
               y={estimatedBudget}
-              stroke="var(--error)"
-              strokeDasharray="5 5"
+              stroke="#f43f5e" // rose-500
+              strokeDasharray="6 4"
+              strokeWidth={1.5}
               label={{
-                value: "Budget",
-                fill: "var(--error)",
-                fontSize: 12,
-                position: "right",
+                value: "Budget Limit",
+                fill: "#f43f5e",
+                fontSize: 10,
+                fontWeight: "bold",
+                position: "insideBottomRight",
+                dy: -5,
               }}
             />
+
             <Line
               type="monotone"
               dataKey="cumulative"
-              stroke="var(--primary)"
-              strokeWidth={2}
-              dot={{ fill: "var(--primary)", strokeWidth: 2 }}
-              activeDot={{ r: 6, fill: "var(--primary)" }}
+              stroke="#8b5cf6" // accent-violet
+              strokeWidth={3}
+              dot={{ fill: "#8b5cf6", stroke: "#0f172a", strokeWidth: 2, r: 4 }}
+              activeDot={{
+                r: 6,
+                fill: "#8b5cf6",
+                stroke: "#ffffff",
+                strokeWidth: 2,
+              }}
+              animationDuration={1500}
             />
           </LineChart>
         </ResponsiveContainer>

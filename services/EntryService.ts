@@ -18,9 +18,14 @@ export class EntryService {
     limit?: number,
     cursor?: { date: string; id: string },
     startDate?: string,
-    endDate?: string
+    endDate?: string,
+    email?: string
   ): Promise<BudgetEntry[]> {
-    const access = await this.projectService.verifyAccess(projectId, userId);
+    const access = await this.projectService.verifyAccess(
+      projectId,
+      userId,
+      email
+    );
     if (!access.hasAccess) throw new Error("Access denied");
 
     return await this.entryRepo.getByProjectId(
@@ -32,8 +37,16 @@ export class EntryService {
     );
   }
 
-  async getTotalSpent(projectId: string, userId: string): Promise<number> {
-    const access = await this.projectService.verifyAccess(projectId, userId);
+  async getTotalSpent(
+    projectId: string,
+    userId: string,
+    email?: string
+  ): Promise<number> {
+    const access = await this.projectService.verifyAccess(
+      projectId,
+      userId,
+      email
+    );
     if (!access.hasAccess) throw new Error("Access denied");
     return await this.entryRepo.getProjectTotalSpent(projectId);
   }
@@ -51,7 +64,11 @@ export class EntryService {
     },
     file?: { buffer: Buffer; name: string; type: string }
   ): Promise<BudgetEntry> {
-    const access = await this.projectService.verifyAccess(projectId, userId);
+    const access = await this.projectService.verifyAccess(
+      projectId,
+      userId,
+      userEmail
+    );
     if (!access.hasAccess) throw new Error("Access denied");
 
     if (access.role === "viewer") throw new Error("Viewers cannot add entries");
@@ -104,9 +121,14 @@ export class EntryService {
       amount?: number;
       date?: string;
     },
-    file?: { buffer: Buffer; name: string; type: string }
+    file?: { buffer: Buffer; name: string; type: string },
+    email?: string
   ): Promise<BudgetEntry> {
-    const access = await this.projectService.verifyAccess(projectId, userId);
+    const access = await this.projectService.verifyAccess(
+      projectId,
+      userId,
+      email
+    );
     if (!access.hasAccess) throw new Error("Access denied");
 
     // Check if user is allowed to edit (owners/editors only)
@@ -182,9 +204,14 @@ export class EntryService {
   async deleteEntry(
     projectId: string,
     entryId: string,
-    userId: string
+    userId: string,
+    email?: string
   ): Promise<void> {
-    const access = await this.projectService.verifyAccess(projectId, userId);
+    const access = await this.projectService.verifyAccess(
+      projectId,
+      userId,
+      email
+    );
     if (!access.hasAccess) throw new Error("Access denied");
     if (access.role === "viewer")
       throw new Error("Viewers cannot delete entries");
