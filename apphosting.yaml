@@ -20,8 +20,6 @@ env:
     value: "75723235538"
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
     value: "1:75723235538:web:dc65a06c80939c18180d0b"
-  - variable: FIREBASE_PROJECT_ID
-    value: "construction-budget-trac-88fba"
 
   # --- Server-Side Secrets ---
 secrets:
