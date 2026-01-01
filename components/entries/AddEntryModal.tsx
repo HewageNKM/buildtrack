@@ -86,11 +86,11 @@ export default function AddEntryModal({
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
+      "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".tiff"],
       "application/pdf": [".pdf"],
     },
     maxFiles: 1,
-    maxSize: 10 * 1024 * 1024,
+    maxSize: 5 * 1024 * 1024,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -385,7 +385,7 @@ export default function AddEntryModal({
                         : "Drag & drop invoice"}
                     </p>
                     <p className="text-xs text-foreground-muted mt-1">
-                      Image or PDF (Max 10MB)
+                      Image or PDF (Max 5MB)
                     </p>
                   </div>
                 )}
