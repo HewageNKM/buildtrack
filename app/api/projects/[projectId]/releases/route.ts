@@ -1,18 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BudgetReleaseService } from "@/services/BudgetReleaseService";
-import { adminAuth } from "@/lib/firebase/admin";
-
-async function verifyAuth(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) return null;
-
-  const token = authHeader.split("Bearer ")[1];
-  try {
-    return await adminAuth.verifyIdToken(token);
-  } catch {
-    return null;
-  }
-}
+import { verifyAuth } from "@/lib/firebase/server-auth";
 
 const releaseService = new BudgetReleaseService();
 

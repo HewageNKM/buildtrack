@@ -1,20 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebase/admin";
+import { verifyAuth } from "@/lib/firebase/server-auth";
 import { ProjectService } from "@/services/ProjectService";
-import { EntryService } from "@/services/EntryService"; // For deleting associated entries
 
 const projectService = new ProjectService();
-const entryService = new EntryService();
-
-async function verifyAuth(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) return null;
-  try {
-    return await adminAuth.verifyIdToken(authHeader.split("Bearer ")[1]);
-  } catch {
-    return null;
-  }
-}
 
 export async function GET(
   request: NextRequest,

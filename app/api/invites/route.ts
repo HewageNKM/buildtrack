@@ -1,33 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebase/admin";
+import { verifyAuth } from "@/lib/firebase/server-auth";
 import { InviteRepository } from "@/repositories/InviteRepository";
-import { TeamService } from "@/services/TeamService"; // Actually handling invite logic here might be better, but sticking to pattern
-
-// Extending TeamService or InviteRepo usage
-import { adminDb } from "@/lib/firebase/admin"; // Fallback for specific logic like accept/decline if not in service yet
-// Assuming we'll add accept/decline to Service or handle here.
-// Adding accept/decline into TeamService is cleaner. Let's update TeamService?
-// No, I can implement it here using repositories for now or add to TeamService in next step if needed.
-// Let's implement logic here properly using Repos since TeamService doesn't have accept/decline yet in my previous step.
-
-// WAITING: I realized TeamService missed acceptInvite/declineInvite.
-// I will implement the logic here using repositories directly similar to before but cleaner,
-// OR I should have added it to TeamService. For now, I'll keep logic here but use Repositories where possible.
-
 import { ProjectRepository } from "@/repositories/ProjectRepository";
 
 const inviteRepo = new InviteRepository();
 const projectRepo = new ProjectRepository();
-
-async function verifyAuth(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) return null;
-  try {
-    return await adminAuth.verifyIdToken(authHeader.split("Bearer ")[1]);
-  } catch {
-    return null;
-  }
-}
 
 export async function GET(request: NextRequest) {
   try {

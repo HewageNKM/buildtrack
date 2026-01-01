@@ -1,21 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebase/admin";
+import { verifyAuth } from "@/lib/firebase/server-auth";
 import { ProjectService } from "@/services/ProjectService";
 import { CurrencyCode, DEFAULT_CURRENCY } from "@/lib/currency";
 
 const projectService = new ProjectService();
-
-async function verifyAuth(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) return null;
-
-  const token = authHeader.split("Bearer ")[1];
-  try {
-    return await adminAuth.verifyIdToken(token);
-  } catch {
-    return null;
-  }
-}
 
 export async function GET(request: NextRequest) {
   try {
