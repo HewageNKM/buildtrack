@@ -15,7 +15,16 @@ const adminApp =
   getApps().length > 0
     ? getApp()
     : initializeApp({
-        credential: cert(serviceAccount),
+        credential: process.env.FIREBASE_PRIVATE_KEY
+          ? cert(serviceAccount)
+          : {
+              getAccessToken: () =>
+                Promise.resolve({
+                  access_token: "mock-token",
+                  expires_in: 3600,
+                }),
+            },
+        projectId: process.env.FIREBASE_PROJECT_ID || "mock-project-id",
         storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
       });
 
