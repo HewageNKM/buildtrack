@@ -161,7 +161,18 @@ export const MATERIAL_TYPES = [
   { value: "other", label: "Other Materials" },
 ];
 
+export interface BudgetRelease {
+  id: string;
+  projectId: string;
+  amount: number;
+  note?: string; // e.g., "Phase 1 Mobilization"
+  date: string;
+  createdAt: string;
+  createdBy: string; // User ID
+}
+
 export interface ProjectWithStats extends Project {
   totalSpent: number;
+  totalReleased: number; // New field for released funds
   entryCount: number;
 }

@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   Project,
   BudgetEntry,
+  BudgetRelease,
   BUDGET_CATEGORIES,
   MATERIAL_TYPES,
   TeamMemberRole,
@@ -25,6 +26,9 @@ import BudgetOverviewChart from "@/components/charts/BudgetOverviewChart";
 import CategoryBreakdownChart from "@/components/charts/CategoryBreakdownChart";
 import SpendingTimelineChart from "@/components/charts/SpendingTimelineChart";
 import TeamManagementModal from "@/components/projects/TeamManagementModal";
+import AddReleaseModal from "@/components/releases/AddReleaseModal";
+import ReleaseList from "@/components/releases/ReleaseList";
+
 import {
   ArrowLeft,
   Plus,
@@ -41,9 +45,12 @@ import {
   Edit2,
   ChevronLeft,
   ChevronRight,
+  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+
+type ViewMode = "expenses" | "releases";
 
 export default function ProjectDetailPage({
   params,
@@ -56,25 +63,37 @@ export default function ProjectDetailPage({
 
   const [project, setProject] = useState<Project | null>(null);
   const [entries, setEntries] = useState<BudgetEntry[]>([]);
+  const [releases, setReleases] = useState<BudgetRelease[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Modals
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showReleaseModal, setShowReleaseModal] = useState(false);
+  const [showTeamModal, setShowTeamModal] = useState(false);
+
   const [previewFile, setPreviewFile] = useState<{
     url: string;
     name: string;
     type: "image" | "pdf";
   } | null>(null);
-  const [filterCategory, setFilterCategory] = useState<string>("all");
-  const [showTeamModal, setShowTeamModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<BudgetEntry | undefined>(
     undefined
   );
 
+  // Filters & View State
+  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<ViewMode>("expenses");
+
+  // Pagination for Entries
   const [limit, setLimit] = useState(20);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageHistory, setPageHistory] = useState<
     ({ date: string; id: string } | undefined)[]
   >([undefined]);
+
+  // Statistics
   const [projectTotalSpent, setProjectTotalSpent] = useState(0);
+  const [projectTotalReleased, setProjectTotalReleased] = useState(0);
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -100,21 +119,28 @@ export default function ProjectDetailPage({
   const fetchData = useCallback(async () => {
     if (!user) return;
     try {
+      // Parallel fetching can be optimized but keeping simple for now
       const projectData = await api.projects.get(projectId);
       setProject(projectData);
 
+      // Fetch Entries
       const cursor = pageHistory[currentPage];
-      const data = await api.entries.list(projectId, {
+      const entriesData = await api.entries.list(projectId, {
         limit,
         cursor,
       });
 
-      setEntries(data.entries);
-      setProjectTotalSpent(data.totalSpent);
+      setEntries(entriesData.entries);
+      setProjectTotalSpent(entriesData.totalSpent);
 
-      if (data.nextCursor && currentPage === pageHistory.length - 1) {
-        setPageHistory((prev) => [...prev, data.nextCursor!]);
+      if (entriesData.nextCursor && currentPage === pageHistory.length - 1) {
+        setPageHistory((prev) => [...prev, entriesData.nextCursor!]);
       }
+
+      // Fetch Releases
+      const releasesData = await api.releases.list(projectId);
+      setReleases(releasesData.releases);
+      setProjectTotalReleased(releasesData.totalReleased);
     } catch (error) {
       console.error("Error fetching project data:", error);
       toast.error("Failed to load project details");
@@ -146,15 +172,43 @@ export default function ProjectDetailPage({
     }
   };
 
+  const handleDeleteRelease = async (releaseId: string) => {
+    if (!confirm("Are you sure you want to delete this release?")) return;
+
+    try {
+      await api.releases.delete(projectId, releaseId);
+      toast.success("Release deleted");
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting release:", error);
+      toast.error("Failed to delete release");
+    }
+  };
+
   if (authLoading || loading) return <PageLoader />;
   if (!project) return null;
 
   const totalSpent = projectTotalSpent;
-  const remaining = project.estimatedBudget - totalSpent;
-  const isOverBudget = remaining < 0;
+  const totalReleased = projectTotalReleased;
+
+  // Estimation Delta
+  const remainingEstimation = project.estimatedBudget - totalSpent;
+  const isOverBudget = remainingEstimation < 0;
+
+  // Release Delta
+  const remainingReleased = totalReleased - totalSpent;
+  const isOverReleased = remainingReleased < 0; // Usage exceeds released funds
+
   const progress =
     project.estimatedBudget > 0
       ? Math.min((totalSpent / project.estimatedBudget) * 100, 100)
+      : 0;
+
+  // Percentage of released funds used (relative to total estimation for visual alignment or relative to itself?)
+  // Let's show released marker on the progress bar.
+  const releasedPercentage =
+    project.estimatedBudget > 0
+      ? Math.min((totalReleased / project.estimatedBudget) * 100, 100)
       : 0;
 
   const filteredEntries =
@@ -219,6 +273,15 @@ export default function ProjectDetailPage({
                 <Users className="w-4 h-4 text-accent-cyan" />
                 Team ({teamMembers.length})
               </button>
+
+              <button
+                onClick={() => setShowReleaseModal(true)}
+                className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-[var(--input-bg)] border border-[var(--input-border)] hover:bg-[var(--input-focus-bg)] hover:text-foreground transition-all shadow-sm text-foreground-muted"
+              >
+                <Wallet className="w-4 h-4 text-emerald-400" />
+                Release Funds
+              </button>
+
               <button
                 onClick={() => {
                   setEditingEntry(undefined);
@@ -252,6 +315,15 @@ export default function ProjectDetailPage({
               border: "border-indigo-500/20",
             },
             {
+              label: "Funds Released",
+              value: formatCurrencyCompact(totalReleased, project.currency),
+              fullValue: formatCurrency(totalReleased, project.currency),
+              icon: <Wallet className="w-5 h-5" />,
+              color: "text-emerald-400",
+              bg: "bg-emerald-500/10",
+              border: "border-emerald-500/20",
+            },
+            {
               label: "Total Spent",
               value: formatCurrencyCompact(totalSpent, project.currency),
               fullValue: formatCurrency(totalSpent, project.currency),
@@ -261,26 +333,28 @@ export default function ProjectDetailPage({
               border: "border-accent-cyan/20",
             },
             {
-              label: isOverBudget ? "Over Budget" : "Remaining",
+              label: isOverReleased
+                ? "Over Released Limit"
+                : isOverBudget
+                ? "Over Total Budget"
+                : "Remaining Released",
+              // Logic check: User asked specifically for "how much has left from released amount"
               value: formatCurrencyCompact(
-                Math.abs(remaining),
+                isOverReleased
+                  ? Math.abs(remainingReleased)
+                  : remainingReleased,
                 project.currency
               ),
-              fullValue: formatCurrency(Math.abs(remaining), project.currency),
+              fullValue: formatCurrency(
+                Math.abs(remainingReleased),
+                project.currency
+              ),
               icon: <TrendingDown className="w-5 h-5" />,
-              color: isOverBudget ? "text-red-400" : "text-emerald-400",
-              bg: isOverBudget ? "bg-red-500/10" : "bg-emerald-500/10",
-              border: isOverBudget
+              color: isOverReleased ? "text-red-400" : "text-amber-400",
+              bg: isOverReleased ? "bg-red-500/10" : "bg-amber-500/10",
+              border: isOverReleased
                 ? "border-red-500/20"
-                : "border-emerald-500/20",
-            },
-            {
-              label: "Total Entries",
-              value: entries.length,
-              icon: <Receipt className="w-5 h-5" />,
-              color: "text-amber-400",
-              bg: "bg-amber-500/10",
-              border: "border-amber-500/20",
+                : "border-amber-500/20",
             },
           ].map((stat, i) => (
             <div
@@ -301,7 +375,7 @@ export default function ProjectDetailPage({
                     className="text-2xl font-black text-foreground"
                     title={stat.fullValue?.toString()}
                   >
-                    {isOverBudget && stat.label === "Over Budget" ? "+" : ""}
+                    {isOverReleased && i === 3 ? "+" : ""}
                     {stat.value}
                   </p>
                 </div>
@@ -310,31 +384,63 @@ export default function ProjectDetailPage({
           ))}
         </section>
 
-        {/* Progress Card */}
-        <section className="p-6 rounded-2xl glass-card">
-          <div className="flex items-center justify-between mb-4">
+        {/* Improved Progress Card */}
+        <section className="p-6 rounded-2xl glass-card relative overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
             <span className="text-sm font-bold text-foreground-muted">
-              Budget Usage
+              Budget Usage vs Released Funds
             </span>
-            <span
-              className={`text-sm font-bold ${
-                isOverBudget ? "text-red-400" : "text-foreground"
-              }`}
-            >
-              {progress.toFixed(1)}%
-            </span>
+            <div className="text-right text-xs font-medium text-foreground-muted">
+              <span className="text-emerald-400 font-bold">
+                {formatCurrencyCompact(totalReleased, project.currency)}
+              </span>{" "}
+              released of{" "}
+              <span className="text-indigo-400 font-bold">
+                {formatCurrencyCompact(
+                  project.estimatedBudget,
+                  project.currency
+                )}
+              </span>{" "}
+              total
+            </div>
           </div>
-          <div className="w-full bg-[var(--input-bg)] rounded-full h-3 overflow-hidden border border-[var(--input-border)]">
+
+          <div className="relative w-full h-4 bg-[var(--input-bg)] rounded-full overflow-hidden border border-[var(--input-border)]">
+            {/* Total Released Marker (Background Bar) */}
+            <div
+              className="absolute top-0 left-0 h-full bg-emerald-500/20 border-r border-emerald-500/50 transition-all duration-1000"
+              style={{ width: `${releasedPercentage}%` }}
+              title={`Released: ${releasedPercentage.toFixed(1)}%`}
+            />
+
+            {/* Spent Progress */}
             <div
               className={`h-full transition-all duration-1000 ease-out rounded-full shadow-[0_0_15px_rgba(0,0,0,0.3)] ${
                 isOverBudget
                   ? "bg-red-500"
-                  : progress > 80
-                  ? "bg-amber-500"
+                  : isOverReleased
+                  ? "bg-amber-500" // Warning: Spent more than released but under estimation
                   : "bg-emerald-500"
               }`}
               style={{ width: `${progress}%` }}
+              title={`Spent: ${progress.toFixed(1)}%`}
             />
+          </div>
+
+          {/* Legend */}
+          <div className="flex items-center gap-4 mt-3 text-xs font-medium text-foreground-muted">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+              <span>Spent (Safe)</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+              <span>Exceeds Released</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-emerald-500/30 border border-emerald-500/50"></div>
+              <span>Total Released</span>
+            </div>
           </div>
         </section>
 
@@ -362,231 +468,273 @@ export default function ProjectDetailPage({
           </div>
         </section>
 
-        {/* Entries Section */}
+        {/* Data Section (Tabs) */}
         <section className="p-6 rounded-2xl glass-card">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
-            <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
-              <Receipt className="w-5 h-5 text-accent-violet" />
-              Project Ledger
-            </h3>
-
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Date Filters */}
-              <div className="flex items-center bg-[var(--input-bg)] rounded-xl border border-[var(--input-border)] px-3 py-2 text-sm">
-                <Calendar className="w-4 h-4 text-foreground-muted mr-2" />
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-transparent text-foreground focus:outline-none w-28 placeholder:text-foreground-muted"
-                />
-                <span className="mx-2 text-foreground-muted">→</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-transparent text-foreground focus:outline-none w-28 placeholder:text-foreground-muted"
-                />
-              </div>
-
-              {/* Category Select */}
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="bg-[var(--input-bg)] border border-[var(--input-border)] text-foreground rounded-xl px-4 py-2 text-sm focus:border-accent-violet outline-none"
-              >
-                <option
-                  value="all"
-                  className="bg-background-secondary text-foreground"
-                >
-                  All Categories
-                </option>
-                {BUDGET_CATEGORIES.map((cat) => (
-                  <option
-                    key={cat.value}
-                    value={cat.value}
-                    className="bg-background-secondary text-foreground"
-                  >
-                    {cat.label}
-                  </option>
-                ))}
-              </select>
-
-              {(filterCategory !== "all" || startDate || endDate) && (
-                <button
-                  onClick={handleClearFilters}
-                  className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {filteredEntries.length > 0 ? (
-            <div className="overflow-x-auto -mx-6">
-              <div className="inline-block min-w-full align-middle px-6">
-                <table className="min-w-full divide-y divide-[var(--card-border)]">
-                  <thead>
-                    <tr className="text-left text-xs font-bold text-foreground-muted uppercase tracking-wider">
-                      <th className="pb-4 px-4">Date</th>
-                      <th className="pb-4 px-4">Category</th>
-                      <th className="pb-4 px-4">Description</th>
-                      <th className="pb-4 px-4">Amount</th>
-                      <th className="pb-4 px-4">Receipt</th>
-                      <th className="pb-4 px-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--card-border)] text-sm">
-                    {filteredEntries.map((entry) => (
-                      <tr
-                        key={entry.id}
-                        className="group hover:bg-[var(--input-bg)]/50 transition-colors"
-                      >
-                        <td className="py-4 px-4 text-foreground whitespace-nowrap font-medium">
-                          {new Date(entry.date).toLocaleDateString()}
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex flex-col gap-1.5 align-start">
-                            <span
-                              className="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-tight w-fit"
-                              style={{
-                                backgroundColor: `${getCategoryColor(
-                                  entry.category
-                                )}15`,
-                                color: getCategoryColor(entry.category),
-                                border: `1px solid ${getCategoryColor(
-                                  entry.category
-                                )}30`,
-                              }}
-                            >
-                              {getCategoryLabel(entry.category)}
-                            </span>
-                            {entry.subCategory && (
-                              <span className="text-[10px] text-foreground-muted px-1 font-medium">
-                                {getSubCategoryLabel(entry.subCategory)}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-4 px-4 text-foreground-muted max-w-[200px] truncate">
-                          {entry.description}
-                        </td>
-                        <td className="py-4 px-4 font-bold text-foreground whitespace-nowrap">
-                          {formatCurrencyCompact(
-                            entry.amount,
-                            project.currency
-                          )}
-                        </td>
-                        <td className="py-4 px-4">
-                          {entry.invoiceUrl ? (
-                            <button
-                              onClick={() =>
-                                setPreviewFile({
-                                  url: entry.invoiceUrl!,
-                                  name: entry.invoiceFileName || "Invoice",
-                                  type: entry.invoiceType || "image",
-                                })
-                              }
-                              className="p-2 rounded-lg bg-[var(--input-bg)] text-foreground-muted hover:text-accent-violet hover:bg-[var(--input-focus-bg)] border border-[var(--input-border)] transition-colors"
-                            >
-                              {entry.invoiceType === "pdf" ? (
-                                <FileText className="w-4 h-4" />
-                              ) : (
-                                <ImageIcon className="w-4 h-4" />
-                              )}
-                            </button>
-                          ) : (
-                            <span className="text-foreground-muted/30">—</span>
-                          )}
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => handleEditEntry(entry)}
-                              className="p-2 text-foreground-muted hover:text-accent-violet hover:bg-accent-violet/10 rounded-lg transition-colors"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteEntry(entry.id)}
-                              className="p-2 text-foreground-muted hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              <div className="flex items-center justify-between mt-6 pt-6 border-t border-[var(--card-border)]">
-                <div className="flex items-center gap-2 text-sm text-foreground-muted font-medium">
-                  <span>Show</span>
-                  <select
-                    value={limit}
-                    onChange={(e) => setLimit(Number(e.target.value))}
-                    className="bg-transparent font-bold focus:outline-none text-foreground cursor-pointer"
-                  >
-                    <option
-                      value={20}
-                      className="bg-background-secondary text-foreground"
-                    >
-                      20
-                    </option>
-                    <option
-                      value={50}
-                      className="bg-background-secondary text-foreground"
-                    >
-                      50
-                    </option>
-                  </select>
-                </div>
-                <div className="flex items-center gap-4">
-                  <button
-                    disabled={currentPage === 0}
-                    onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-                    className="flex items-center gap-1 px-4 py-2 text-sm font-semibold rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] hover:bg-[var(--input-focus-bg)] text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                    Prev
-                  </button>
-                  <span className="text-sm font-bold text-foreground">
-                    Page {currentPage + 1}
-                  </span>
-                  <button
-                    disabled={entries.length < limit}
-                    onClick={() => setCurrentPage((p) => p + 1)}
-                    className="flex items-center gap-1 px-4 py-2 text-sm font-semibold rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] hover:bg-[var(--input-focus-bg)] text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  >
-                    Next
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-20">
-              <div className="w-16 h-16 bg-[var(--input-bg)] rounded-full flex items-center justify-center mx-auto mb-4 border border-[var(--input-border)]">
-                <Receipt className="w-8 h-8 text-foreground-muted" />
-              </div>
-              <h4 className="text-lg font-bold text-foreground">
-                No entries found
-              </h4>
-              <p className="text-foreground-muted mb-6 max-w-sm mx-auto">
-                Start tracking your expenses by adding your first budget entry.
-              </p>
+            <div className="flex items-center gap-4">
               <button
-                onClick={() => setShowAddModal(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-accent-violet to-indigo-600 text-white font-bold hover:from-accent-violet hover:to-indigo-500 transition-all shadow-lg shadow-indigo-500/20"
+                onClick={() => setViewMode("expenses")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                  viewMode === "expenses"
+                    ? "bg-accent-violet/10 text-accent-violet border border-accent-violet/20"
+                    : "text-foreground-muted hover:bg-[var(--input-bg)] hover:text-foreground"
+                }`}
               >
-                <Plus className="w-5 h-5" />
-                Add First Entry
+                <Receipt className="w-4 h-4" />
+                Expenses Ledger
+              </button>
+              <button
+                onClick={() => setViewMode("releases")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                  viewMode === "releases"
+                    ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                    : "text-foreground-muted hover:bg-[var(--input-bg)] hover:text-foreground"
+                }`}
+              >
+                <Wallet className="w-4 h-4" />
+                Funds Released
               </button>
             </div>
+
+            {viewMode === "expenses" && (
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Date Filters */}
+                <div className="flex items-center bg-[var(--input-bg)] rounded-xl border border-[var(--input-border)] px-3 py-2 text-sm">
+                  <Calendar className="w-4 h-4 text-foreground-muted mr-2" />
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="bg-transparent text-foreground focus:outline-none w-28 placeholder:text-foreground-muted"
+                  />
+                  <span className="mx-2 text-foreground-muted">→</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="bg-transparent text-foreground focus:outline-none w-28 placeholder:text-foreground-muted"
+                  />
+                </div>
+
+                {/* Category Select */}
+                <select
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value)}
+                  className="bg-[var(--input-bg)] border border-[var(--input-border)] text-foreground rounded-xl px-4 py-2 text-sm focus:border-accent-violet outline-none"
+                >
+                  <option
+                    value="all"
+                    className="bg-background-secondary text-foreground"
+                  >
+                    All Categories
+                  </option>
+                  {BUDGET_CATEGORIES.map((cat) => (
+                    <option
+                      key={cat.value}
+                      value={cat.value}
+                      className="bg-background-secondary text-foreground"
+                    >
+                      {cat.label}
+                    </option>
+                  ))}
+                </select>
+
+                {(filterCategory !== "all" || startDate || endDate) && (
+                  <button
+                    onClick={handleClearFilters}
+                    className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {viewMode === "expenses" ? (
+            // EXPESES TABLE
+            <>
+              {filteredEntries.length > 0 ? (
+                <div className="overflow-x-auto -mx-6">
+                  <div className="inline-block min-w-full align-middle px-6">
+                    <table className="min-w-full divide-y divide-[var(--card-border)]">
+                      <thead>
+                        <tr className="text-left text-xs font-bold text-foreground-muted uppercase tracking-wider">
+                          <th className="pb-4 px-4">Date</th>
+                          <th className="pb-4 px-4">Category</th>
+                          <th className="pb-4 px-4">Description</th>
+                          <th className="pb-4 px-4">Amount</th>
+                          <th className="pb-4 px-4">Receipt</th>
+                          <th className="pb-4 px-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[var(--card-border)] text-sm">
+                        {filteredEntries.map((entry) => (
+                          <tr
+                            key={entry.id}
+                            className="group hover:bg-[var(--input-bg)]/50 transition-colors"
+                          >
+                            <td className="py-4 px-4 text-foreground whitespace-nowrap font-medium">
+                              {new Date(entry.date).toLocaleDateString()}
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex flex-col gap-1.5 align-start">
+                                <span
+                                  className="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-tight w-fit"
+                                  style={{
+                                    backgroundColor: `${getCategoryColor(
+                                      entry.category
+                                    )}15`,
+                                    color: getCategoryColor(entry.category),
+                                    border: `1px solid ${getCategoryColor(
+                                      entry.category
+                                    )}30`,
+                                  }}
+                                >
+                                  {getCategoryLabel(entry.category)}
+                                </span>
+                                {entry.subCategory && (
+                                  <span className="text-[10px] text-foreground-muted px-1 font-medium">
+                                    {getSubCategoryLabel(entry.subCategory)}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-4 px-4 text-foreground-muted max-w-[200px] truncate">
+                              {entry.description}
+                            </td>
+                            <td className="py-4 px-4 font-bold text-foreground whitespace-nowrap">
+                              {formatCurrencyCompact(
+                                entry.amount,
+                                project.currency
+                              )}
+                            </td>
+                            <td className="py-4 px-4">
+                              {entry.invoiceUrl ? (
+                                <button
+                                  onClick={() =>
+                                    setPreviewFile({
+                                      url: entry.invoiceUrl!,
+                                      name: entry.invoiceFileName || "Invoice",
+                                      type: entry.invoiceType || "image",
+                                    })
+                                  }
+                                  className="p-2 rounded-lg bg-[var(--input-bg)] text-foreground-muted hover:text-accent-violet hover:bg-[var(--input-focus-bg)] border border-[var(--input-border)] transition-colors"
+                                >
+                                  {entry.invoiceType === "pdf" ? (
+                                    <FileText className="w-4 h-4" />
+                                  ) : (
+                                    <ImageIcon className="w-4 h-4" />
+                                  )}
+                                </button>
+                              ) : (
+                                <span className="text-foreground-muted/30">
+                                  —
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => handleEditEntry(entry)}
+                                  className="p-2 text-foreground-muted hover:text-accent-violet hover:bg-accent-violet/10 rounded-lg transition-colors"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteEntry(entry.id)}
+                                  className="p-2 text-foreground-muted hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination */}
+                  <div className="flex items-center justify-between mt-6 pt-6 border-t border-[var(--card-border)]">
+                    <div className="flex items-center gap-2 text-sm text-foreground-muted font-medium">
+                      <span>Show</span>
+                      <select
+                        value={limit}
+                        onChange={(e) => setLimit(Number(e.target.value))}
+                        className="bg-transparent font-bold focus:outline-none text-foreground cursor-pointer"
+                      >
+                        <option
+                          value={20}
+                          className="bg-background-secondary text-foreground"
+                        >
+                          20
+                        </option>
+                        <option
+                          value={50}
+                          className="bg-background-secondary text-foreground"
+                        >
+                          50
+                        </option>
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <button
+                        disabled={currentPage === 0}
+                        onClick={() =>
+                          setCurrentPage((p) => Math.max(0, p - 1))
+                        }
+                        className="flex items-center gap-1 px-4 py-2 text-sm font-semibold rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] hover:bg-[var(--input-focus-bg)] text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                        Prev
+                      </button>
+                      <span className="text-sm font-bold text-foreground">
+                        Page {currentPage + 1}
+                      </span>
+                      <button
+                        disabled={entries.length < limit}
+                        onClick={() => setCurrentPage((p) => p + 1)}
+                        className="flex items-center gap-1 px-4 py-2 text-sm font-semibold rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] hover:bg-[var(--input-focus-bg)] text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      >
+                        Next
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-20">
+                  <div className="w-16 h-16 bg-[var(--input-bg)] rounded-full flex items-center justify-center mx-auto mb-4 border border-[var(--input-border)]">
+                    <Receipt className="w-8 h-8 text-foreground-muted" />
+                  </div>
+                  <h4 className="text-lg font-bold text-foreground">
+                    No entries found
+                  </h4>
+                  <p className="text-foreground-muted mb-6 max-w-sm mx-auto">
+                    Start tracking your expenses by adding your first budget
+                    entry.
+                  </p>
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-accent-violet to-indigo-600 text-white font-bold hover:from-accent-violet hover:to-indigo-500 transition-all shadow-lg shadow-indigo-500/20"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Add First Entry
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            // RELEASES TABLE
+            <ReleaseList
+              releases={releases}
+              currency={project.currency}
+              onDelete={handleDeleteRelease}
+              isOwner={
+                currentUserRole === "owner" || currentUserRole === "editor"
+              }
+            />
           )}
         </section>
       </div>
@@ -598,6 +746,17 @@ export default function ProjectDetailPage({
         projectId={project.id}
         onEntryAdded={fetchData}
         initialData={editingEntry}
+      />
+
+      <AddReleaseModal
+        isOpen={showReleaseModal}
+        onClose={() => setShowReleaseModal(false)}
+        projectId={project.id}
+        onReleaseAdded={fetchData}
+        remainingEstimation={
+          project.estimatedBudget -
+          releases.reduce((sum, r) => sum + r.amount, 0)
+        }
       />
 
       {previewFile && (
