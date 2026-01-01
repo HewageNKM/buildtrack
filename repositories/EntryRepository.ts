@@ -56,4 +56,15 @@ export class EntryRepository extends BaseRepository<BudgetEntry> {
     const entries = await this.getByProjectId(projectId);
     return entries.reduce((sum, entry) => sum + (entry.amount || 0), 0);
   }
+
+  async getProjectStats(
+    projectId: string
+  ): Promise<{ totalSpent: number; entryCount: number }> {
+    const entries = await this.getByProjectId(projectId);
+    const totalSpent = entries.reduce(
+      (sum, entry) => sum + (entry.amount || 0),
+      0
+    );
+    return { totalSpent, entryCount: entries.length };
+  }
 }

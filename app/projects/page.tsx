@@ -217,7 +217,7 @@ export default function ProjectsPage() {
                     {stat.label}
                   </p>
                   <p
-                    className="text-2xl font-black tracking-tight text-white truncate"
+                    className="text-2xl font-black tracking-tight text-foreground truncate"
                     title={stat.fullValue}
                   >
                     {stat.value}
@@ -241,7 +241,7 @@ export default function ProjectsPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-14 pr-6 py-4 rounded-2xl bg-white/5 border border-white/5 focus:border-accent-violet/50 focus:bg-white/10 outline-none transition-all text-white placeholder:text-foreground-muted/50 focus:shadow-[0_0_20px_rgba(139,92,246,0.2)]"
+              className="w-full pl-14 pr-6 py-4 rounded-2xl bg-[var(--input-bg)] border border-[var(--input-border)] focus:border-accent-violet/50 focus:bg-[var(--input-focus-bg)] outline-none transition-all text-foreground placeholder:text-foreground-muted/50 focus:shadow-[0_0_20px_rgba(139,92,246,0.2)]"
               placeholder="Search by project name or description..."
             />
           </div>
@@ -269,7 +269,7 @@ export default function ProjectsPage() {
             <div className="w-20 h-20 mb-8 flex items-center justify-center rounded-3xl bg-white/5 border border-white/10 shadow-2xl">
               <FolderKanban className="w-10 h-10 text-foreground-muted" />
             </div>
-            <h3 className="text-2xl font-bold mb-3 text-white">
+            <h3 className="text-2xl font-bold mb-3 text-foreground">
               {searchQuery ? "No results found" : "No projects yet"}
             </h3>
             <p className="text-foreground-muted mb-8 max-w-sm mx-auto text-base leading-relaxed">

@@ -38,7 +38,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-[var(--card-border)] bg-[var(--background)]/60 backdrop-blur-md">
+    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-(--card-border) bg-[var(--background)]/60 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
         {/* Logo */}
         <Link
@@ -46,7 +46,7 @@ export default function Navbar() {
           className="flex items-center gap-3 group"
         >
           <motion.div
-            className="flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-tr from-accent-violet to-primary shadow-[0_0_20px_rgba(139,92,246,0.5)] border border-[var(--card-border)]"
+            className="flex items-center justify-center w-11 h-11 rounded-xl bg-linear-to-tr from-accent-violet to-primary shadow-[0_0_20px_rgba(139,92,246,0.5)] border border-[var(--card-border)]"
             whileHover={{ scale: 1.05, rotate: 5 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -55,9 +55,6 @@ export default function Navbar() {
           <div className="hidden sm:flex flex-col">
             <span className="text-xl font-bold tracking-tight text-foreground leading-none">
               Build<span className="text-accent-cyan">Track</span>
-            </span>
-            <span className="text-[10px] font-medium text-foreground-muted tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity -mt-3.5 translate-y-3.5">
-              Pro
             </span>
           </div>
         </Link>

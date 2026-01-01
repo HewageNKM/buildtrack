@@ -13,8 +13,9 @@
   --card: rgba(255, 255, 255, 0.8);
   --card-border: rgba(226, 232, 240, 0.8); /* slate-200 */
 
-  --input-bg: rgba(241, 245, 249, 0.7); /* slate-100 */
-  --input-border: rgba(203, 213, 225, 0.6); /* slate-300 */
+  /* Increased contrast for inputs in light mode */
+  --input-bg: #f1f5f9; /* slate-100 solid */
+  --input-border: #cbd5e1; /* slate-300 solid */
   --input-focus-bg: #ffffff;
 
   --accent-violet: #7c3aed; /* violet-600 */

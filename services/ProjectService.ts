@@ -1,11 +1,17 @@
 import { ProjectRepository } from "@/repositories/ProjectRepository";
-import { Project, TeamMemberRole, TeamMember } from "@/types";
+import { EntryRepository } from "@/repositories/EntryRepository";
+import { BudgetReleaseRepository } from "@/repositories/BudgetReleaseRepository";
+import { Project, TeamMemberRole, TeamMember, ProjectWithStats } from "@/types";
 
 export class ProjectService {
   private projectRepo: ProjectRepository;
+  private entryRepo: EntryRepository;
+  private budgetReleaseRepo: BudgetReleaseRepository;
 
   constructor() {
     this.projectRepo = new ProjectRepository();
+    this.entryRepo = new EntryRepository();
+    this.budgetReleaseRepo = new BudgetReleaseRepository();
   }
 
   async createProject(
@@ -33,8 +39,33 @@ export class ProjectService {
     );
   }
 
-  async getProjects(userId: string, email?: string) {
-    return await this.projectRepo.getProjectsForUser(userId, email);
+  async getProjects(
+    userId: string,
+    email?: string
+  ): Promise<{ owned: ProjectWithStats[]; shared: ProjectWithStats[] }> {
+    const { owned, shared } = await this.projectRepo.getProjectsForUser(
+      userId,
+      email
+    );
+
+    const enhanceProject = async (
+      project: Project
+    ): Promise<ProjectWithStats> => {
+      const { totalSpent, entryCount } = await this.entryRepo.getProjectStats(
+        project.id
+      );
+      const totalReleased = await this.budgetReleaseRepo.getTotalReleased(
+        project.id
+      );
+      return { ...project, totalSpent, entryCount, totalReleased };
+    };
+
+    const [ownedWithStats, sharedWithStats] = await Promise.all([
+      Promise.all(owned.map(enhanceProject)),
+      Promise.all(shared.map(enhanceProject)),
+    ]);
+
+    return { owned: ownedWithStats, shared: sharedWithStats };
   }
 
   async getProject(

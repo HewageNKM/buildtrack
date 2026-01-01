@@ -656,8 +656,8 @@ export default function ProjectDetailPage({
                   </div>
 
                   {/* Pagination */}
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t border-[var(--card-border)]">
-                    <div className="flex items-center gap-2 text-sm text-foreground-muted font-medium">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-[var(--card-border)]">
+                    <div className="flex items-center gap-2 text-sm text-foreground-muted font-medium w-full sm:w-auto justify-center sm:justify-start">
                       <span>Show</span>
                       <select
                         value={limit}
@@ -678,7 +678,7 @@ export default function ProjectDetailPage({
                         </option>
                       </select>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 w-full sm:w-auto justify-center">
                       <button
                         disabled={currentPage === 0}
                         onClick={() =>
