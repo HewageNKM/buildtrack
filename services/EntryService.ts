@@ -123,7 +123,7 @@ export class EntryService {
       invoiceType = file.type.startsWith("image/") ? "image" : "pdf";
     }
 
-    const entryData = {
+    const entryData: Record<string, any> = {
       projectId,
       category: data.category,
       subCategory: data.subCategory || undefined,
@@ -138,7 +138,12 @@ export class EntryService {
       updatedAt: new Date().toISOString(),
     };
 
-    return await this.entryRepo.create(entryData);
+    // Remove undefined fields to prevent Firestore "Value for argument data is not a valid Firestore document" error
+    Object.keys(entryData).forEach(
+      (key) => entryData[key] === undefined && delete entryData[key]
+    );
+
+    return await this.entryRepo.create(entryData as Omit<BudgetEntry, "id">);
   }
 
   async updateEntry(
