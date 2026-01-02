@@ -58,6 +58,7 @@ export interface BudgetEntry {
   amount: number;
   date: string;
   invoiceUrl?: string;
+  storagePath?: string;
   invoiceFileName?: string;
   invoiceType?: "image" | "pdf";
   createdAt: string;

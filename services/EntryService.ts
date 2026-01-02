@@ -1,18 +1,20 @@
 import { EntryRepository } from "@/repositories/EntryRepository";
 import { ProjectService } from "./ProjectService";
 import { BudgetEntry } from "@/types";
-import { adminStorage } from "@/lib/firebase/admin";
 import { CompressionService } from "./CompressionService";
+import { StorageService } from "./StorageService";
 
 export class EntryService {
   private entryRepo: EntryRepository;
   private projectService: ProjectService;
   private compressionService: CompressionService;
+  private storageService: StorageService;
 
   constructor() {
     this.entryRepo = new EntryRepository();
     this.projectService = new ProjectService();
     this.compressionService = new CompressionService();
+    this.storageService = new StorageService();
   }
 
   async getEntries(
@@ -31,13 +33,26 @@ export class EntryService {
     );
     if (!access.hasAccess) throw new Error("Access denied");
 
-    return await this.entryRepo.getByProjectId(
+    const entries = await this.entryRepo.getByProjectId(
       projectId,
       limit,
       cursor,
       startDate,
       endDate
     );
+
+    // Generate signed URLs for private files
+    const entriesWithUrls = await Promise.all(
+      entries.map(async (entry) => {
+        if (entry.storagePath) {
+          const url = await this.storageService.getSignedUrl(entry.storagePath);
+          return url ? { ...entry, invoiceUrl: url } : entry;
+        }
+        return entry;
+      })
+    );
+
+    return entriesWithUrls;
   }
 
   async getTotalSpent(
@@ -76,14 +91,12 @@ export class EntryService {
 
     if (access.role === "viewer") throw new Error("Viewers cannot add entries");
 
-    let invoiceUrl: string | undefined;
+    let storagePath: string | undefined;
     let invoiceFileName: string | undefined;
     let invoiceType: "image" | "pdf" | undefined;
 
     if (file) {
       const fileName = `invoices/${projectId}/${Date.now()}-${file.name}`;
-      const bucket = adminStorage.bucket();
-      const fileRef = bucket.file(fileName);
 
       let fileBuffer = file.buffer;
       let contentType = file.type;
@@ -99,12 +112,10 @@ export class EntryService {
         fileBuffer = await this.compressionService.compressPdf(file.buffer);
       }
 
-      await fileRef.save(fileBuffer, {
-        metadata: { contentType },
-      });
+      await this.storageService.uploadFile(fileName, fileBuffer, contentType);
 
-      await fileRef.makePublic();
-      invoiceUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+      // Do not make public, store storage path
+      storagePath = fileName;
       invoiceFileName = file.name;
       invoiceType = file.type.startsWith("image/") ? "image" : "pdf";
     }
@@ -116,7 +127,8 @@ export class EntryService {
       description: data.description,
       amount: data.amount,
       date: data.date,
-      invoiceUrl: invoiceUrl || undefined,
+      invoiceUrl: undefined,
+      storagePath: storagePath || undefined,
       invoiceFileName: invoiceFileName || undefined,
       invoiceType: invoiceType || undefined,
       addedBy: userId,
@@ -164,22 +176,21 @@ export class EntryService {
     if (existingEntry.projectId !== projectId)
       throw new Error("Entry does not belong to this project");
 
-    let invoiceUrl = existingEntry.invoiceUrl;
+    let storagePath = existingEntry.storagePath;
     let invoiceFileName = existingEntry.invoiceFileName;
     let invoiceType = existingEntry.invoiceType;
 
     // Handle new file upload if provided
     if (file) {
       // Delete old file if exists
-      if (existingEntry.invoiceUrl) {
+      if (existingEntry.storagePath) {
+        await this.storageService.deleteFile(existingEntry.storagePath);
+      } else if (existingEntry.invoiceUrl) {
+        // Fallback for old entries without storagePath
         try {
-          const bucket = adminStorage.bucket();
           const urlParts = existingEntry.invoiceUrl.split("/");
           const oldFileName = urlParts.slice(-3).join("/");
-          // Check if file exists before deleting prevents error
-          const oldFile = bucket.file(oldFileName);
-          const [exists] = await oldFile.exists();
-          if (exists) await oldFile.delete();
+          await this.storageService.deleteFile(oldFileName);
         } catch (err) {
           console.error("Error deleting old invoice file:", err);
         }
@@ -187,8 +198,6 @@ export class EntryService {
 
       // Upload new file
       const fileName = `invoices/${projectId}/${Date.now()}-${file.name}`;
-      const bucket = adminStorage.bucket();
-      const fileRef = bucket.file(fileName);
 
       let fileBuffer = file.buffer;
       let contentType = file.type;
@@ -204,19 +213,18 @@ export class EntryService {
         fileBuffer = await this.compressionService.compressPdf(file.buffer);
       }
 
-      await fileRef.save(fileBuffer, {
-        metadata: { contentType },
-      });
+      await this.storageService.uploadFile(fileName, fileBuffer, contentType);
 
-      await fileRef.makePublic();
-      invoiceUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+      // Do not make public, store path
+      storagePath = fileName;
       invoiceFileName = file.name;
       invoiceType = file.type.startsWith("image/") ? "image" : "pdf";
     }
 
     const updateData: Partial<BudgetEntry> = {
       ...data,
-      invoiceUrl: invoiceUrl || undefined,
+      invoiceUrl: undefined,
+      storagePath: storagePath || undefined,
       invoiceFileName: invoiceFileName || undefined,
       invoiceType: invoiceType || undefined,
       updatedAt: new Date().toISOString(),
@@ -255,12 +263,13 @@ export class EntryService {
     const entry = await this.entryRepo.getById(entryId);
     if (!entry) throw new Error("Entry not found");
 
-    if (entry.invoiceUrl) {
+    if (entry.storagePath) {
+      await this.storageService.deleteFile(entry.storagePath);
+    } else if (entry.invoiceUrl) {
       try {
-        const bucket = adminStorage.bucket();
         const urlParts = entry.invoiceUrl.split("/");
         const fileName = urlParts.slice(-3).join("/");
-        await bucket.file(fileName).delete();
+        await this.storageService.deleteFile(fileName);
       } catch (err) {
         console.error("Error deleting invoice file:", err);
       }
