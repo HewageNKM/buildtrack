@@ -2,15 +2,17 @@ import { EntryRepository } from "@/repositories/EntryRepository";
 import { ProjectService } from "./ProjectService";
 import { BudgetEntry } from "@/types";
 import { adminStorage } from "@/lib/firebase/admin";
-import sharp from "sharp";
+import { CompressionService } from "./CompressionService";
 
 export class EntryService {
   private entryRepo: EntryRepository;
   private projectService: ProjectService;
+  private compressionService: CompressionService;
 
   constructor() {
     this.entryRepo = new EntryRepository();
     this.projectService = new ProjectService();
+    this.compressionService = new CompressionService();
   }
 
   async getEntries(
@@ -86,31 +88,15 @@ export class EntryService {
       let fileBuffer = file.buffer;
       let contentType = file.type;
 
-      // Compress image if applicable
       if (file.type.startsWith("image/")) {
-        try {
-          const pipeline = sharp(file.buffer).resize(1920, 1920, {
-            fit: "inside",
-            withoutEnlargement: true,
-          });
-
-          if (file.type === "image/png") {
-            fileBuffer = await pipeline.png({ quality: 80 }).toBuffer();
-            contentType = "image/png";
-          } else if (file.type === "image/webp") {
-            fileBuffer = await pipeline.webp({ quality: 80 }).toBuffer();
-            contentType = "image/webp";
-          } else {
-            // Default to JPEG for others (JPG, BMP, TIFF, etc.)
-            fileBuffer = await pipeline
-              .jpeg({ quality: 50, mozjpeg: true })
-              .toBuffer();
-            contentType = "image/jpeg";
-          }
-        } catch (error) {
-          console.error("Error compressing image:", error);
-          // Fallback to original buffer if compression fails
-        }
+        const result = await this.compressionService.compressImage(
+          file.buffer,
+          file.type
+        );
+        fileBuffer = result.buffer;
+        contentType = result.contentType;
+      } else if (file.type === "application/pdf") {
+        fileBuffer = await this.compressionService.compressPdf(file.buffer);
       }
 
       await fileRef.save(fileBuffer, {
@@ -207,31 +193,15 @@ export class EntryService {
       let fileBuffer = file.buffer;
       let contentType = file.type;
 
-      // Compress image if applicable
       if (file.type.startsWith("image/")) {
-        try {
-          const pipeline = sharp(file.buffer).resize(1920, 1920, {
-            fit: "inside",
-            withoutEnlargement: true,
-          });
-
-          if (file.type === "image/png") {
-            fileBuffer = await pipeline.png({ quality: 80 }).toBuffer();
-            contentType = "image/png";
-          } else if (file.type === "image/webp") {
-            fileBuffer = await pipeline.webp({ quality: 80 }).toBuffer();
-            contentType = "image/webp";
-          } else {
-            // Default to JPEG for others (JPG, BMP, TIFF, etc.)
-            fileBuffer = await pipeline
-              .jpeg({ quality: 50, mozjpeg: true })
-              .toBuffer();
-            contentType = "image/jpeg";
-          }
-        } catch (error) {
-          console.error("Error compressing image:", error);
-          // Fallback to original buffer if compression fails
-        }
+        const result = await this.compressionService.compressImage(
+          file.buffer,
+          file.type
+        );
+        fileBuffer = result.buffer;
+        contentType = result.contentType;
+      } else if (file.type === "application/pdf") {
+        fileBuffer = await this.compressionService.compressPdf(file.buffer);
       }
 
       await fileRef.save(fileBuffer, {
