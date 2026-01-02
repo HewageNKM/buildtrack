@@ -26,6 +26,7 @@ import {
   TrendingUp,
   AlertTriangle,
   Sparkles,
+  Wallet,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -109,6 +110,10 @@ export default function ProjectsPage() {
     0
   );
   const totalSpent = projects.reduce((sum, p) => sum + (p.totalSpent || 0), 0);
+  const totalReleased = projects.reduce(
+    (sum, p) => sum + (p.totalReleased || 0),
+    0
+  );
   const activeProjects = projects.filter((p) => p.status === "active").length;
   const overBudgetProjects = projects.filter(
     (p) => (p.totalSpent || 0) > (p.estimatedBudget || 0)
@@ -132,6 +137,14 @@ export default function ProjectsPage() {
       shadowClass: "shadow-accent-pink/20",
     },
     {
+      icon: Wallet,
+      label: "Funds Released",
+      value: formatCurrencyCompact(totalReleased, DEFAULT_CURRENCY),
+      fullValue: formatCurrency(totalReleased, DEFAULT_CURRENCY),
+      colorClass: "from-emerald-400 to-teal-500",
+      shadowClass: "shadow-emerald-400/20",
+    },
+    {
       icon: TrendingUp,
       label: "Total Spent",
       value: formatCurrencyCompact(totalSpent, DEFAULT_CURRENCY),
@@ -147,11 +160,9 @@ export default function ProjectsPage() {
       colorClass:
         overBudgetProjects > 0
           ? "from-amber-400 to-orange-500"
-          : "from-emerald-400 to-teal-500",
+          : "from-slate-400 to-slate-500", // Changed logic slightly to distinguish 'Good' vs 'Over'
       shadowClass:
-        overBudgetProjects > 0
-          ? "shadow-amber-400/20"
-          : "shadow-emerald-400/20",
+        overBudgetProjects > 0 ? "shadow-amber-400/20" : "shadow-slate-400/20",
     },
   ];
 
@@ -188,7 +199,7 @@ export default function ProjectsPage() {
 
         {/* Stats Cards */}
         <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-12"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
