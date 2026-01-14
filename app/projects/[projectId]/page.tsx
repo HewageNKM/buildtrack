@@ -309,6 +309,14 @@ export default function ProjectDetailPage({
               </button>
 
               <button
+                onClick={() => setShowCategoriesModal(true)}
+                className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-[var(--input-bg)] border border-[var(--input-border)] hover:bg-[var(--input-focus-bg)] hover:text-foreground transition-all shadow-sm text-foreground-muted"
+              >
+                <LayoutGrid className="w-4 h-4 text-accent-violet" />
+                Categories
+              </button>
+
+              <button
                 onClick={() => setShowReleaseModal(true)}
                 className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-[var(--input-bg)] border border-[var(--input-border)] hover:bg-[var(--input-focus-bg)] hover:text-foreground transition-all shadow-sm text-foreground-muted"
               >
@@ -773,7 +781,25 @@ export default function ProjectDetailPage({
         </section>
       </div>
 
-      {/* Modals */}
+      <TeamManagementModal
+        isOpen={showTeamModal}
+        onClose={() => setShowTeamModal(false)}
+        projectId={projectId}
+        projectName={project.name}
+        teamMembers={teamMembers}
+        currentUserRole={currentUserRole}
+        onUpdate={fetchData}
+      />
+
+      <ManageCategoriesModal
+        isOpen={showCategoriesModal}
+        onClose={() => setShowCategoriesModal(false)}
+        projectId={projectId}
+        onCategoriesUpdated={() => {
+          toast.success("Categories updated");
+        }}
+      />
+
       <AddEntryModal
         isOpen={showAddModal}
         onClose={handleCloseModal}
