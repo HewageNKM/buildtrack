@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyAuth } from "@/lib/firebase/server-auth";
 import { CategoryService } from "@/services/CategoryService";
 
 const categoryService = new CategoryService();
@@ -9,13 +10,16 @@ export async function GET(
 ) {
   try {
     const { projectId } = await params;
-    const userId = request.headers.get("x-user-id");
-
-    if (!userId) {
+    const user = await verifyAuth(request);
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const categories = await categoryService.getCategories(projectId, userId);
+    const categories = await categoryService.getCategories(
+      projectId,
+      user.uid,
+      user.email || undefined
+    );
     return NextResponse.json(categories);
   } catch (error: any) {
     console.error("Error fetching categories:", error);
@@ -32,18 +36,16 @@ export async function POST(
 ) {
   try {
     const { projectId } = await params;
-    const userId = request.headers.get("x-user-id");
-    const email = request.headers.get("x-user-email") || undefined;
-
-    if (!userId) {
+    const user = await verifyAuth(request);
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
     const category = await categoryService.addCategory(
       projectId,
-      userId,
-      email,
+      user.uid,
+      user.email || undefined,
       body
     );
     return NextResponse.json(category);

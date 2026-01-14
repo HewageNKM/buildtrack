@@ -113,6 +113,7 @@ export class CategoryService {
       this.categoryRepo.create({
         projectId,
         name: cat.label, // Use Label as the name shown to user
+        slug: cat.value, // Store slug for legacy compatibility
         type: "category",
         color: cat.color,
         isDeleted: false,

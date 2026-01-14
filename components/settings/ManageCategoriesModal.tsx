@@ -49,7 +49,7 @@ export default function ManageCategoriesModal({
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const data = await api.get(`/api/projects/${projectId}/categories`);
+      const data = await api.categories.list(projectId);
       setCategories(data);
     } catch (err) {
       console.error("Failed to fetch categories:", err);
@@ -71,7 +71,7 @@ export default function ManageCategoriesModal({
         parentId: addingType === "subcategory" ? selectedParentId : undefined,
       };
 
-      await api.post(`/api/projects/${projectId}/categories`, payload);
+      await api.categories.create(projectId, payload);
 
       toast.success(
         `${addingType === "category" ? "Category" : "Subcategory"} added`
@@ -92,7 +92,7 @@ export default function ManageCategoriesModal({
     if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
 
     try {
-      await api.delete(`/api/projects/${projectId}/categories/${id}`);
+      await api.categories.delete(projectId, id);
       toast.success("Category deleted");
       fetchCategories();
       onCategoriesUpdated();

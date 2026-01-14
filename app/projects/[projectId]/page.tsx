@@ -7,8 +7,7 @@ import {
   Project,
   BudgetEntry,
   BudgetRelease,
-  BUDGET_CATEGORIES,
-  MATERIAL_TYPES,
+  ProjectCategory,
   TeamMemberRole,
 } from "@/types";
 import { api } from "@/lib/api";
@@ -67,6 +66,7 @@ export default function ProjectDetailPage({
   const [project, setProject] = useState<Project | null>(null);
   const [entries, setEntries] = useState<BudgetEntry[]>([]);
   const [releases, setReleases] = useState<BudgetRelease[]>([]);
+  const [categories, setCategories] = useState<ProjectCategory[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Modals
@@ -159,6 +159,10 @@ export default function ProjectDetailPage({
       const releasesData = await api.releases.list(projectId);
       setReleases(releasesData.releases);
       setProjectTotalReleased(releasesData.totalReleased);
+
+      // Fetch Categories
+      const categoriesData = await api.categories.list(projectId);
+      setCategories(categoriesData);
     } catch (error) {
       console.error("Error fetching project data:", error);
       toast.error("Failed to load project details");
@@ -250,14 +254,34 @@ export default function ProjectDetailPage({
       ? entries
       : entries.filter((e) => e.category === filterCategory);
 
-  const getCategoryLabel = (value: string) =>
-    BUDGET_CATEGORIES.find((c) => c.value === value)?.label || value;
+  const getCategoryLabel = (value: string) => {
+    const cat = categories.find(
+      (c) =>
+        c.type === "category" &&
+        (c.name === value ||
+          c.slug === value ||
+          c.name.toLowerCase() === value.toLowerCase())
+    );
+    return cat ? cat.name : value;
+  };
 
-  const getCategoryColor = (value: string) =>
-    BUDGET_CATEGORIES.find((c) => c.value === value)?.color || "#6B7280";
+  const getCategoryColor = (value: string) => {
+    const cat = categories.find(
+      (c) =>
+        c.type === "category" &&
+        (c.name === value ||
+          c.slug === value ||
+          c.name.toLowerCase() === value.toLowerCase())
+    );
+    return cat ? cat.color || "#6B7280" : "#6B7280";
+  };
 
-  const getSubCategoryLabel = (value: string) =>
-    MATERIAL_TYPES.find((t) => t.value === value)?.label || value;
+  const getSubCategoryLabel = (value: string) => {
+    const sub = categories.find(
+      (c) => c.type === "subcategory" && (c.name === value || c.slug === value)
+    );
+    return sub ? sub.name : value;
+  };
 
   const isOwner = project.userId === user?.uid;
   const currentUserRole: TeamMemberRole = isOwner
@@ -499,6 +523,7 @@ export default function ProjectDetailPage({
             <CategoryBreakdownChart
               entries={entries}
               currency={project.currency || DEFAULT_CURRENCY}
+              categories={categories}
             />
           </div>
           <div className="lg:col-span-2 p-6 rounded-2xl glass-card">
@@ -570,15 +595,17 @@ export default function ProjectDetailPage({
                   >
                     All Categories
                   </option>
-                  {BUDGET_CATEGORIES.map((cat) => (
-                    <option
-                      key={cat.value}
-                      value={cat.value}
-                      className="bg-background-secondary text-foreground"
-                    >
-                      {cat.label}
-                    </option>
-                  ))}
+                  {categories
+                    .filter((c) => c.type === "category")
+                    .map((cat) => (
+                      <option
+                        key={cat.id}
+                        value={cat.name}
+                        className="bg-background-secondary text-foreground"
+                      >
+                        {cat.name}
+                      </option>
+                    ))}
                 </select>
 
                 {(filterCategory !== "all" || startDate || endDate) && (
@@ -797,6 +824,7 @@ export default function ProjectDetailPage({
         projectId={projectId}
         onCategoriesUpdated={() => {
           toast.success("Categories updated");
+          fetchData();
         }}
       />
 

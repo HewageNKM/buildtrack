@@ -9,30 +9,50 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { BUDGET_CATEGORIES, BudgetEntry, CurrencyCode } from "@/types";
+import { ProjectCategory, BudgetEntry, CurrencyCode } from "@/types";
 
 interface CategoryBreakdownChartProps {
   entries: BudgetEntry[];
   currency: CurrencyCode;
+  categories: ProjectCategory[];
 }
 
 export default function CategoryBreakdownChart({
   entries,
   currency,
+  categories,
 }: CategoryBreakdownChartProps) {
   // Aggregate spending by category
   const categoryTotals = entries.reduce((acc, entry) => {
-    acc[entry.category] = (acc[entry.category] || 0) + entry.amount;
+    // entry.category might be a slug (legacy) or a Name (new)
+    // We normalize to lowercase for aggregation if we want?
+    // Actually, better to map everything to the Category ID or Name defined in ProjectCategory.
+
+    // Find the matching ProjectCategory
+    // Check if entry.category matches a cat.slug or cat.name
+    // (assuming entry.category is the string value stored)
+
+    const cat = categories.find(
+      (c) =>
+        c.type === "category" &&
+        (c.name === entry.category ||
+          c.slug === entry.category ||
+          c.name.toLowerCase() === entry.category.toLowerCase())
+    );
+
+    const key = cat ? cat.name : entry.category; // Group by standardized Name, fall back to entry value
+    acc[key] = (acc[key] || 0) + entry.amount;
     return acc;
   }, {} as Record<string, number>);
 
-  const data = BUDGET_CATEGORIES.filter(
-    (cat) => categoryTotals[cat.value] > 0
-  ).map((cat) => ({
-    name: cat.label,
-    value: categoryTotals[cat.value] || 0,
-    color: cat.color,
-  }));
+  const data = categories
+    .filter((cat) => cat.type === "category")
+    .map((cat) => ({
+      name: cat.name,
+      value: categoryTotals[cat.name] || 0,
+      color: cat.color || "#ccc",
+    }))
+    .filter((d) => d.value > 0);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {

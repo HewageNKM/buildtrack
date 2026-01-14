@@ -87,6 +87,7 @@ export interface ProjectCategory {
   id: string;
   projectId: string;
   name: string;
+  slug?: string; // For backward compatibility with legacy entries (e.g. 'materials' vs 'Materials')
   type: "category" | "subcategory";
   parentId?: string; // If subcategory, links to parent category name/id
   color?: string; // For categories (charts)

@@ -19,11 +19,9 @@ import {
   Plus,
 } from "lucide-react";
 import {
-  BUDGET_CATEGORIES,
   BudgetCategory,
   BudgetEntry,
   BudgetEntryItem,
-  MATERIAL_TYPES,
   ProjectCategory,
 } from "@/types";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
@@ -70,7 +68,7 @@ export default function AddEntryModal({
   const fetchCategories = async () => {
     try {
       setLoadingCategories(true);
-      const data = await api.get(`/api/projects/${projectId}/categories`);
+      const data = await api.categories.list(projectId);
       setCategories(data);
     } catch (err) {
       console.error("Failed to fetch categories:", err);
@@ -239,7 +237,9 @@ export default function AddEntryModal({
   };
 
   const removeInvoice = () => setInvoice(null);
-  const showSubCategory = category === "materials";
+
+  const currentSubcategories = getSubcategories(category);
+  const showSubCategory = currentSubcategories.length > 0;
 
   // Shared classes
   const labelClass =
@@ -308,17 +308,27 @@ export default function AddEntryModal({
                       setSubCategory("");
                     }}
                     className={inputClass}
-                    style={{ appearance: "none" }}
+                    style={{
+                      appearance: "none",
+                      borderLeft: `4px solid ${
+                        mainCategories.find((c) => c.name === category)
+                          ?.color || "transparent"
+                      }`,
+                    }}
                   >
-                    {BUDGET_CATEGORIES.map((cat) => (
-                      <option
-                        key={cat.value}
-                        value={cat.value}
-                        className="bg-background-secondary text-foreground"
-                      >
-                        {cat.label}
-                      </option>
-                    ))}
+                    {loadingCategories ? (
+                      <option>Loading categories...</option>
+                    ) : (
+                      mainCategories.map((cat) => (
+                        <option
+                          key={cat.id}
+                          value={cat.name}
+                          className="bg-background-secondary text-foreground"
+                        >
+                          {cat.name}
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
 
@@ -329,7 +339,7 @@ export default function AddEntryModal({
                   >
                     <label className={labelClass}>
                       <Tag className="w-4 h-4 text-indigo-400" />
-                      Material Type
+                      Material / Sub-category
                     </label>
                     <select
                       value={subCategory}
@@ -343,13 +353,13 @@ export default function AddEntryModal({
                       >
                         Select Material...
                       </option>
-                      {MATERIAL_TYPES.map((type) => (
+                      {currentSubcategories.map((sub) => (
                         <option
-                          key={type.value}
-                          value={type.value}
+                          key={sub.id}
+                          value={sub.name}
                           className="bg-background-secondary text-foreground"
                         >
-                          {type.label}
+                          {sub.name}
                         </option>
                       ))}
                     </select>
