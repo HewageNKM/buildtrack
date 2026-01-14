@@ -65,6 +65,32 @@ export interface BudgetEntry {
   updatedAt: string;
   addedBy?: string; // User ID who added this entry
   subCategory?: string;
+  history?: BudgetEntryVersion[];
+  items?: BudgetEntryItem[];
+}
+
+export interface BudgetEntryItem {
+  id: string;
+  description: string;
+  amount: number;
+}
+
+export interface BudgetEntryVersion {
+  id: string; // timestamp
+  timestamp: string;
+  changedBy: string; // User ID
+  note: string; // Reason for change
+  snapshot: Partial<BudgetEntry>; // Previous state
+}
+
+export interface ProjectCategory {
+  id: string;
+  projectId: string;
+  name: string;
+  type: "category" | "subcategory";
+  parentId?: string; // If subcategory, links to parent category name/id
+  color?: string; // For categories (charts)
+  isDeleted: boolean; // Soft delete
 }
 
 export type BudgetCategory =

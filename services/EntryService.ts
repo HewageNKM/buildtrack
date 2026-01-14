@@ -1,6 +1,6 @@
 import { EntryRepository } from "@/repositories/EntryRepository";
 import { ProjectService } from "./ProjectService";
-import { BudgetEntry } from "@/types";
+import { BudgetEntry, BudgetEntryItem } from "@/types";
 import { CompressionService } from "./CompressionService";
 import { StorageService } from "./StorageService";
 
@@ -79,6 +79,7 @@ export class EntryService {
       description: string;
       amount: number;
       date: string;
+      items?: BudgetEntryItem[];
     },
     file?: { buffer: Buffer; name: string; type: string }
   ): Promise<BudgetEntry> {
@@ -127,6 +128,7 @@ export class EntryService {
       description: data.description,
       amount: data.amount,
       date: data.date,
+      items: data.items || undefined,
       invoiceUrl: undefined,
       storagePath: storagePath || undefined,
       invoiceFileName: invoiceFileName || undefined,
@@ -154,6 +156,8 @@ export class EntryService {
       description?: string;
       amount?: number;
       date?: string;
+      note?: string; // Reason for update
+      items?: BudgetEntryItem[];
     },
     file?: { buffer: Buffer; name: string; type: string },
     email?: string
@@ -221,28 +225,52 @@ export class EntryService {
       invoiceType = file.type.startsWith("image/") ? "image" : "pdf";
     }
 
-    const updateData: Partial<BudgetEntry> = {
+    // Create version snapshot from CURRENT state (before update)
+    const versionSnapshot: Partial<BudgetEntry> = {
+      category: existingEntry.category,
+      subCategory: existingEntry.subCategory,
+      description: existingEntry.description,
+      amount: existingEntry.amount,
+      date: existingEntry.date,
+      invoiceFileName: existingEntry.invoiceFileName,
+      invoiceType: existingEntry.invoiceType,
+      storagePath: existingEntry.storagePath,
+      items: existingEntry.items,
+    };
+
+    const newVersion = {
+      id: Date.now().toString(),
+      timestamp: new Date().toISOString(),
+      changedBy: userId,
+      note: data.note || "Update",
+      snapshot: versionSnapshot,
+    };
+
+    const updatedHistory = [...(existingEntry.history || []), newVersion];
+
+    const finalUpdateData: Partial<BudgetEntry> = {
       ...data,
       invoiceUrl: undefined,
       storagePath: storagePath || undefined,
       invoiceFileName: invoiceFileName || undefined,
       invoiceType: invoiceType || undefined,
       updatedAt: new Date().toISOString(),
+      history: updatedHistory,
     };
 
     // Remove undefined fields
-    Object.keys(updateData).forEach(
-      (key) =>
-        updateData[key as keyof BudgetEntry] === undefined &&
-        delete updateData[key as keyof BudgetEntry]
-    );
+    Object.keys(finalUpdateData).forEach((key) => {
+      if (key === "note") delete finalUpdateData[key as keyof BudgetEntry]; // Don't save note in top-level
+      if (finalUpdateData[key as keyof BudgetEntry] === undefined)
+        delete finalUpdateData[key as keyof BudgetEntry];
+    });
 
     // Explicitly handle subCategory null/undefined logic if needed,
     // but BaseRepository.update handles partials.
     // However, if we want to UNSET subCategory, we might need to send null?
     // For now assuming update sends what is changed.
 
-    return await this.entryRepo.update(entryId, updateData);
+    return await this.entryRepo.update(entryId, finalUpdateData);
   }
 
   async deleteEntry(

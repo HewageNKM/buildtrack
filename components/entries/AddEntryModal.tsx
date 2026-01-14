@@ -14,12 +14,17 @@ import {
   DollarSign,
   Tag,
   Paperclip,
+  History,
+  Trash2,
+  Plus,
 } from "lucide-react";
 import {
   BUDGET_CATEGORIES,
   BudgetCategory,
   BudgetEntry,
+  BudgetEntryItem,
   MATERIAL_TYPES,
+  ProjectCategory,
 } from "@/types";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
@@ -45,10 +50,49 @@ export default function AddEntryModal({
   const [subCategory, setSubCategory] = useState("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
+  const [items, setItems] = useState<BudgetEntryItem[]>([]);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [note, setNote] = useState(""); // For versioning
   const [invoice, setInvoice] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Dynamic Categories
+  const [categories, setCategories] = useState<ProjectCategory[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && projectId) {
+      fetchCategories();
+    }
+  }, [isOpen, projectId]);
+
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const data = await api.get(`/api/projects/${projectId}/categories`);
+      setCategories(data);
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+      // Fallback is handled by service migration, but if API fails, we might just show empty or alert
+      toast.error("Failed to load project categories");
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  const mainCategories = categories.filter((c) => c.type === "category");
+  const subCategories = categories.filter((c) => c.type === "subcategory");
+
+  const getSubcategories = (parentName: string) => {
+    // Find parent ID or check by namne
+    const parent = mainCategories.find((c) => c.name === parentName);
+    if (!parent) return [];
+
+    return subCategories.filter(
+      (s) => s.parentId === parent.id || s.parentId === parent.name
+    );
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -58,17 +102,27 @@ export default function AddEntryModal({
         setDescription(initialData.description);
         setAmount(initialData.amount.toString());
         setDate(initialData.date.split("T")[0]);
+        setItems(initialData.items || []);
       } else {
-        setCategory("materials");
+        // Default to first category if available, else 'materials'
+        if (categories.length > 0 && !initialData) {
+          const firstCat = categories.find((c) => c.type === "category");
+          if (firstCat) setCategory(firstCat.name as BudgetCategory);
+        } else if (!initialData) {
+          setCategory("materials");
+        }
+
         setSubCategory("");
         setDescription("");
         setAmount("");
         setDate(new Date().toISOString().split("T")[0]);
         setInvoice(null);
+        setItems([]);
       }
       setError("");
+      setNote("");
     }
-  }, [isOpen, initialData]);
+  }, [isOpen, initialData, categories]); // Added categories dependency to auto-select
 
   useBodyScrollLock(isOpen);
 
@@ -92,6 +146,41 @@ export default function AddEntryModal({
     maxFiles: 1,
     maxSize: 5 * 1024 * 1024,
   });
+
+  const addItem = () => {
+    setItems([
+      ...items,
+      { id: Date.now().toString(), description: "", amount: 0 },
+    ]);
+  };
+
+  const removeItem = (id: string) => {
+    const newItems = items.filter((item) => item.id !== id);
+    setItems(newItems);
+    if (newItems.length > 0) {
+      const total = newItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+      setAmount(total.toString());
+    }
+  };
+
+  const updateItem = (
+    id: string,
+    field: "description" | "amount",
+    value: any
+  ) => {
+    const newItems = items.map((item) => {
+      if (item.id === id) {
+        return { ...item, [field]: value };
+      }
+      return item;
+    });
+    setItems(newItems);
+
+    if (field === "amount") {
+      const total = newItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+      setAmount(total.toString());
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,6 +207,8 @@ export default function AddEntryModal({
         amount: parsedAmount,
         date,
         invoice: invoice || undefined,
+        note: initialData ? note : undefined,
+        items: items.length > 0 ? items : undefined,
       };
 
       if (initialData) {
@@ -281,6 +372,81 @@ export default function AddEntryModal({
                 />
               </div>
 
+              {items.length > 0 ? (
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className={labelClass + " mb-0"}>
+                      <DollarSign className="w-4 h-4 text-emerald-400" />
+                      Items Breakdown
+                    </label>
+                    <span className="text-sm font-bold text-foreground">
+                      Total: LKR {parseFloat(amount || "0").toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="space-y-3 bg-[var(--input-bg)] p-4 rounded-xl border border-[var(--input-border)]">
+                    {items.map((item, index) => (
+                      <div key={item.id} className="flex gap-2 items-start">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            placeholder="Item description"
+                            value={item.description}
+                            onChange={(e) =>
+                              updateItem(item.id, "description", e.target.value)
+                            }
+                            className={inputClass + " py-2 text-xs"}
+                            required
+                          />
+                        </div>
+                        <div className="w-32">
+                          <input
+                            type="number"
+                            placeholder="Amount"
+                            value={item.amount || ""}
+                            onChange={(e) =>
+                              updateItem(
+                                item.id,
+                                "amount",
+                                parseFloat(e.target.value)
+                              )
+                            }
+                            className={inputClass + " py-2 text-xs"}
+                            required
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeItem(item.id)}
+                          className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={addItem}
+                      className="w-full py-2 flex items-center justify-center gap-2 text-sm font-medium text-accent-violet hover:bg-accent-violet/10 rounded-lg transition-colors border border-dashed border-accent-violet/30"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Another Item
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-end mb-2">
+                  <button
+                    type="button"
+                    onClick={addItem}
+                    className="text-xs font-semibold text-accent-violet hover:underline"
+                  >
+                    + Add Itemized List
+                  </button>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
                   <label className={labelClass}>
@@ -297,11 +463,14 @@ export default function AddEntryModal({
                       type="number"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      className={`${inputClass} pl-12`}
+                      className={`${inputClass} pl-12 ${
+                        items.length > 0 ? "opacity-70" : ""
+                      }`}
                       placeholder="0.00"
                       step="0.01"
                       min="0"
                       required
+                      readOnly={items.length > 0}
                     />
                   </div>
                 </div>
@@ -319,6 +488,61 @@ export default function AddEntryModal({
                   />
                 </div>
               </div>
+
+              {initialData && (
+                <div className="mb-6">
+                  <label className={labelClass}>
+                    <FileText className="w-4 h-4 text-amber-500" />
+                    Revision Note (Why are you changing this?)
+                  </label>
+                  <input
+                    type="text"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    className={inputClass}
+                    placeholder="e.g., Price adjustment, Error correction"
+                  />
+                </div>
+              )}
+
+              {initialData &&
+                initialData.history &&
+                initialData.history.length > 0 && (
+                  <div className="mb-8 p-4 bg-[var(--input-bg)] rounded-xl border border-[var(--input-border)]">
+                    <h4 className="flex items-center gap-2 text-sm font-bold text-foreground mb-3">
+                      <History className="w-4 h-4 text-accent-cyan" />
+                      Edit History
+                    </h4>
+                    <div className="space-y-3 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                      {[...initialData.history]
+                        .sort(
+                          (a, b) =>
+                            new Date(b.timestamp).getTime() -
+                            new Date(a.timestamp).getTime()
+                        )
+                        .map((version) => (
+                          <div
+                            key={version.id}
+                            className="text-xs border-l-2 border-[var(--card-border)] pl-3"
+                          >
+                            <div className="flex justify-between text-foreground-muted mb-1">
+                              <span>
+                                {new Date(version.timestamp).toLocaleString()}
+                              </span>
+                            </div>
+                            <p className="text-foreground font-medium">
+                              Note: {version.note || "No note"}
+                            </p>
+                            <div className="mt-1 text-foreground-muted/70">
+                              Previous Amount:{" "}
+                              {version.snapshot.amount?.toLocaleString()} |
+                              Desc: {version.snapshot.description}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
 
               {/* Invoice Upload */}
               <div className="mb-8">

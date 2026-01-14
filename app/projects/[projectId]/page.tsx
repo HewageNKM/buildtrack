@@ -47,9 +47,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Wallet,
+  LayoutGrid,
 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import ManageCategoriesModal from "@/components/settings/ManageCategoriesModal";
 
 type ViewMode = "expenses" | "releases";
 
@@ -71,6 +73,7 @@ export default function ProjectDetailPage({
   const [showAddModal, setShowAddModal] = useState(false);
   const [showReleaseModal, setShowReleaseModal] = useState(false);
   const [showTeamModal, setShowTeamModal] = useState(false);
+  const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
