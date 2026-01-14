@@ -61,7 +61,7 @@ export default function ManageCategoriesModal({
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCatName.trim()) return;
+    if (!newCatName.trim() || !addingType) return;
 
     try {
       const payload = {
