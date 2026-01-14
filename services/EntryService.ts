@@ -96,7 +96,7 @@ export class EntryService {
     let invoiceType: "image" | "pdf" | undefined;
 
     if (file) {
-      const fileName = `invoices/${projectId}/${Date.now()}-${file.name}`;
+      const fileName = `invoices/${Date.now()}-${file.name}`;
 
       let fileBuffer = file.buffer;
       let contentType = file.type;
@@ -197,7 +197,7 @@ export class EntryService {
       }
 
       // Upload new file
-      const fileName = `invoices/${projectId}/${Date.now()}-${file.name}`;
+      const fileName = `invoices/${Date.now()}-${file.name}`;
 
       let fileBuffer = file.buffer;
       let contentType = file.type;

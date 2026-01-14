@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   PieChart,
   Pie,
@@ -42,6 +43,21 @@ export default function CategoryBreakdownChart({
     }).format(value);
   };
 
+  // Responsive Legend state
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024); // lg breakpoint
+    };
+
+    // Initial check
+    handleResize();
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // Common container classes to replace .card
   const containerClasses = "glass-card p-6 rounded-3xl";
 
@@ -71,13 +87,13 @@ export default function CategoryBreakdownChart({
           <PieChart>
             <Pie
               data={data}
-              cx="40%" // Shifted slightly left to make room for the right-aligned legend
+              cx={isMobile ? "50%" : "40%"}
               cy="50%"
               innerRadius={70}
               outerRadius={95}
               paddingAngle={4}
               dataKey="value"
-              stroke="none" // Removes the default white border around slices
+              stroke="none"
             >
               {data.map((entry, index) => (
                 <Cell
@@ -106,18 +122,19 @@ export default function CategoryBreakdownChart({
             />
 
             <Legend
-              layout="vertical"
-              align="right"
-              verticalAlign="middle"
+              layout={isMobile ? "horizontal" : "vertical"}
+              align={isMobile ? "center" : "right"}
+              verticalAlign={isMobile ? "bottom" : "middle"}
               iconType="circle"
               iconSize={8}
               formatter={(value) => (
-                <span className="text-xs font-semibold text-foreground-muted ml-2">
+                <span className="text-xs font-semibold text-foreground-muted ml-2 mr-2">
                   {value}
                 </span>
               )}
               wrapperStyle={{
-                paddingLeft: "20px",
+                paddingLeft: isMobile ? "0px" : "20px",
+                paddingTop: isMobile ? "20px" : "0px",
               }}
             />
           </PieChart>

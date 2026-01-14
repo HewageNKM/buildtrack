@@ -28,6 +28,7 @@ import SpendingTimelineChart from "@/components/charts/SpendingTimelineChart";
 import TeamManagementModal from "@/components/projects/TeamManagementModal";
 import AddReleaseModal from "@/components/releases/AddReleaseModal";
 import ReleaseList from "@/components/releases/ReleaseList";
+import ConfirmModal from "@/components/common/ConfirmModal";
 
 import {
   ArrowLeft,
@@ -70,6 +71,20 @@ export default function ProjectDetailPage({
   const [showAddModal, setShowAddModal] = useState(false);
   const [showReleaseModal, setShowReleaseModal] = useState(false);
   const [showTeamModal, setShowTeamModal] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    isDestructive: boolean;
+    confirmText?: string;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+    isDestructive: false,
+  });
 
   const [previewFile, setPreviewFile] = useState<{
     url: string;
@@ -160,29 +175,45 @@ export default function ProjectDetailPage({
   }, [user, authLoading, fetchData, router]);
 
   const handleDeleteEntry = async (entryId: string) => {
-    if (!confirm("Are you sure you want to delete this entry?")) return;
-
-    try {
-      await api.entries.delete(projectId, entryId);
-      toast.success("Entry deleted");
-      fetchData();
-    } catch (error) {
-      console.error("Error deleting entry:", error);
-      toast.error("Failed to delete entry");
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Entry",
+      message:
+        "Are you sure you want to delete this budget entry? This action cannot be undone.",
+      confirmText: "Delete",
+      isDestructive: true,
+      onConfirm: async () => {
+        try {
+          await api.entries.delete(projectId, entryId);
+          toast.success("Entry deleted");
+          fetchData();
+        } catch (error) {
+          console.error("Error deleting entry:", error);
+          toast.error("Failed to delete entry");
+        }
+      },
+    });
   };
 
   const handleDeleteRelease = async (releaseId: string) => {
-    if (!confirm("Are you sure you want to delete this release?")) return;
-
-    try {
-      await api.releases.delete(projectId, releaseId);
-      toast.success("Release deleted");
-      fetchData();
-    } catch (error) {
-      console.error("Error deleting release:", error);
-      toast.error("Failed to delete release");
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Release",
+      message:
+        "Are you sure you want to delete this fund release? This action cannot be undone.",
+      confirmText: "Delete",
+      isDestructive: true,
+      onConfirm: async () => {
+        try {
+          await api.releases.delete(projectId, releaseId);
+          toast.success("Release deleted");
+          fetchData();
+        } catch (error) {
+          console.error("Error deleting release:", error);
+          toast.error("Failed to delete release");
+        }
+      },
+    });
   };
 
   if (authLoading || loading) return <PageLoader />;
@@ -634,7 +665,7 @@ export default function ProjectDetailPage({
                               )}
                             </td>
                             <td className="py-4 px-4 text-right">
-                              <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="flex items-center justify-end gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                                 <button
                                   onClick={() => handleEditEntry(entry)}
                                   className="p-2 text-foreground-muted hover:text-accent-violet hover:bg-accent-violet/10 rounded-lg transition-colors"
@@ -777,6 +808,16 @@ export default function ProjectDetailPage({
         teamMembers={teamMembers}
         currentUserRole={currentUserRole}
         onUpdate={fetchData}
+      />
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
+        isDestructive={confirmModal.isDestructive}
       />
     </main>
   );
