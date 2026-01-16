@@ -240,7 +240,13 @@ export default function ProjectDetailPage({
   const isOverReleased = totalSpent > totalReleased;
 
   const filteredEntries = entries.filter((e) => {
-    if (filterCategory !== "all" && e.category !== filterCategory) return false;
+    if (filterCategory !== "all") {
+      // Check if ANY item matches the filtered category
+      const hasCategory = (e.items || []).some(
+        (item) => item.category === filterCategory
+      );
+      if (!hasCategory) return false;
+    }
     if (dateRange[0] && dayjs(e.date).isBefore(dateRange[0], "day"))
       return false;
     if (dateRange[1] && dayjs(e.date).isAfter(dateRange[1], "day"))
@@ -297,7 +303,7 @@ export default function ProjectDetailPage({
               color={getCategoryColor(item.category || "")}
               style={{ marginRight: 0, width: "fit-content" }}
             >
-              {item.category}
+              {item.category?.toLowerCase()}
             </Tag>
             {item.subCategory && (
               <Text type="secondary" style={{ fontSize: 11 }}>

@@ -31,14 +31,9 @@ export default function CategoryBreakdownChart({
     // Collect items: either use the new items array or allow fallback (though fallback shouldn't be needed if migrated)
     const items = entry.items || [];
 
-    // If no items (legacy weirdness?), try root field if it exists
-    if (items.length === 0 && entry.category) {
-      items.push({
-        id: "legacy",
-        category: entry.category,
-        amount: entry.amount,
-        description: entry.description || "",
-      } as any); // cast for simplicity in strict mode if needed, or better, make items optional in type
+    // If no items (legacy weirdness?), ignore as we removed root category support
+    if (items.length === 0) {
+      // no-op
     }
 
     items.forEach((item) => {

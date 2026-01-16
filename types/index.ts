@@ -53,9 +53,7 @@ export type { CurrencyCode } from "@/lib/currency";
 export interface BudgetEntry {
   id: string;
   projectId: string;
-  category?: BudgetCategory; // Optional now, derived from items
-  description?: string; // Optional now, derived from items
-  amount: number; // Still kept as cache/total
+  amount: number;
   date: string;
   invoiceUrl?: string;
   storagePath?: string;
@@ -64,9 +62,8 @@ export interface BudgetEntry {
   createdAt: string;
   updatedAt: string;
   addedBy?: string; // User ID who added this entry
-  subCategory?: string;
   history?: BudgetEntryVersion[];
-  items?: BudgetEntryItem[];
+  items: BudgetEntryItem[];
 }
 
 export interface BudgetEntryItem {

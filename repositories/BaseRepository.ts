@@ -1,10 +1,5 @@
 import { adminDb } from "@/lib/firebase/admin";
-import {
-  DocumentData,
-  Firestore,
-  Query,
-  CollectionReference,
-} from "firebase-admin/firestore";
+import { Firestore, CollectionReference } from "firebase-admin/firestore";
 
 export abstract class BaseRepository<T extends { id: string }> {
   protected collectionName: string;
@@ -37,6 +32,19 @@ export abstract class BaseRepository<T extends { id: string }> {
       updatedAt: new Date().toISOString(),
     });
     return { id: docRef.id, ...data } as T;
+  }
+
+  async createWithId(id: string, data: Omit<T, "id">): Promise<T> {
+    await this.collection.doc(id).set({
+      ...data,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    return { id, ...data } as T;
+  }
+
+  getNewId(): string {
+    return this.collection.doc().id;
   }
 
   async update(id: string, data: Partial<T>): Promise<T> {

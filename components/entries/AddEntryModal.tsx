@@ -12,7 +12,6 @@ import {
   Button,
   Card,
   Space,
-  Alert,
   Spin,
   Divider,
   Typography,
@@ -23,14 +22,8 @@ import {
   DeleteOutlined,
   UploadOutlined,
   DollarOutlined,
-  FileImageOutlined,
 } from "@ant-design/icons";
-import {
-  BudgetCategory,
-  BudgetEntry,
-  BudgetEntryItem,
-  ProjectCategory,
-} from "@/types";
+import { BudgetEntry, ProjectCategory } from "@/types";
 import { api } from "@/lib/api";
 // import toast from "react-hot-toast"; // Removed
 import dayjs from "dayjs";
@@ -82,7 +75,7 @@ export default function AddEntryModal({
           setItems(
             initialData.items.map((item) => ({
               id: item.id,
-              category: item.category || initialData.category || "",
+              category: item.category || (initialData as any).category || "",
               subCategory: item.subCategory || "",
               description: item.description,
               amount: item.amount,
@@ -92,9 +85,9 @@ export default function AddEntryModal({
           setItems([
             {
               id: "1",
-              category: initialData.category || "",
-              subCategory: initialData.subCategory || "",
-              description: initialData.description || "",
+              category: (initialData as any).category || "",
+              subCategory: (initialData as any).subCategory || "",
+              description: (initialData as any).description || "",
               amount: initialData.amount,
             },
           ]);

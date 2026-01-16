@@ -53,7 +53,7 @@ export default function ViewEntryModal({
           {descriptionLabel}
         </Descriptions.Item>
         <Descriptions.Item label="Category">
-          <Tag>{categoryLabel}</Tag>
+          <Tag>{categoryLabel?.toString().toLowerCase()}</Tag>
         </Descriptions.Item>
         <Descriptions.Item label="Amount">
           <Typography.Text strong>

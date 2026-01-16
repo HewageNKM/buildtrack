@@ -74,9 +74,6 @@ export class EntryService {
     userId: string,
     userEmail: string,
     data: {
-      category?: BudgetEntry["category"];
-      subCategory?: string;
-      description?: string;
       amount: number;
       date: string;
       items?: BudgetEntryItem[];
@@ -92,12 +89,16 @@ export class EntryService {
 
     if (access.role === "viewer") throw new Error("Viewers cannot add entries");
 
+    // Generate ID first to use in storage path
+    const entryId = this.entryRepo.getNewId();
+
     let storagePath: string | undefined;
     let invoiceFileName: string | undefined;
     let invoiceType: "image" | "pdf" | undefined;
 
     if (file) {
-      const fileName = `invoices/${Date.now()}-${file.name}`;
+      // Standardize path: invoices/{entryId}/{filename}
+      const fileName = `invoices/${entryId}/${file.name}`;
 
       let fileBuffer = file.buffer;
       let contentType = file.type;
@@ -130,9 +131,6 @@ export class EntryService {
 
     const entryData: Record<string, any> = {
       projectId,
-      // category: data.category, // Removed global field
-      // subCategory: data.subCategory || undefined, // Removed global field
-      // description: data.description, // Removed global field
       amount: totalAmount, // Use calculated total
       date: data.date,
       items: items,
@@ -150,7 +148,10 @@ export class EntryService {
       (key) => entryData[key] === undefined && delete entryData[key]
     );
 
-    return await this.entryRepo.create(entryData as Omit<BudgetEntry, "id">);
+    return await this.entryRepo.createWithId(
+      entryId,
+      entryData as Omit<BudgetEntry, "id">
+    );
   }
 
   async updateEntry(
@@ -158,9 +159,6 @@ export class EntryService {
     entryId: string,
     userId: string,
     data: {
-      category?: BudgetEntry["category"];
-      subCategory?: string;
-      description?: string;
       amount?: number;
       date?: string;
       note?: string; // Reason for update
@@ -207,8 +205,8 @@ export class EntryService {
         }
       }
 
-      // Upload new file
-      const fileName = `invoices/${Date.now()}-${file.name}`;
+      // Standardize path: invoices/{entryId}/{filename}
+      const fileName = `invoices/${entryId}/${file.name}`;
 
       let fileBuffer = file.buffer;
       let contentType = file.type;
@@ -248,9 +246,6 @@ export class EntryService {
 
     // Create version snapshot from CURRENT state (before update)
     const versionSnapshot: Partial<BudgetEntry> = {
-      category: existingEntry.category,
-      subCategory: existingEntry.subCategory,
-      description: existingEntry.description,
       amount: existingEntry.amount,
       date: existingEntry.date,
       invoiceFileName: existingEntry.invoiceFileName,
@@ -277,9 +272,6 @@ export class EntryService {
       // We explicitly DELETE them if we want to clean up on edit?
       // Or just ignore incoming data.category?
       // Let's just IGNORE incoming category/subCategory/description for root write.
-      category: undefined,
-      subCategory: undefined,
-      description: undefined,
 
       invoiceUrl: undefined,
       storagePath: storagePath || undefined,
