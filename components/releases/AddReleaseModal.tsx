@@ -89,7 +89,7 @@ export default function AddReleaseModal({
       open={isOpen}
       onCancel={onClose}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
     >
       <p style={{ marginBottom: 24, color: "var(--foreground-muted)" }}>
         Add funds to the working capital

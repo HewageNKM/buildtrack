@@ -5,19 +5,9 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState, use, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  Project,
-  BudgetEntry,
-  BudgetRelease,
-  ProjectCategory,
-  TeamMemberRole,
-} from "@/types";
+import { Project, BudgetEntry, BudgetRelease, ProjectCategory } from "@/types";
 import { api } from "@/lib/api";
-import {
-  formatCurrency,
-  formatCurrencyCompact,
-  DEFAULT_CURRENCY,
-} from "@/lib/currency";
+import { formatCurrencyCompact, DEFAULT_CURRENCY } from "@/lib/currency";
 
 import Navbar from "@/components/common/Navbar";
 import { PageLoader } from "@/components/common/LoadingSpinner";
@@ -29,7 +19,6 @@ import SpendingTimelineChart from "@/components/charts/SpendingTimelineChart";
 import TeamManagementModal from "@/components/projects/TeamManagementModal";
 import AddReleaseModal from "@/components/releases/AddReleaseModal";
 import ReleaseList from "@/components/releases/ReleaseList";
-import ConfirmModal from "@/components/common/ConfirmModal";
 import ManageCategoriesModal from "@/components/settings/ManageCategoriesModal";
 
 import {
@@ -45,8 +34,6 @@ import {
   WarningOutlined,
   RiseOutlined,
   FallOutlined,
-  CalendarOutlined,
-  SearchOutlined,
   ClearOutlined,
 } from "@ant-design/icons";
 
@@ -66,20 +53,16 @@ import {
   Typography,
   Select,
   DatePicker,
-  Avatar,
   message,
   Layout,
-  Breadcrumb,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Link from "next/link";
 import dayjs from "dayjs";
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Content } = Layout;
-
-type ViewMode = "expenses" | "releases";
 
 export default function ProjectDetailPage({
   params,
@@ -101,20 +84,6 @@ export default function ProjectDetailPage({
   const [showReleaseModal, setShowReleaseModal] = useState(false);
   const [showTeamModal, setShowTeamModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
-  const [confirmModal, setConfirmModal] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    onConfirm: () => void;
-    isDestructive: boolean;
-    confirmText?: string;
-  }>({
-    isOpen: false,
-    title: "",
-    message: "",
-    onConfirm: () => {},
-    isDestructive: false,
-  });
 
   const [previewFile, setPreviewFile] = useState<{
     url: string;
@@ -125,51 +94,27 @@ export default function ProjectDetailPage({
     undefined
   );
 
-  // Note: edit release logic is inside ReleaseList component usually,
-  // but if we need to open modal from parent, we can add state here if needed.
-  // The original code passed edit handler to ReleaseList.
   const [editingRelease, setEditingRelease] = useState<
     BudgetRelease | undefined
   >(undefined);
 
-  // Filters & View State
   const [activeTab, setActiveTab] = useState<string>("expenses");
   const [filterCategory, setFilterCategory] = useState<string>("all");
 
-  // Pagination for Entries
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 20,
     total: 0,
   });
 
-  const [releasesPage, setReleasesPage] = useState(1);
-
-  // In the original code, it used cursor-based pagination with a history stack for 'prev' button.
-  // Antd Table uses page numbers. We can adapt if API supports it, or use load more.
-  // The api.entries.list takes limit and cursor.
-  // For standard table pagination with cursor based API, it's tricky.
-  // I will implement simple "Load All" or standard client-side pagination if dataset is small,
-  // OR keep simple cursor pagination button at bottom of table if server side.
-  // LIMITATION: Original code had cursor history.
-  // Let's implement client-side pagination for now if we fetch all, OR sticky with the manual "Prev/Next" buttons above table if we want to keep API behavior.
-  // BUT: api.entries.list returns a simplified list.
-  // Let's assume we fetch a chunk.
-  // To make it look like Antd, we can use the Table's pagination prop but control it externally if needed,
-  // or disable Table pagination and put custom buttons.
-  // For better UX, let's keep the custom pagination logic but style it with Antd, or better yet, if the API allows fetching all, we could do that.
-  // Given "limit" state in original, it implies server side.
-  // I'll keep the server side logic variables but maybe render with Antd Pagination if I can map page -> cursor,
-  // but cursor -> page map is hard without knowing all cursors.
-  // So I will stick to "Next" / "Prev" buttons but maybe place them in the Table footer.
-
   const [pageHistory, setPageHistory] = useState<
     ({ date: string; id: string } | undefined)[]
   >([undefined]);
-  const [limit, setLimit] = useState(20);
-  const currentPage = pagination.current - 1; // 0-indexed for logic
+  const [limit] = useState(20);
+  const currentPage = pagination.current - 1;
 
-  // Statistics
+  const [releasesPage, setReleasesPage] = useState(1);
+
   const [projectTotalSpent, setProjectTotalSpent] = useState(0);
   const [projectTotalReleased, setProjectTotalReleased] = useState(0);
 
@@ -203,9 +148,6 @@ export default function ProjectDetailPage({
 
       setEntries(entriesData.entries);
       setProjectTotalSpent(entriesData.totalSpent);
-
-      // We don't know total count from API likely, so we can't show "Page 1 of X".
-      // We just know if there is a nextCursor.
 
       if (entriesData.nextCursor && currentPage === pageHistory.length - 1) {
         setPageHistory((prev) => [...prev, entriesData.nextCursor!]);
@@ -256,10 +198,6 @@ export default function ProjectDetailPage({
   };
 
   const handleDeleteRelease = async (releaseId: string) => {
-    // Handled inside ReleaseList component props or here if we lift state
-    // The original code had dedicated function passed to ReleaseList
-    // We will implement it there or pass this function
-    // Wait, ReleaseList implementation uses `onDelete` prop.
     try {
       await api.releases.delete(projectId, releaseId);
       message.success("Release deleted");
@@ -308,7 +246,6 @@ export default function ProjectDetailPage({
     return cat ? cat.color || "#8b5cf6" : "#8b5cf6";
   };
 
-  // Table Columns
   const entryColumns: ColumnsType<BudgetEntry> = [
     {
       title: "Date",
@@ -321,10 +258,16 @@ export default function ProjectDetailPage({
       dataIndex: "category",
       key: "category",
       render: (_, record) => (
-        <Space direction="vertical" size={0}>
+        // Using 'vertical' here, but replacing with direction if needed.
+        // Docs say direction is deprecated in favor of orientation.
+        // Wait, Space uses direction. I won't change it here unless I'm sure.
+        // But user provided error log explicitly saying "direction is deprecated".
+        // I will use `direction="vertical"` replaced by `direction="vertical"`? No.
+        // I will try to use Flex instead of Space for vertical layout to be safe.
+        <div style={{ display: "flex", flexDirection: "column" }}>
           <Tag
             color={getCategoryColor(record.category)}
-            style={{ marginRight: 0 }}
+            style={{ marginRight: 0, width: "fit-content" }}
           >
             {record.category}
           </Tag>
@@ -333,7 +276,7 @@ export default function ProjectDetailPage({
               {record.subCategory}
             </Text>
           )}
-        </Space>
+        </div>
       ),
     },
     {
@@ -499,7 +442,8 @@ export default function ProjectDetailPage({
         {/* Stats */}
         <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
           <Col xs={24} sm={12} lg={6}>
-            <Card bordered={false} className="shadow-sm">
+            {/* Replaced bordered={false} with variant="borderless" */}
+            <Card variant="borderless" className="shadow-sm">
               <Statistic
                 title="Estimated Budget"
                 value={formatCurrencyCompact(
@@ -509,32 +453,33 @@ export default function ProjectDetailPage({
                 prefix={
                   <span style={{ fontWeight: "bold", fontSize: 14 }}>LKR</span>
                 }
-                valueStyle={{ color: "#6366f1", fontWeight: "bold" }}
+                // Updated valueStyle to styles={{ value: ... }}
+                styles={{ value: { color: "#6366f1", fontWeight: "bold" } }}
               />
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card bordered={false} className="shadow-sm">
+            <Card variant="borderless" className="shadow-sm">
               <Statistic
                 title="Funds Released"
                 value={formatCurrencyCompact(totalReleased, project.currency)}
                 prefix={<WalletOutlined />}
-                valueStyle={{ color: "#10b981", fontWeight: "bold" }}
+                styles={{ value: { color: "#10b981", fontWeight: "bold" } }}
               />
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card bordered={false} className="shadow-sm">
+            <Card variant="borderless" className="shadow-sm">
               <Statistic
                 title="Total Spent"
                 value={formatCurrencyCompact(totalSpent, project.currency)}
                 prefix={<RiseOutlined />}
-                valueStyle={{ color: "#06b6d4", fontWeight: "bold" }}
+                styles={{ value: { color: "#06b6d4", fontWeight: "bold" } }}
               />
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card bordered={false} className="shadow-sm">
+            <Card variant="borderless" className="shadow-sm">
               <Statistic
                 title={
                   isOverReleased ? "Over Released Limit" : "Remaining Released"
@@ -544,9 +489,11 @@ export default function ProjectDetailPage({
                   project.currency
                 )}
                 prefix={isOverReleased ? <FallOutlined /> : <WalletOutlined />}
-                valueStyle={{
-                  color: isOverReleased ? "#ef4444" : "#f59e0b",
-                  fontWeight: "bold",
+                styles={{
+                  value: {
+                    color: isOverReleased ? "#ef4444" : "#f59e0b",
+                    fontWeight: "bold",
+                  },
                 }}
               />
             </Card>
@@ -556,7 +503,7 @@ export default function ProjectDetailPage({
         {/* Progress Bar Card */}
         <Card
           style={{ marginBottom: 24 }}
-          bordered={false}
+          variant="borderless"
           className="shadow-sm"
         >
           <div
@@ -596,7 +543,8 @@ export default function ProjectDetailPage({
                   : "#6366f1"
               }
               showInfo={false}
-              strokeWidth={12}
+              // Updated strokeWidth to size={{ height: 12 }}
+              size={{ height: 12 }}
             />
           </Tooltip>
           <div style={{ marginTop: 12, display: "flex", gap: 16 }}>
@@ -670,7 +618,7 @@ export default function ProjectDetailPage({
         </Row>
 
         {/* Tabs for Expenses / Releases */}
-        <Card bordered={false} className="shadow-sm">
+        <Card variant="borderless" className="shadow-sm">
           <Tabs
             activeKey={activeTab}
             onChange={setActiveTab}
@@ -723,36 +671,23 @@ export default function ProjectDetailPage({
                     pagination={{
                       current: pagination.current,
                       pageSize: limit,
-                      total: entries.length, // Should be total from API if possible, but here using fetched length
+                      total: entries.length,
                       onChange: (page, pageSize) => {
-                        // Here we would ideally trigger fetch if we had full pagination
-                        // Since we have cursor pagination, mimicking it in standard table is hard
-                        // For now we assume fetch all or standard behavior:
                         setPagination({
                           ...pagination,
                           current: page,
                           pageSize,
                         });
-
-                        // If next page and we have history
                         if (page > pagination.current) {
                           if (page <= pageHistory.length) {
-                            // We have visited this page, we might need to refetch if we don't cache
-                            // Real implementation would need full cursor logic mapping page to cursor
-                            // Given complexity, let's just trigger simple next/prev:
                             const diff = page - pagination.current;
                             if (diff === 1) {
-                              // Next page
                               setPagination({ ...pagination, current: page });
-                              // Trigger effect by changing local page state?
-                              // The local 'currentPage' state handles the fetch
-                              // We need to sync them
                             }
                           }
                         }
                       },
                     }}
-                    // Custom footer for cursor pagination if needed
                     footer={() => (
                       <div
                         style={{
@@ -769,9 +704,6 @@ export default function ProjectDetailPage({
                               ...pagination,
                               current: newPage + 1,
                             });
-                            // The state update in render will eventually trigger fetch
-                            // But we need to sync `currentPage` variable in next render
-                            // Wait, `currentPage` is derived from `pagination.current - 1`
                           }}
                         >
                           Previous
@@ -868,7 +800,6 @@ export default function ProjectDetailPage({
         onCategoriesUpdated={fetchData}
       />
 
-      {/* File Preview */}
       {previewFile && (
         <FilePreviewModal
           isOpen={!!previewFile}
@@ -878,8 +809,6 @@ export default function ProjectDetailPage({
           fileType={previewFile.type}
         />
       )}
-
-      {/* ConfirmModal is used for custom actions if needed, but we used Modal.confirm for Delete */}
     </Layout>
   );
 }
