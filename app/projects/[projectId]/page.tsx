@@ -699,6 +699,7 @@ export default function ProjectDetailPage({
                 ),
                 children: (
                   <Table
+                    scroll={{ x: 800 }}
                     columns={entryColumns}
                     dataSource={filteredEntries}
                     rowKey="id"

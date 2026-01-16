@@ -250,6 +250,7 @@ export default function AddEntryModal({
       onCancel={onClose}
       footer={null}
       width={700}
+      style={{ maxWidth: "100%", top: 20 }}
       destroyOnHidden
     >
       <Spin spinning={loadingCategories}>

@@ -111,6 +111,7 @@ export default function ReleaseList({
 
   return (
     <Table
+      scroll={{ x: 600 }}
       columns={columns}
       dataSource={releases}
       rowKey="id"

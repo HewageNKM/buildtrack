@@ -113,6 +113,7 @@ export default function ProjectModal({
       onCancel={onClose}
       footer={null}
       width={600}
+      style={{ maxWidth: "100%", top: 20 }}
       destroyOnHidden
     >
       <Form

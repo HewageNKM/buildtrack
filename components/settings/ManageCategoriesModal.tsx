@@ -137,6 +137,7 @@ export default function ManageCategoriesModal({
       onCancel={onClose}
       footer={null}
       width={700}
+      style={{ maxWidth: "100%", top: 20 }}
       destroyOnHidden
     >
       <Text type="secondary" style={{ display: "block", marginBottom: 16 }}>
