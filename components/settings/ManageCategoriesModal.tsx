@@ -7,7 +7,6 @@ import {
   Input,
   Select,
   Button,
-  List,
   Tag,
   Space,
   Typography,
@@ -15,6 +14,7 @@ import {
   ColorPicker,
   Empty,
   Spin,
+  Switch,
   message,
 } from "antd";
 import {
@@ -22,13 +22,15 @@ import {
   DeleteOutlined,
   FolderOutlined,
   TagOutlined,
+  EditOutlined,
+  CheckOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import { ProjectCategory } from "@/types";
 import { api } from "@/lib/api";
-// import toast from "react-hot-toast"; // Removed
 import type { Color } from "antd/es/color-picker";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface ManageCategoriesModalProps {
   isOpen: boolean;
@@ -50,6 +52,11 @@ export default function ManageCategoriesModal({
     "category" | "subcategory" | null
   >(null);
   const [submitting, setSubmitting] = useState(false);
+  const [editingCategory, setEditingCategory] =
+    useState<ProjectCategory | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editColor, setEditColor] = useState<string>("#3B82F6");
+  const [editHasSubs, setEditHasSubs] = useState(false);
 
   useEffect(() => {
     if (isOpen && projectId) {
@@ -97,6 +104,7 @@ export default function ManageCategoriesModal({
               : values.color.toHexString()
             : undefined,
         parentId: addingType === "subcategory" ? values.parentId : undefined,
+        hasSubCategories: addingType === "category" ? false : undefined,
       };
 
       await api.categories.create(projectId, payload);
@@ -122,6 +130,40 @@ export default function ManageCategoriesModal({
       onCategoriesUpdated();
     } catch {
       message.error("Failed to delete category");
+    }
+  };
+
+  const startEdit = (cat: ProjectCategory) => {
+    setEditingCategory(cat);
+    setEditName(cat.name);
+    setEditColor(cat.color || "#3B82F6");
+    setEditHasSubs(cat.hasSubCategories || false);
+  };
+
+  const cancelEdit = () => {
+    setEditingCategory(null);
+    setEditName("");
+    setEditColor("#3B82F6");
+    setEditHasSubs(false);
+  };
+
+  const handleUpdate = async () => {
+    if (!editingCategory) return;
+    setSubmitting(true);
+    try {
+      await api.categories.update(projectId, editingCategory.id, {
+        name: editName,
+        color: editColor,
+        hasSubCategories: editHasSubs,
+      });
+      message.success("Category updated");
+      cancelEdit();
+      fetchCategories();
+      onCategoriesUpdated();
+    } catch {
+      message.error("Failed to update category");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -250,31 +292,88 @@ export default function ManageCategoriesModal({
                     background: "rgba(255,255,255,0.02)",
                   }}
                 >
-                  <Space>
-                    <div
-                      style={{
-                        width: 12,
-                        height: 12,
-                        borderRadius: "50%",
-                        backgroundColor: cat.color || "#666",
-                      }}
-                    />
-                    <Text strong>{cat.name}</Text>
-                  </Space>
-                  <Popconfirm
-                    title={`Delete "${cat.name}"?`}
-                    description="This will also delete all subcategories"
-                    onConfirm={() => handleDelete(cat.id, cat.name)}
-                    okText="Delete"
-                    okButtonProps={{ danger: true }}
-                  >
-                    <Button
-                      type="text"
-                      danger
-                      icon={<DeleteOutlined />}
-                      size="small"
-                    />
-                  </Popconfirm>
+                  {editingCategory?.id === cat.id ? (
+                    /* Inline Edit View */
+                    <Space wrap>
+                      <ColorPicker
+                        value={editColor}
+                        onChange={(color) => setEditColor(color.toHexString())}
+                        size="small"
+                      />
+                      <Input
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        style={{ width: 150 }}
+                        size="small"
+                      />
+                      <Space size={4}>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          Has Subs:
+                        </Text>
+                        <Switch
+                          checked={editHasSubs}
+                          onChange={setEditHasSubs}
+                          size="small"
+                        />
+                      </Space>
+                      <Button
+                        type="text"
+                        icon={<CheckOutlined />}
+                        onClick={handleUpdate}
+                        loading={submitting}
+                        size="small"
+                        style={{ color: "#52c41a" }}
+                      />
+                      <Button
+                        type="text"
+                        icon={<CloseOutlined />}
+                        onClick={cancelEdit}
+                        size="small"
+                      />
+                    </Space>
+                  ) : (
+                    /* Normal View */
+                    <>
+                      <Space>
+                        <div
+                          style={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: "50%",
+                            backgroundColor: cat.color || "#666",
+                          }}
+                        />
+                        <Text strong>{cat.name}</Text>
+                        {cat.hasSubCategories && (
+                          <Tag color="blue" style={{ fontSize: 10 }}>
+                            Has Subs
+                          </Tag>
+                        )}
+                      </Space>
+                      <Space>
+                        <Button
+                          type="text"
+                          icon={<EditOutlined />}
+                          size="small"
+                          onClick={() => startEdit(cat)}
+                        />
+                        <Popconfirm
+                          title={`Delete "${cat.name}"?`}
+                          description="This will also delete all subcategories"
+                          onConfirm={() => handleDelete(cat.id, cat.name)}
+                          okText="Delete"
+                          okButtonProps={{ danger: true }}
+                        >
+                          <Button
+                            type="text"
+                            danger
+                            icon={<DeleteOutlined />}
+                            size="small"
+                          />
+                        </Popconfirm>
+                      </Space>
+                    </>
+                  )}
                 </div>
 
                 {/* Subcategories */}

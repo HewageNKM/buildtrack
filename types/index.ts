@@ -90,6 +90,7 @@ export interface ProjectCategory {
   type: "category" | "subcategory";
   parentId?: string; // If subcategory, links to parent category name/id
   color?: string; // For categories (charts)
+  hasSubCategories?: boolean; // Whether this category can have subcategories
   isDeleted: boolean; // Soft delete
 }
 

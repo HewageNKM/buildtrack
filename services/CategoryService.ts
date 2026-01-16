@@ -107,6 +107,43 @@ export class CategoryService {
     }
   }
 
+  async updateCategory(
+    categoryId: string,
+    projectId: string,
+    userId: string,
+    email: string | undefined,
+    data: {
+      name?: string;
+      color?: string;
+      hasSubCategories?: boolean;
+    }
+  ): Promise<ProjectCategory> {
+    const access = await this.projectService.verifyAccess(
+      projectId,
+      userId,
+      email
+    );
+    if (!access.hasAccess) throw new Error("Access denied");
+    if (access.role === "viewer")
+      throw new Error("Viewers cannot manage categories");
+
+    // Get the category to ensure it exists and belongs to project
+    const category = await this.categoryRepo.getById(categoryId);
+    if (!category || category.projectId !== projectId) {
+      throw new Error("Category not found or access denied");
+    }
+
+    // Only categories (not subcategories) can have hasSubCategories flag
+    const updateData: Partial<ProjectCategory> = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.color !== undefined) updateData.color = data.color;
+    if (data.hasSubCategories !== undefined && category.type === "category") {
+      updateData.hasSubCategories = data.hasSubCategories;
+    }
+
+    return await this.categoryRepo.update(categoryId, updateData);
+  }
+
   private async seedDefaultCategories(projectId: string, userId: string) {
     // 1. Seed Main Categories
     const categoryPromises = BUDGET_CATEGORIES.map((cat) =>
@@ -116,6 +153,7 @@ export class CategoryService {
         slug: cat.value, // Store slug for legacy compatibility
         type: "category",
         color: cat.color,
+        hasSubCategories: cat.value === "materials", // Only Materials has default subs
         isDeleted: false,
       })
     );

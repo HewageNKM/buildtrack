@@ -134,6 +134,8 @@ export default function AddEntryModal({
   const getSubcategories = (categoryName: string) => {
     const parent = mainCategories.find((c) => c.name === categoryName);
     if (!parent) return [];
+    // Check if this category supports subcategories
+    if (!parent.hasSubCategories) return [];
     return subCategories.filter(
       (s) => s.parentId === parent.id || s.parentId === parent.name
     );
