@@ -19,6 +19,8 @@ import TeamManagementModal from "@/components/projects/TeamManagementModal";
 import AddReleaseModal from "@/components/releases/AddReleaseModal";
 import ReleaseList from "@/components/releases/ReleaseList";
 import ManageCategoriesModal from "@/components/settings/ManageCategoriesModal";
+import ViewEntryModal from "@/components/entries/ViewEntryModal";
+import ViewReleaseModal from "@/components/releases/ViewReleaseModal";
 
 import {
   ArrowLeftOutlined,
@@ -96,6 +98,11 @@ export default function ProjectDetailPage({
     BudgetRelease | undefined
   >(undefined);
 
+  const [viewingEntry, setViewingEntry] = useState<BudgetEntry | null>(null);
+  const [viewingRelease, setViewingRelease] = useState<BudgetRelease | null>(
+    null
+  );
+
   const [activeTab, setActiveTab] = useState<string>("expenses");
   const [filterCategory, setFilterCategory] = useState<string>("all");
 
@@ -130,6 +137,14 @@ export default function ProjectDetailPage({
   const handleEditEntry = (entry: BudgetEntry) => {
     setEditingEntry(entry);
     setShowAddModal(true);
+  };
+
+  const handleViewEntry = (entry: BudgetEntry) => {
+    setViewingEntry(entry);
+  };
+
+  const handleViewRelease = (release: BudgetRelease) => {
+    setViewingRelease(release);
   };
 
   const fetchData = useCallback(async () => {
@@ -341,6 +356,11 @@ export default function ProjectDetailPage({
       align: "right",
       render: (_, record) => (
         <Space>
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
+            onClick={() => handleViewEntry(record)}
+          />
           <Button
             type="text"
             icon={<EditOutlined />}
@@ -759,6 +779,7 @@ export default function ProjectDetailPage({
                       setEditingRelease(release);
                       setShowReleaseModal(true);
                     }}
+                    onView={handleViewRelease}
                     isOwner={user?.uid === project.userId}
                   />
                 ),
@@ -769,6 +790,20 @@ export default function ProjectDetailPage({
       </Content>
 
       {/* Modals */}
+      <ViewEntryModal
+        isOpen={!!viewingEntry}
+        onClose={() => setViewingEntry(null)}
+        entry={viewingEntry}
+        currency={project.currency}
+      />
+
+      <ViewReleaseModal
+        isOpen={!!viewingRelease}
+        onClose={() => setViewingRelease(null)}
+        release={viewingRelease}
+        currency={project.currency}
+      />
+
       <AddEntryModal
         isOpen={showAddModal}
         onClose={() => {

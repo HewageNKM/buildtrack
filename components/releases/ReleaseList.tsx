@@ -3,7 +3,12 @@
 import { BudgetRelease } from "@/types";
 import { formatCurrency, DEFAULT_CURRENCY, CurrencyCode } from "@/lib/currency";
 import { Table, Button, Empty, Space, Popconfirm } from "antd";
-import { EditOutlined, DeleteOutlined, RiseOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  DeleteOutlined,
+  RiseOutlined,
+  EyeOutlined,
+} from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 
 interface ReleaseListProps {
@@ -11,6 +16,7 @@ interface ReleaseListProps {
   currency?: CurrencyCode;
   onDelete: (id: string) => void;
   onEdit: (release: BudgetRelease) => void;
+  onView: (release: BudgetRelease) => void;
   isOwner: boolean;
   currentPage: number;
   totalPages: number;
@@ -23,6 +29,7 @@ export default function ReleaseList({
   currency = DEFAULT_CURRENCY,
   onDelete,
   onEdit,
+  onView,
   isOwner,
   currentPage,
   totalPages,
@@ -53,10 +60,7 @@ export default function ReleaseList({
         </span>
       ),
     },
-  ];
-
-  if (isOwner) {
-    columns.push({
+    {
       title: "Actions",
       key: "actions",
       align: "right",
@@ -65,23 +69,32 @@ export default function ReleaseList({
         <Space>
           <Button
             type="text"
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
+            icon={<EyeOutlined />}
+            onClick={() => onView(record)}
           />
-          <Popconfirm
-            title="Delete Release"
-            description="Are you sure you want to delete this release?"
-            onConfirm={() => onDelete(record.id)}
-            okText="Delete"
-            okButtonProps={{ danger: true }}
-            cancelText="Cancel"
-          >
-            <Button type="text" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
+          {isOwner && (
+            <>
+              <Button
+                type="text"
+                icon={<EditOutlined />}
+                onClick={() => onEdit(record)}
+              />
+              <Popconfirm
+                title="Delete Release"
+                description="Are you sure you want to delete this release?"
+                onConfirm={() => onDelete(record.id)}
+                okText="Delete"
+                okButtonProps={{ danger: true }}
+                cancelText="Cancel"
+              >
+                <Button type="text" danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            </>
+          )}
         </Space>
       ),
-    });
-  }
+    },
+  ];
 
   if (releases.length === 0 && currentPage === 0) {
     return (
