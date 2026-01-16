@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, DollarSign, FileText, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
@@ -23,26 +23,29 @@ export default function AddReleaseModal({
   remainingEstimation,
   initialData,
 }: AddReleaseModalProps) {
-  const [amount, setAmount] = useState(initialData?.amount?.toString() || "");
-  const [date, setDate] = useState(
-    initialData?.date?.split("T")[0] || new Date().toISOString().split("T")[0]
-  );
-  const [note, setNote] = useState(initialData?.note || "");
+  const [amount, setAmount] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Reset form when modal opens/closes or initialData changes
-  const resetForm = () => {
-    setAmount(initialData?.amount?.toString() || "");
-    setDate(
-      initialData?.date?.split("T")[0] || new Date().toISOString().split("T")[0]
-    );
-    setNote(initialData?.note || "");
-  };
-
-  // Effect to reset when modal opens
-  if (isOpen && !loading) {
-    // This is a simple approach; a useEffect might be more robust
-  }
+  // Sync form state when modal opens or initialData changes
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setAmount(initialData.amount?.toString() || "");
+        setDate(
+          initialData.date?.split("T")[0] ||
+            new Date().toISOString().split("T")[0]
+        );
+        setNote(initialData.note || "");
+      } else {
+        // Reset for new release
+        setAmount("");
+        setDate(new Date().toISOString().split("T")[0]);
+        setNote("");
+      }
+    }
+  }, [isOpen, initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +83,6 @@ export default function AddReleaseModal({
         toast.success("Funds released successfully");
       }
 
-      resetForm();
       onReleaseAdded();
       onClose();
     } catch (error: any) {

@@ -812,6 +812,14 @@ export default function ProjectDetailPage({
               currentPage={releasesPage}
               totalPages={Math.ceil(releases.length / releasesPerPage)}
               onPageChange={setReleasesPage}
+              onDelete={handleDeleteRelease}
+              onEdit={(release) => {
+                setEditingRelease(release);
+                setShowReleaseModal(true);
+              }}
+              isOwner={
+                currentUserRole === "owner" || currentUserRole === "editor"
+              }
             />
           )}
         </section>
