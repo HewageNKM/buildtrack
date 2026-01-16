@@ -4,7 +4,7 @@ import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import { ConfigProvider, theme } from "antd";
+import ThemeWrapper from "@/components/common/ThemeWrapper";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -53,41 +53,8 @@ export default function RootLayout({
         </div>
 
         <AntdRegistry>
-          <ConfigProvider
-            theme={{
-              algorithm: theme.darkAlgorithm,
-              token: {
-                colorPrimary: "#8b5cf6",
-                colorSuccess: "#10b981",
-                colorError: "#ef4444",
-                colorWarning: "#f59e0b",
-                colorInfo: "#06b6d4",
-                borderRadius: 12,
-                fontFamily: "var(--font-geist-sans)",
-              },
-              components: {
-                Button: {
-                  borderRadius: 12,
-                },
-                Input: {
-                  borderRadius: 12,
-                },
-                Select: {
-                  borderRadius: 12,
-                },
-                Modal: {
-                  borderRadiusLG: 24,
-                },
-                Table: {
-                  borderRadius: 12,
-                },
-                Card: {
-                  borderRadiusLG: 16,
-                },
-              },
-            }}
-          >
-            <ThemeProvider>
+          <ThemeProvider>
+            <ThemeWrapper>
               <AuthProvider>
                 {children}
                 <Toaster
@@ -116,8 +83,8 @@ export default function RootLayout({
                   }}
                 />
               </AuthProvider>
-            </ThemeProvider>
-          </ConfigProvider>
+            </ThemeWrapper>
+          </ThemeProvider>
         </AntdRegistry>
       </body>
     </html>
