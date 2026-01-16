@@ -136,7 +136,7 @@ export default function TeamManagementModal({
       onCancel={onClose}
       footer={null}
       width={520}
-      destroyOnClose
+      destroyOnHidden
     >
       <Text type="secondary" style={{ display: "block", marginBottom: 16 }}>
         {projectName}

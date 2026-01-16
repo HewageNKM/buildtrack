@@ -43,7 +43,7 @@ export default function FilePreviewModal({
       style={{ top: 20 }}
       styles={{ body: { padding: 0, overflow: "hidden", minHeight: 400 } }}
       centered
-      destroyOnClose
+      destroyOnHidden
     >
       <div
         style={{

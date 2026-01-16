@@ -136,7 +136,7 @@ export default function ManageCategoriesModal({
       onCancel={onClose}
       footer={null}
       width={700}
-      destroyOnClose
+      destroyOnHidden
     >
       <Text type="secondary" style={{ display: "block", marginBottom: 16 }}>
         Customize categories for this project
