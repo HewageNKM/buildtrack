@@ -1,12 +1,12 @@
 import { Modal, Descriptions, Button, Tag, Typography } from "antd";
-import { BudgetEntry } from "@/types";
-import { formatCurrency, DEFAULT_CURRENCY } from "@/lib/currency";
+import { BudgetEntry, BUDGET_CATEGORIES } from "@/types";
+import { formatCurrency, DEFAULT_CURRENCY, CurrencyCode } from "@/lib/currency";
 
 interface ViewEntryModalProps {
   isOpen: boolean;
   onClose: () => void;
   entry: BudgetEntry | null;
-  currency?: string;
+  currency?: CurrencyCode;
 }
 
 export default function ViewEntryModal({
@@ -16,6 +16,10 @@ export default function ViewEntryModal({
   currency = DEFAULT_CURRENCY,
 }: ViewEntryModalProps) {
   if (!entry) return null;
+
+  const categoryLabel =
+    BUDGET_CATEGORIES.find((c) => c.value === entry.category)?.label ||
+    entry.category;
 
   return (
     <Modal
@@ -38,7 +42,7 @@ export default function ViewEntryModal({
           {entry.description}
         </Descriptions.Item>
         <Descriptions.Item label="Category">
-          <Tag>{entry.category?.name || "Uncategorized"}</Tag>
+          <Tag>{categoryLabel}</Tag>
         </Descriptions.Item>
         <Descriptions.Item label="Amount">
           <Typography.Text strong>
