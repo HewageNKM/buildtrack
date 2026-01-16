@@ -74,9 +74,9 @@ export class EntryService {
     userId: string,
     userEmail: string,
     data: {
-      category: BudgetEntry["category"];
+      category?: BudgetEntry["category"];
       subCategory?: string;
-      description: string;
+      description?: string;
       amount: number;
       date: string;
       items?: BudgetEntryItem[];
@@ -121,14 +121,21 @@ export class EntryService {
       invoiceType = file.type.startsWith("image/") ? "image" : "pdf";
     }
 
+    // Calculate total amount from items
+    const items = data.items || [];
+    const totalAmount = items.reduce(
+      (sum, item) => sum + (item.amount || 0),
+      0
+    );
+
     const entryData: Record<string, any> = {
       projectId,
-      category: data.category,
-      subCategory: data.subCategory || undefined,
-      description: data.description,
-      amount: data.amount,
+      // category: data.category, // Removed global field
+      // subCategory: data.subCategory || undefined, // Removed global field
+      // description: data.description, // Removed global field
+      amount: totalAmount, // Use calculated total
       date: data.date,
-      items: data.items || undefined,
+      items: items,
       invoiceUrl: undefined,
       storagePath: storagePath || undefined,
       invoiceFileName: invoiceFileName || undefined,
@@ -225,6 +232,20 @@ export class EntryService {
       invoiceType = file.type.startsWith("image/") ? "image" : "pdf";
     }
 
+    // Recalculate amount if items are present
+    let newAmount = data.amount;
+    if (data.items) {
+      newAmount = data.items.reduce((sum, item) => sum + (item.amount || 0), 0);
+    } else if (existingEntry.items) {
+      // If updating other fields but items remain same, ensure amount matches items sum?
+      // Or trust provided amount?
+      // Better to recalculate if we are enforcing item-based.
+      newAmount = existingEntry.items.reduce(
+        (sum, item) => sum + (item.amount || 0),
+        0
+      );
+    }
+
     // Create version snapshot from CURRENT state (before update)
     const versionSnapshot: Partial<BudgetEntry> = {
       category: existingEntry.category,
@@ -250,6 +271,16 @@ export class EntryService {
 
     const finalUpdateData: Partial<BudgetEntry> = {
       ...data,
+      amount: newAmount, // Enforce calculated amount
+      // Do not update root description/category if they are removed from DB schema
+      // But we must support `data` arg structure.
+      // We explicitly DELETE them if we want to clean up on edit?
+      // Or just ignore incoming data.category?
+      // Let's just IGNORE incoming category/subCategory/description for root write.
+      category: undefined,
+      subCategory: undefined,
+      description: undefined,
+
       invoiceUrl: undefined,
       storagePath: storagePath || undefined,
       invoiceFileName: invoiceFileName || undefined,

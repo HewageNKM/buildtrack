@@ -26,17 +26,39 @@ export default function CategoryBreakdownChart({
   categories,
 }: CategoryBreakdownChartProps) {
   // Aggregate spending by category
+  // Aggregate spending by category
   const categoryTotals = entries.reduce((acc, entry) => {
-    const cat = categories.find(
-      (c) =>
-        c.type === "category" &&
-        (c.name === entry.category ||
-          c.slug === entry.category ||
-          c.name.toLowerCase() === entry.category.toLowerCase())
-    );
+    // Collect items: either use the new items array or allow fallback (though fallback shouldn't be needed if migrated)
+    const items = entry.items || [];
 
-    const key = cat ? cat.name : entry.category;
-    acc[key] = (acc[key] || 0) + entry.amount;
+    // If no items (legacy weirdness?), try root field if it exists
+    if (items.length === 0 && entry.category) {
+      items.push({
+        id: "legacy",
+        category: entry.category,
+        amount: entry.amount,
+        description: entry.description || "",
+      } as any); // cast for simplicity in strict mode if needed, or better, make items optional in type
+    }
+
+    items.forEach((item) => {
+      if (!item.category) return;
+
+      // Safe check for category existence
+      const categoryName = item.category || "";
+
+      const cat = categories.find(
+        (c) =>
+          c.type === "category" &&
+          (c.name === categoryName ||
+            c.slug === categoryName ||
+            c.name.toLowerCase() === categoryName.toLowerCase())
+      );
+
+      const key = cat ? cat.name : categoryName;
+      acc[key] = (acc[key] || 0) + (item.amount || 0);
+    });
+
     return acc;
   }, {} as Record<string, number>);
 

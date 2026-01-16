@@ -269,36 +269,59 @@ export default function ProjectDetailPage({
     },
     {
       title: "Category",
-      dataIndex: "category",
       key: "category",
       width: 150,
-      render: (_, record) => (
-        // Using 'vertical' here, but replacing with direction if needed.
-        // Docs say direction is deprecated in favor of orientation.
-        // Wait, Space uses direction. I won't change it here unless I'm sure.
-        // But user provided error log explicitly saying "direction is deprecated".
-        // I will use `direction="vertical"` replaced by `direction="vertical"`? No.
-        // I will try to use Flex instead of Space for vertical layout to be safe.
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <Tag
-            color={getCategoryColor(record.category)}
-            style={{ marginRight: 0, width: "fit-content" }}
-          >
-            {record.category}
-          </Tag>
-          {record.subCategory && (
-            <Text type="secondary" style={{ fontSize: 11 }}>
-              {record.subCategory}
-            </Text>
-          )}
-        </div>
-      ),
+      render: (_, record) => {
+        // Fallback or multi-item logic
+        const items = record.items || [];
+        if (items.length > 1) {
+          return (
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <Tag
+                color="default"
+                style={{ marginRight: 0, width: "fit-content" }}
+              >
+                Multiple Items ({items.length})
+              </Tag>
+            </div>
+          );
+        }
+
+        const item = items[0] || record; // Fallback to root for legacy if array empty
+        // However, item might be just { description, amount, category } structure
+        // We need to fetch color for item.category
+
+        return (
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <Tag
+              color={getCategoryColor(item.category)}
+              style={{ marginRight: 0, width: "fit-content" }}
+            >
+              {item.category}
+            </Tag>
+            {item.subCategory && (
+              <Text type="secondary" style={{ fontSize: 11 }}>
+                {item.subCategory}
+              </Text>
+            )}
+          </div>
+        );
+      },
     },
     {
       title: "Description",
-      dataIndex: "description",
       key: "description",
       ellipsis: true,
+      render: (_, record) => {
+        const items = record.items || [];
+        if (items.length > 1) {
+          return (
+            <Text type="secondary">See details for {items.length} items</Text>
+          );
+        }
+        const item = items[0] || record;
+        return <Text>{item.description}</Text>;
+      },
     },
     {
       title: "Amount",

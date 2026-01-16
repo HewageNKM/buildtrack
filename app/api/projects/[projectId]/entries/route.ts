@@ -77,9 +77,6 @@ export async function POST(
     const { projectId } = await params;
     const formData = await request.formData();
 
-    const category = formData.get("category") as any;
-    const subCategory = formData.get("subCategory") as string | undefined;
-    const description = (formData.get("description") as string) || "";
     const amount = parseFloat((formData.get("amount") as string) || "0");
     const date = (formData.get("date") as string) || new Date().toISOString();
     const invoiceFile = formData.get("invoice") as File | null;
@@ -94,11 +91,15 @@ export async function POST(
       };
     }
 
+    const itemsStr = formData.get("items") as string | null;
+    const items = itemsStr ? JSON.parse(itemsStr) : undefined;
+    const note = (formData.get("note") as string) || undefined;
+
     const entry = await entryService.createEntry(
       projectId,
       user.uid,
       user.email || "",
-      { category, subCategory, description, amount, date },
+      { amount, date, items, note },
       fileData
     );
 
@@ -127,9 +128,6 @@ export async function PUT(
 
     const formData = await request.formData();
 
-    const category = formData.get("category") as any;
-    const subCategory = formData.get("subCategory") as string | undefined;
-    const description = (formData.get("description") as string) || undefined;
     const amountStr = formData.get("amount") as string;
     const amount = amountStr ? parseFloat(amountStr) : undefined;
     const date = (formData.get("date") as string) || undefined;
@@ -145,11 +143,16 @@ export async function PUT(
       };
     }
 
+    const itemsStr = formData.get("items") as string | null;
+    const items = itemsStr ? JSON.parse(itemsStr) : undefined;
+    const note = (formData.get("note") as string) || undefined;
+
     const entry = await entryService.updateEntry(
       projectId,
       entryId,
       user.uid,
-      { category, subCategory, description, amount, date },
+      user.uid,
+      { amount, date, items, note },
       fileData,
       user.email
     );

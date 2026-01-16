@@ -206,11 +206,10 @@ export default function AddEntryModal({
     setLoading(true);
 
     try {
-      const firstItem = items[0];
       const data = {
-        category: firstItem.category as BudgetCategory,
-        subCategory: firstItem.subCategory || undefined,
-        description: items.map((i) => i.description).join(", "),
+        // category: firstItem.category as BudgetCategory, // Removed
+        // subCategory: firstItem.subCategory || undefined, // Removed
+        // description: items.map((i) => i.description).join(", "), // Removed
         amount: totalAmount,
         date: formValues.date.format("YYYY-MM-DD"),
         invoice: invoice || undefined,
@@ -325,14 +324,14 @@ export default function AddEntryModal({
                           disabled={items.length <= 1}
                         />
                       </Space>
-                      <Space style={{ width: "100%" }}>
+                      <Space style={{ width: "100%" }} wrap align="start">
                         <Input
                           placeholder="Description"
                           value={item.description}
                           onChange={(e) =>
                             updateItem(item.id, "description", e.target.value)
                           }
-                          style={{ flex: 1, minWidth: 300 }}
+                          style={{ flex: 1, minWidth: "100%" }}
                         />
                         <InputNumber
                           placeholder="Amount"
@@ -342,7 +341,7 @@ export default function AddEntryModal({
                           }
                           min={0}
                           step={0.01}
-                          style={{ width: 150 }}
+                          style={{ width: "100%" }}
                           prefix="LKR"
                         />
                       </Space>

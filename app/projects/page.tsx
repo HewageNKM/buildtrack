@@ -161,18 +161,20 @@ export default function ProjectsPage() {
               control of accurate financial insights.
             </Text>
           </div>
-          <Button
-            type="primary"
-            size="large"
-            icon={<PlusOutlined />}
-            onClick={() => setShowCreateModal(true)}
-            style={{
-              background: "linear-gradient(90deg, #ec4899, #f43f5e)",
-              borderColor: "transparent",
-            }}
-          >
-            New Project
-          </Button>
+          <Space>
+            <Button
+              type="primary"
+              size="large"
+              icon={<PlusOutlined />}
+              onClick={() => setShowCreateModal(true)}
+              style={{
+                background: "linear-gradient(90deg, #ec4899, #f43f5e)",
+                borderColor: "transparent",
+              }}
+            >
+              New Project
+            </Button>
+          </Space>
         </div>
 
         {/* Stats Cards */}
