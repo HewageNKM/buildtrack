@@ -294,7 +294,7 @@ export default function ProjectDetailPage({
         return (
           <div style={{ display: "flex", flexDirection: "column" }}>
             <Tag
-              color={getCategoryColor(item.category)}
+              color={getCategoryColor(item.category || "")}
               style={{ marginRight: 0, width: "fit-content" }}
             >
               {item.category}

@@ -37,9 +37,9 @@ export const entriesApi = {
   create: async (
     projectId: string,
     data: {
-      category: BudgetCategory;
+      category?: BudgetCategory | string;
       subCategory?: string;
-      description: string;
+      description?: string;
       amount: number;
       date: string;
       invoice?: File;
@@ -48,11 +48,11 @@ export const entriesApi = {
     }
   ) => {
     const formData = new FormData();
-    formData.append("category", data.category);
+    if (data.category) formData.append("category", data.category);
     if (data.subCategory) {
       formData.append("subCategory", data.subCategory);
     }
-    formData.append("description", data.description);
+    if (data.description) formData.append("description", data.description);
     formData.append("amount", data.amount.toString());
     formData.append("date", data.date);
     if (data.invoice) {

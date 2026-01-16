@@ -93,13 +93,12 @@ export async function POST(
 
     const itemsStr = formData.get("items") as string | null;
     const items = itemsStr ? JSON.parse(itemsStr) : undefined;
-    const note = (formData.get("note") as string) || undefined;
 
     const entry = await entryService.createEntry(
       projectId,
       user.uid,
       user.email || "",
-      { amount, date, items, note },
+      { amount, date, items },
       fileData
     );
 
@@ -150,7 +149,6 @@ export async function PUT(
     const entry = await entryService.updateEntry(
       projectId,
       entryId,
-      user.uid,
       user.uid,
       { amount, date, items, note },
       fileData,

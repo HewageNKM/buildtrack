@@ -82,7 +82,7 @@ export default function AddEntryModal({
           setItems(
             initialData.items.map((item) => ({
               id: item.id,
-              category: item.category || initialData.category,
+              category: item.category || initialData.category || "",
               subCategory: item.subCategory || "",
               description: item.description,
               amount: item.amount,
@@ -92,9 +92,9 @@ export default function AddEntryModal({
           setItems([
             {
               id: "1",
-              category: initialData.category,
+              category: initialData.category || "",
               subCategory: initialData.subCategory || "",
-              description: initialData.description,
+              description: initialData.description || "",
               amount: initialData.amount,
             },
           ]);
