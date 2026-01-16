@@ -43,6 +43,8 @@ export const entriesApi = {
       amount: number;
       date: string;
       invoice?: File;
+      items?: any[];
+      note?: string;
     }
   ) => {
     const formData = new FormData();
@@ -55,6 +57,12 @@ export const entriesApi = {
     formData.append("date", data.date);
     if (data.invoice) {
       formData.append("invoice", data.invoice);
+    }
+    if (data.items) {
+      formData.append("items", JSON.stringify(data.items));
+    }
+    if (data.note) {
+      formData.append("note", data.note);
     }
 
     const response = await api.post<{ entry: BudgetEntry }>(
@@ -79,6 +87,8 @@ export const entriesApi = {
       amount?: number;
       date?: string;
       invoice?: File;
+      items?: any[];
+      note?: string;
     }
   ) => {
     const formData = new FormData();
@@ -88,6 +98,8 @@ export const entriesApi = {
     if (data.amount) formData.append("amount", data.amount.toString());
     if (data.date) formData.append("date", data.date);
     if (data.invoice) formData.append("invoice", data.invoice);
+    if (data.items) formData.append("items", JSON.stringify(data.items));
+    if (data.note) formData.append("note", data.note);
 
     const response = await api.put<{ entry: BudgetEntry }>(
       `/projects/${projectId}/entries?entryId=${entryId}`,

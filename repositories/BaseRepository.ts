@@ -40,10 +40,12 @@ export abstract class BaseRepository<T extends { id: string }> {
   }
 
   async update(id: string, data: Partial<T>): Promise<T> {
-    await this.collection.doc(id).update({
+    const cleanData = removeUndefined({
       ...data,
       updatedAt: new Date().toISOString(),
     });
+
+    await this.collection.doc(id).update(cleanData);
     const updated = await this.getById(id);
     if (!updated) throw new Error("Document not found after update");
     return updated;
@@ -52,4 +54,26 @@ export abstract class BaseRepository<T extends { id: string }> {
   async delete(id: string): Promise<void> {
     await this.collection.doc(id).delete();
   }
+}
+
+function removeUndefined(obj: any): any {
+  if (obj === null || typeof obj !== "object") {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((v) => removeUndefined(v));
+  }
+
+  if (obj instanceof Date) {
+    return obj;
+  }
+
+  return Object.entries(obj).reduce((acc, [key, value]) => {
+    const cleaned = removeUndefined(value);
+    if (cleaned !== undefined) {
+      acc[key] = cleaned;
+    }
+    return acc;
+  }, {} as any);
 }
