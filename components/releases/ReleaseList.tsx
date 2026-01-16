@@ -41,6 +41,7 @@ export default function ReleaseList({
       title: "Date",
       dataIndex: "date",
       key: "date",
+      width: 120,
       render: (date: string) => new Date(date).toLocaleDateString(),
     },
     {
@@ -54,6 +55,7 @@ export default function ReleaseList({
       dataIndex: "amount",
       key: "amount",
       align: "right",
+      width: 150,
       render: (amount: number) => (
         <span style={{ fontWeight: 600 }}>
           {formatCurrency(amount, currency)}

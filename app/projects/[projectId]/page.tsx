@@ -264,12 +264,14 @@ export default function ProjectDetailPage({
       title: "Date",
       dataIndex: "date",
       key: "date",
+      width: 120,
       render: (date) => dayjs(date).format("MMM D, YYYY"),
     },
     {
       title: "Category",
       dataIndex: "category",
       key: "category",
+      width: 150,
       render: (_, record) => (
         // Using 'vertical' here, but replacing with direction if needed.
         // Docs say direction is deprecated in favor of orientation.
@@ -303,6 +305,7 @@ export default function ProjectDetailPage({
       dataIndex: "amount",
       key: "amount",
       align: "right",
+      width: 120,
       render: (amount) => (
         <Text strong>{formatCurrencyCompact(amount, project.currency)}</Text>
       ),
@@ -311,6 +314,7 @@ export default function ProjectDetailPage({
       title: "Receipt",
       key: "receipt",
       align: "center",
+      width: 100,
       render: (_, record) =>
         record.invoiceUrl ? (
           <Space>
@@ -354,6 +358,7 @@ export default function ProjectDetailPage({
       title: "Actions",
       key: "actions",
       align: "right",
+      width: 120,
       render: (_, record) => (
         <Space>
           <Button
@@ -656,39 +661,6 @@ export default function ProjectDetailPage({
           <Tabs
             activeKey={activeTab}
             onChange={setActiveTab}
-            tabBarExtraContent={
-              activeTab === "expenses" ? (
-                <Space wrap>
-                  <RangePicker
-                    value={dateRange}
-                    onChange={(dates) => setDateRange(dates as any)}
-                  />
-                  <Select
-                    value={filterCategory}
-                    onChange={setFilterCategory}
-                    style={{ width: 150 }}
-                    placeholder="Category"
-                  >
-                    <Select.Option value="all">All Categories</Select.Option>
-                    {categories
-                      .filter((c) => c.type === "category")
-                      .map((c) => (
-                        <Select.Option key={c.id} value={c.name}>
-                          {c.name}
-                        </Select.Option>
-                      ))}
-                  </Select>
-                  {(filterCategory !== "all" || dateRange[0]) && (
-                    <Button
-                      icon={<ClearOutlined />}
-                      onClick={handleClearFilters}
-                    >
-                      Clear
-                    </Button>
-                  )}
-                </Space>
-              ) : null
-            }
             items={[
               {
                 key: "expenses",
@@ -698,66 +670,102 @@ export default function ProjectDetailPage({
                   </span>
                 ),
                 children: (
-                  <Table
-                    scroll={{ x: 800 }}
-                    columns={entryColumns}
-                    dataSource={filteredEntries}
-                    rowKey="id"
-                    pagination={{
-                      current: pagination.current,
-                      pageSize: limit,
-                      total: entries.length,
-                      onChange: (page, pageSize) => {
-                        setPagination({
-                          ...pagination,
-                          current: page,
-                          pageSize,
-                        });
-                        if (page > pagination.current) {
-                          if (page <= pageHistory.length) {
-                            const diff = page - pagination.current;
-                            if (diff === 1) {
-                              setPagination({ ...pagination, current: page });
+                  <>
+                    <div style={{ marginBottom: 16 }}>
+                      <Space wrap>
+                        <RangePicker
+                          value={dateRange}
+                          onChange={(dates) => setDateRange(dates as any)}
+                          style={{ maxWidth: "100%" }}
+                        />
+                        <Select
+                          value={filterCategory}
+                          onChange={setFilterCategory}
+                          style={{ width: 150 }}
+                          placeholder="Category"
+                        >
+                          <Select.Option value="all">
+                            All Categories
+                          </Select.Option>
+                          {categories
+                            .filter((c) => c.type === "category")
+                            .map((c) => (
+                              <Select.Option key={c.id} value={c.name}>
+                                {c.name}
+                              </Select.Option>
+                            ))}
+                        </Select>
+                        {(filterCategory !== "all" || dateRange[0]) && (
+                          <Button
+                            icon={<ClearOutlined />}
+                            onClick={handleClearFilters}
+                          >
+                            Clear
+                          </Button>
+                        )}
+                      </Space>
+                    </div>
+                    <Table
+                      scroll={{ x: 800 }}
+                      columns={entryColumns}
+                      dataSource={filteredEntries}
+                      rowKey="id"
+                      pagination={{
+                        current: pagination.current,
+                        pageSize: limit,
+                        total: entries.length,
+                        onChange: (page, pageSize) => {
+                          setPagination({
+                            ...pagination,
+                            current: page,
+                            pageSize,
+                          });
+                          if (page > pagination.current) {
+                            if (page <= pageHistory.length) {
+                              const diff = page - pagination.current;
+                              if (diff === 1) {
+                                setPagination({ ...pagination, current: page });
+                              }
                             }
                           }
-                        }
-                      },
-                    }}
-                    footer={() => (
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "flex-end",
-                          gap: 8,
-                        }}
-                      >
-                        <Button
-                          disabled={currentPage === 0}
-                          onClick={() => {
-                            const newPage = Math.max(0, currentPage - 1);
-                            setPagination({
-                              ...pagination,
-                              current: newPage + 1,
-                            });
+                        },
+                      }}
+                      footer={() => (
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            gap: 8,
                           }}
                         >
-                          Previous
-                        </Button>
-                        <Button
-                          disabled={entries.length < limit}
-                          onClick={() => {
-                            const newPage = currentPage + 1;
-                            setPagination({
-                              ...pagination,
-                              current: newPage + 1,
-                            });
-                          }}
-                        >
-                          Next
-                        </Button>
-                      </div>
-                    )}
-                  />
+                          <Button
+                            disabled={currentPage === 0}
+                            onClick={() => {
+                              const newPage = Math.max(0, currentPage - 1);
+                              setPagination({
+                                ...pagination,
+                                current: newPage + 1,
+                              });
+                            }}
+                          >
+                            Previous
+                          </Button>
+                          <Button
+                            disabled={entries.length < limit}
+                            onClick={() => {
+                              const newPage = currentPage + 1;
+                              setPagination({
+                                ...pagination,
+                                current: newPage + 1,
+                              });
+                            }}
+                          >
+                            Next
+                          </Button>
+                        </div>
+                      )}
+                    />
+                  </>
                 ),
               },
               {
