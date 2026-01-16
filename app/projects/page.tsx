@@ -22,6 +22,7 @@ import {
   Empty,
   Typography,
   Space,
+  message,
 } from "antd";
 import {
   PlusOutlined,
@@ -37,7 +38,7 @@ import Navbar from "@/components/common/Navbar";
 import { PageLoader } from "@/components/common/LoadingSpinner";
 import CreateProjectModal from "@/components/projects/CreateProjectModal";
 import ProjectCard from "@/components/projects/ProjectCard";
-import toast from "react-hot-toast";
+// import toast from "react-hot-toast"; // Removed
 
 const { Title, Text } = Typography;
 
@@ -57,7 +58,7 @@ export default function ProjectsPage() {
       setProjects(data.projects);
     } catch (error) {
       console.error("Error fetching projects:", error);
-      toast.error("Failed to load projects");
+      message.error("Failed to load projects");
     } finally {
       setLoading(false);
     }
@@ -76,17 +77,17 @@ export default function ProjectsPage() {
     try {
       if (editingProject) {
         await api.projects.update(editingProject.id, projectData);
-        toast.success("Project updated successfully!");
+        message.success("Project updated successfully!");
       } else {
         await api.projects.create(projectData);
-        toast.success("Project created successfully!");
+        message.success("Project created successfully!");
       }
       fetchProjects();
       setShowCreateModal(false);
       setEditingProject(null);
     } catch (error) {
       console.error("Error saving project:", error);
-      toast.error("Failed to save project");
+      message.error("Failed to save project");
     }
   };
 
@@ -98,11 +99,11 @@ export default function ProjectsPage() {
   const handleDeleteProject = async (projectId: string) => {
     try {
       await api.projects.delete(projectId);
-      toast.success("Project deleted successfully");
+      message.success("Project deleted successfully");
       setProjects((prev) => prev.filter((p) => p.id !== projectId));
     } catch (error) {
       console.error("Error deleting project:", error);
-      toast.error("Failed to delete project");
+      message.error("Failed to delete project");
     }
   };
 

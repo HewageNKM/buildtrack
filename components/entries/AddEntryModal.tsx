@@ -16,6 +16,7 @@ import {
   Spin,
   Divider,
   Typography,
+  message,
 } from "antd";
 import {
   PlusOutlined,
@@ -31,7 +32,7 @@ import {
   ProjectCategory,
 } from "@/types";
 import { api } from "@/lib/api";
-import toast from "react-hot-toast";
+// import toast from "react-hot-toast"; // Removed
 import dayjs from "dayjs";
 
 const { Text } = Typography;
@@ -128,7 +129,7 @@ export default function AddEntryModal({
       setCategories(data);
     } catch (err) {
       console.error("Failed to fetch categories:", err);
-      toast.error("Failed to load project categories");
+      message.error("Failed to load project categories");
     } finally {
       setLoadingCategories(false);
     }
@@ -193,12 +194,12 @@ export default function AddEntryModal({
       (item) => !item.category || !item.description.trim() || item.amount <= 0
     );
     if (invalidItem) {
-      toast.error("All items must have category, description, and amount");
+      message.error("All items must have category, description, and amount");
       return;
     }
 
     if (totalAmount <= 0) {
-      toast.error("Total amount must be greater than 0");
+      message.error("Total amount must be greater than 0");
       return;
     }
 
@@ -225,10 +226,10 @@ export default function AddEntryModal({
 
       if (initialData) {
         await api.entries.update(projectId, initialData.id, data);
-        toast.success("Entry updated successfully");
+        message.success("Entry updated successfully");
       } else {
         await api.entries.create(projectId, data);
-        toast.success("Expense added successfully");
+        message.success("Expense added successfully");
       }
 
       onEntryAdded();
@@ -236,7 +237,7 @@ export default function AddEntryModal({
     } catch (error: unknown) {
       console.error("Error saving entry:", error);
       const err = error as { response?: { data?: { error?: string } } };
-      toast.error(err.response?.data?.error || "Failed to save entry");
+      message.error(err.response?.data?.error || "Failed to save entry");
     } finally {
       setLoading(false);
     }
@@ -379,11 +380,11 @@ export default function AddEntryModal({
                   file.type.startsWith("image/") ||
                   file.type === "application/pdf";
                 if (!isValid) {
-                  toast.error("Only images and PDF files are allowed");
+                  message.error("Only images and PDF files are allowed");
                   return false;
                 }
                 if (file.size > 5 * 1024 * 1024) {
-                  toast.error("File size must be less than 5MB");
+                  message.error("File size must be less than 5MB");
                   return false;
                 }
                 setInvoice(file);

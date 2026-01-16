@@ -16,6 +16,7 @@ import {
   Popconfirm,
   Divider,
   Tooltip,
+  message,
 } from "antd";
 import {
   UserAddOutlined,
@@ -30,7 +31,7 @@ import {
 import { TeamMember, TeamMemberRole } from "@/types";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
-import toast from "react-hot-toast";
+// import toast from "react-hot-toast"; // Removed
 
 const { Text, Title } = Typography;
 
@@ -79,19 +80,19 @@ export default function TeamManagementModal({
         (m) => m.email.toLowerCase() === values.email.toLowerCase()
       )
     ) {
-      toast.error("This user is already a team member");
+      message.error("This user is already a team member");
       return;
     }
 
     setLoading(true);
     try {
       await api.team.invite(projectId, values.email.trim(), values.role);
-      toast.success(`Invite sent to ${values.email}`);
+      message.success(`Invite sent to ${values.email}`);
       form.resetFields();
       onUpdate();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: string } } };
-      toast.error(error.response?.data?.error || "Failed to invite member");
+      message.error(error.response?.data?.error || "Failed to invite member");
     } finally {
       setLoading(false);
     }
@@ -102,15 +103,15 @@ export default function TeamManagementModal({
     try {
       await api.team.remove(projectId, userId);
       if (userId === user?.uid) {
-        toast.success("Left project successfully");
+        message.success("Left project successfully");
         onClose();
         window.location.href = "/projects";
       } else {
-        toast.success("Team member removed");
+        message.success("Team member removed");
         onUpdate();
       }
     } catch {
-      toast.error("Failed to remove member");
+      message.error("Failed to remove member");
     } finally {
       setRemovingId(null);
     }

@@ -1,10 +1,18 @@
 "use client";
 
 import { useEffect } from "react";
-import { Modal, Form, InputNumber, DatePicker, Input, Button } from "antd";
+import {
+  Modal,
+  Form,
+  InputNumber,
+  DatePicker,
+  Input,
+  Button,
+  message,
+} from "antd";
 import { DollarOutlined } from "@ant-design/icons";
 import { api } from "@/lib/api";
-import toast from "react-hot-toast";
+// import toast from "react-hot-toast"; // Removed
 import { DEFAULT_CURRENCY } from "@/lib/currency";
 import { BudgetRelease } from "@/types";
 import dayjs from "dayjs";
@@ -54,7 +62,7 @@ export default function AddReleaseModal({
       const releaseAmount = values.amount;
 
       if (releaseAmount > remainingEstimation) {
-        toast.error(
+        message.error(
           "Release amount cannot exceed the project's remaining estimated budget."
         );
         return;
@@ -68,10 +76,10 @@ export default function AddReleaseModal({
 
       if (initialData) {
         await api.releases.update(projectId, initialData.id, data);
-        toast.success("Release updated successfully");
+        message.success("Release updated successfully");
       } else {
         await api.releases.create(projectId, data);
-        toast.success("Funds released successfully");
+        message.success("Funds released successfully");
       }
 
       onReleaseAdded();
@@ -79,7 +87,7 @@ export default function AddReleaseModal({
     } catch (error: unknown) {
       console.error("Error creating release:", error);
       const err = error as { response?: { data?: { error?: string } } };
-      toast.error(err.response?.data?.error || "Failed to release funds");
+      message.error(err.response?.data?.error || "Failed to release funds");
     }
   };
 

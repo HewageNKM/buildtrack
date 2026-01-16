@@ -15,6 +15,7 @@ import {
   ColorPicker,
   Empty,
   Spin,
+  message,
 } from "antd";
 import {
   PlusOutlined,
@@ -24,7 +25,7 @@ import {
 } from "@ant-design/icons";
 import { ProjectCategory } from "@/types";
 import { api } from "@/lib/api";
-import toast from "react-hot-toast";
+// import toast from "react-hot-toast"; // Removed
 import type { Color } from "antd/es/color-picker";
 
 const { Title, Text } = Typography;
@@ -62,7 +63,7 @@ export default function ManageCategoriesModal({
       const data = await api.categories.list(projectId);
       setCategories(data);
     } catch {
-      toast.error("Failed to load categories");
+      message.error("Failed to load categories");
     } finally {
       setLoading(false);
     }
@@ -99,7 +100,7 @@ export default function ManageCategoriesModal({
       };
 
       await api.categories.create(projectId, payload);
-      toast.success(
+      message.success(
         `${addingType === "category" ? "Category" : "Subcategory"} added`
       );
       form.resetFields();
@@ -107,7 +108,7 @@ export default function ManageCategoriesModal({
       fetchCategories();
       onCategoriesUpdated();
     } catch {
-      toast.error("Failed to add category");
+      message.error("Failed to add category");
     } finally {
       setSubmitting(false);
     }
@@ -116,11 +117,11 @@ export default function ManageCategoriesModal({
   const handleDelete = async (id: string, name: string) => {
     try {
       await api.categories.delete(projectId, id);
-      toast.success(`"${name}" deleted`);
+      message.success(`"${name}" deleted`);
       fetchCategories();
       onCategoriesUpdated();
     } catch {
-      toast.error("Failed to delete category");
+      message.error("Failed to delete category");
     }
   };
 
