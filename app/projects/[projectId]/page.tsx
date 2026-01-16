@@ -21,6 +21,9 @@ import ReleaseList from "@/components/releases/ReleaseList";
 import ManageCategoriesModal from "@/components/settings/ManageCategoriesModal";
 import ViewEntryModal from "@/components/entries/ViewEntryModal";
 import ViewReleaseModal from "@/components/releases/ViewReleaseModal";
+import ReportsTab from "@/components/reports/ReportsTab";
+import ManageVendorsModal from "@/components/settings/ManageVendorsModal";
+import ManagePhasesModal from "@/components/settings/ManagePhasesModal";
 
 import {
   ArrowLeftOutlined,
@@ -38,6 +41,9 @@ import {
   ClearOutlined,
   EyeOutlined,
   DownloadOutlined,
+  BarChartOutlined,
+  ShopOutlined,
+  FlagOutlined,
 } from "@ant-design/icons";
 
 import {
@@ -88,6 +94,8 @@ export default function ProjectDetailPage({
   const [showReleaseModal, setShowReleaseModal] = useState(false);
   const [showTeamModal, setShowTeamModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
+  const [showVendorsModal, setShowVendorsModal] = useState(false);
+  const [showPhasesModal, setShowPhasesModal] = useState(false);
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [editingEntry, setEditingEntry] = useState<BudgetEntry | undefined>(
@@ -485,6 +493,18 @@ export default function ProjectDetailPage({
                 Categories
               </Button>
               <Button
+                icon={<ShopOutlined />}
+                onClick={() => setShowVendorsModal(true)}
+              >
+                Vendors
+              </Button>
+              <Button
+                icon={<FlagOutlined />}
+                onClick={() => setShowPhasesModal(true)}
+              >
+                Phases
+              </Button>
+              <Button
                 icon={<WalletOutlined />}
                 onClick={() => setShowReleaseModal(true)}
               >
@@ -822,6 +842,20 @@ export default function ProjectDetailPage({
                   />
                 ),
               },
+              {
+                key: "reports",
+                label: (
+                  <span>
+                    <BarChartOutlined /> Reports
+                  </span>
+                ),
+                children: (
+                  <ReportsTab
+                    projectId={projectId}
+                    currency={project.currency}
+                  />
+                ),
+              },
             ]}
           />
         </Card>
@@ -833,6 +867,8 @@ export default function ProjectDetailPage({
         onClose={() => setViewingEntry(null)}
         entry={viewingEntry}
         currency={project.currency}
+        projectId={projectId}
+        currentUserId={user?.uid}
       />
 
       <ViewReleaseModal
@@ -885,6 +921,19 @@ export default function ProjectDetailPage({
         onClose={() => setShowCategoriesModal(false)}
         projectId={projectId}
         onCategoriesUpdated={fetchData}
+      />
+
+      <ManageVendorsModal
+        isOpen={showVendorsModal}
+        onClose={() => setShowVendorsModal(false)}
+        projectId={projectId}
+      />
+
+      <ManagePhasesModal
+        isOpen={showPhasesModal}
+        onClose={() => setShowPhasesModal(false)}
+        projectId={projectId}
+        currency={project.currency}
       />
 
       {/* Hidden Image for Preview */}

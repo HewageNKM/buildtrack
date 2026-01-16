@@ -23,6 +23,7 @@ import {
   Typography,
   Space,
   message,
+  Tabs,
 } from "antd";
 import {
   PlusOutlined,
@@ -32,12 +33,17 @@ import {
   RiseOutlined,
   WarningOutlined,
   WalletOutlined,
+  AppstoreOutlined,
+  TableOutlined,
 } from "@ant-design/icons";
 
 import Navbar from "@/components/common/Navbar";
 import { PageLoader } from "@/components/common/LoadingSpinner";
 import CreateProjectModal from "@/components/projects/CreateProjectModal";
 import ProjectCard from "@/components/projects/ProjectCard";
+import ProjectComparisonTable from "@/components/dashboard/ProjectComparisonTable";
+import BudgetVarianceCard from "@/components/dashboard/BudgetVarianceCard";
+import AlertBanner from "@/components/dashboard/AlertBanner";
 // import toast from "react-hot-toast"; // Removed
 
 const { Title, Text } = Typography;
@@ -234,7 +240,7 @@ export default function ProjectsPage() {
         </Row>
 
         {/* Search */}
-        <div style={{ marginBottom: 40, maxWidth: 400 }}>
+        <div style={{ marginBottom: 24, maxWidth: 400 }}>
           <Input
             size="large"
             prefix={<SearchOutlined />}
@@ -245,51 +251,91 @@ export default function ProjectsPage() {
           />
         </div>
 
-        {/* Projects Grid */}
-        {filteredProjects.length > 0 ? (
-          <Row gutter={[24, 24]}>
-            {filteredProjects.map((project, index) => (
-              <Col xs={24} sm={12} lg={8} key={project.id}>
-                <ProjectCard
-                  project={project}
-                  onDelete={handleDeleteProject}
-                  onEdit={handleEditProject}
-                  index={index}
-                />
-              </Col>
-            ))}
-          </Row>
-        ) : (
-          <Card style={{ textAlign: "center", padding: 64 }}>
-            <Empty
-              image={
-                <FolderOutlined style={{ fontSize: 48, color: "#8b5cf6" }} />
-              }
-              description={
-                <Space direction="vertical" size="small">
-                  <Text strong style={{ fontSize: 18 }}>
-                    {searchQuery ? "No results found" : "No projects yet"}
-                  </Text>
-                  <Text type="secondary">
-                    {searchQuery
-                      ? `We couldn't find anything matching "${searchQuery}".`
-                      : "Create your first construction project to start tracking."}
-                  </Text>
-                </Space>
-              }
-            >
-              {!searchQuery && (
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={() => setShowCreateModal(true)}
-                >
-                  Create First Project
-                </Button>
-              )}
-            </Empty>
-          </Card>
-        )}
+        {/* Project Views */}
+        <Tabs
+          defaultActiveKey="grid"
+          items={[
+            {
+              key: "grid",
+              label: (
+                <span>
+                  <AppstoreOutlined /> Grid View
+                </span>
+              ),
+              children:
+                filteredProjects.length > 0 ? (
+                  <Row gutter={[24, 24]}>
+                    {filteredProjects.map((project, index) => (
+                      <Col xs={24} sm={12} lg={8} key={project.id}>
+                        <ProjectCard
+                          project={project}
+                          onDelete={handleDeleteProject}
+                          onEdit={handleEditProject}
+                          index={index}
+                        />
+                      </Col>
+                    ))}
+                  </Row>
+                ) : (
+                  <Card style={{ textAlign: "center", padding: 64 }}>
+                    <Empty
+                      image={
+                        <FolderOutlined
+                          style={{ fontSize: 48, color: "#8b5cf6" }}
+                        />
+                      }
+                      description={
+                        <Space direction="vertical" size="small">
+                          <Text strong style={{ fontSize: 18 }}>
+                            {searchQuery
+                              ? "No results found"
+                              : "No projects yet"}
+                          </Text>
+                          <Text type="secondary">
+                            {searchQuery
+                              ? `We couldn't find anything matching "${searchQuery}".`
+                              : "Create your first construction project to start tracking."}
+                          </Text>
+                        </Space>
+                      }
+                    >
+                      {!searchQuery && (
+                        <Button
+                          type="primary"
+                          icon={<PlusOutlined />}
+                          onClick={() => setShowCreateModal(true)}
+                        >
+                          Create First Project
+                        </Button>
+                      )}
+                    </Empty>
+                  </Card>
+                ),
+            },
+            {
+              key: "table",
+              label: (
+                <span>
+                  <TableOutlined /> Comparison
+                </span>
+              ),
+              children: (
+                <Card>
+                  <ProjectComparisonTable projects={filteredProjects} />
+                </Card>
+              ),
+            },
+            {
+              key: "variance",
+              label: (
+                <span>
+                  <WarningOutlined /> Variance
+                </span>
+              ),
+              children: <BudgetVarianceCard projects={filteredProjects} />,
+            },
+          ]}
+        />
       </main>
 
       <CreateProjectModal

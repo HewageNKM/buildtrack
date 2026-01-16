@@ -64,6 +64,11 @@ export interface BudgetEntry {
   addedBy?: string; // User ID who added this entry
   history?: BudgetEntryVersion[];
   items: BudgetEntryItem[];
+  // Approval workflow fields
+  approvalStatus?: "pending" | "approved" | "rejected";
+  approvedBy?: string; // User ID who approved
+  approvalDate?: string;
+  rejectionReason?: string;
 }
 
 export interface BudgetEntryItem {
@@ -203,4 +208,72 @@ export interface ProjectWithStats extends Project {
   totalSpent: number;
   totalReleased: number; // New field for released funds
   entryCount: number;
+}
+
+export interface EntryComment {
+  id: string;
+  entryId: string;
+  projectId: string;
+  userId: string;
+  userName: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface Vendor {
+  id: string;
+  projectId: string;
+  name: string;
+  category?: string; // Primary category this vendor supplies
+  contactName?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  paymentTerms?: string; // e.g., "Net 30", "COD"
+  notes?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectPhase {
+  id: string;
+  projectId: string;
+  name: string;
+  order: number;
+  allocatedBudget: number;
+  startDate?: string;
+  endDate?: string;
+  status: "planned" | "in-progress" | "completed";
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BudgetAlert {
+  id: string;
+  projectId: string;
+  type: "over_budget" | "near_threshold" | "release_needed";
+  message: string;
+  threshold: number; // Percentage (e.g., 80, 100)
+  currentValue: number;
+  severity: "info" | "warning" | "critical";
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface RecurringExpense {
+  id: string;
+  projectId: string;
+  name: string;
+  amount: number;
+  category?: string;
+  subCategory?: string;
+  frequency: "weekly" | "monthly" | "quarterly" | "yearly";
+  nextDueDate: string;
+  isActive: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  lastProcessed?: string;
 }
