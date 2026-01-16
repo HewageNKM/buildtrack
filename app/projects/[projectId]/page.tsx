@@ -811,6 +811,7 @@ export default function ProjectDetailPage({
               currency={project.currency}
               currentPage={releasesPage}
               totalPages={Math.ceil(releases.length / releasesPerPage)}
+              totalReleases={releases.length}
               onPageChange={setReleasesPage}
               onDelete={handleDeleteRelease}
               onEdit={(release) => {

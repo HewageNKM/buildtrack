@@ -1,12 +1,10 @@
+"use client";
+
 import { BudgetRelease } from "@/types";
 import { formatCurrency, DEFAULT_CURRENCY, CurrencyCode } from "@/lib/currency";
-import {
-  Trash2,
-  TrendingUp,
-  Edit2,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Table, Button, Empty, Space, Popconfirm } from "antd";
+import { EditOutlined, DeleteOutlined, RiseOutlined } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
 
 interface ReleaseListProps {
   releases: BudgetRelease[];
@@ -17,6 +15,7 @@ interface ReleaseListProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  totalReleases: number;
 }
 
 export default function ReleaseList({
@@ -28,98 +27,89 @@ export default function ReleaseList({
   currentPage,
   totalPages,
   onPageChange,
+  totalReleases,
 }: ReleaseListProps) {
-  if (releases.length === 0) {
+  const columns: ColumnsType<BudgetRelease> = [
+    {
+      title: "Date",
+      dataIndex: "date",
+      key: "date",
+      render: (date: string) => new Date(date).toLocaleDateString(),
+    },
+    {
+      title: "Note",
+      dataIndex: "note",
+      key: "note",
+      render: (note: string) => note || "—",
+    },
+    {
+      title: "Amount",
+      dataIndex: "amount",
+      key: "amount",
+      align: "right",
+      render: (amount: number) => (
+        <span style={{ fontWeight: 600 }}>
+          {formatCurrency(amount, currency)}
+        </span>
+      ),
+    },
+  ];
+
+  if (isOwner) {
+    columns.push({
+      title: "Actions",
+      key: "actions",
+      align: "right",
+      width: 120,
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => onEdit(record)}
+          />
+          <Popconfirm
+            title="Delete Release"
+            description="Are you sure you want to delete this release?"
+            onConfirm={() => onDelete(record.id)}
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            cancelText="Cancel"
+          >
+            <Button type="text" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
+      ),
+    });
+  }
+
+  if (releases.length === 0 && currentPage === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="w-16 h-16 bg-[var(--input-bg)] rounded-full flex items-center justify-center mx-auto mb-4 border border-[var(--input-border)]">
-          <TrendingUp className="w-8 h-8 text-foreground-muted" />
-        </div>
-        <h4 className="text-lg font-bold text-foreground">No funds released</h4>
-        <p className="text-foreground-muted max-w-sm mx-auto">
-          No funds have been released for this project yet.
-        </p>
-      </div>
+      <Empty
+        image={<RiseOutlined style={{ fontSize: 48, color: "#8b5cf6" }} />}
+        description={
+          <span style={{ color: "var(--foreground-muted)" }}>
+            No funds have been released for this project yet.
+          </span>
+        }
+      />
     );
   }
 
   return (
-    <div>
-      <div className="overflow-x-auto -mx-6">
-        <div className="inline-block min-w-full align-middle px-6">
-          <table className="min-w-full divide-y divide-(--card-border)">
-            <thead>
-              <tr className="text-left text-xs font-bold text-foreground-muted uppercase tracking-wider">
-                <th className="pb-4 px-4">Date</th>
-                <th className="pb-4 px-4">Note</th>
-                <th className="pb-4 px-4 text-right">Amount</th>
-                {isOwner && <th className="pb-4 px-4 text-right">Actions</th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-(--card-border) text-sm">
-              {releases.map((release) => (
-                <tr
-                  key={release.id}
-                  className="group hover:bg-(--input-bg)/50 transition-colors"
-                >
-                  <td className="py-4 px-4 text-foreground whitespace-nowrap font-medium">
-                    {new Date(release.date).toLocaleDateString()}
-                  </td>
-                  <td className="py-4 px-4 text-foreground-muted">
-                    {release.note || "—"}
-                  </td>
-                  <td className="py-4 px-4 font-bold text-foreground text-right">
-                    {formatCurrency(release.amount, currency)}
-                  </td>
-                  {isOwner && (
-                    <td className="py-4 px-4 text-right">
-                      <button
-                        onClick={() => onEdit(release)}
-                        className="p-2 text-foreground-muted hover:text-accent-violet hover:bg-accent-violet/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                        title="Edit Release"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => onDelete(release.id)}
-                        className="p-2 text-foreground-muted hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                        title="Delete Release"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4 mt-6 pt-6 border-t border-[var(--card-border)]">
-          <button
-            disabled={currentPage === 0}
-            onClick={() => onPageChange(currentPage - 1)}
-            className="flex items-center gap-1 px-4 py-2 text-sm font-semibold rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] hover:bg-[var(--input-focus-bg)] text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Prev
-          </button>
-          <span className="text-sm font-bold text-foreground">
-            Page {currentPage + 1} of {totalPages}
-          </span>
-          <button
-            disabled={currentPage >= totalPages - 1}
-            onClick={() => onPageChange(currentPage + 1)}
-            className="flex items-center gap-1 px-4 py-2 text-sm font-semibold rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] hover:bg-[var(--input-focus-bg)] text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            Next
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-    </div>
+    <Table
+      columns={columns}
+      dataSource={releases}
+      rowKey="id"
+      pagination={{
+        current: currentPage + 1,
+        total: totalReleases,
+        pageSize: 10,
+        onChange: (page) => onPageChange(page - 1),
+        showSizeChanger: false,
+        showTotal: (total) => `Total ${total} releases`,
+      }}
+      size="middle"
+    />
   );
 }

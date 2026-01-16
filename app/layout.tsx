@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { AntdRegistry } from "@ant-design/nextjs-registry";
+import { ConfigProvider, theme } from "antd";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BuildTrack Pro | Construction Budget Tracker",
+  title: "BuildTrack | Construction Budget Tracker",
   description:
     "Track and manage your construction project budgets with ease. Upload invoices, visualize spending, and stay on top of your construction costs.",
   keywords: [
@@ -50,36 +52,73 @@ export default function RootLayout({
           <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
         </div>
 
-        <ThemeProvider>
-          <AuthProvider>
-            {children}
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: "var(--card)",
-                  color: "var(--foreground)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "12px",
-                  boxShadow: "var(--shadow-lg)",
+        <AntdRegistry>
+          <ConfigProvider
+            theme={{
+              algorithm: theme.darkAlgorithm,
+              token: {
+                colorPrimary: "#8b5cf6",
+                colorSuccess: "#10b981",
+                colorError: "#ef4444",
+                colorWarning: "#f59e0b",
+                colorInfo: "#06b6d4",
+                borderRadius: 12,
+                fontFamily: "var(--font-geist-sans)",
+              },
+              components: {
+                Button: {
+                  borderRadius: 12,
                 },
-                success: {
-                  iconTheme: {
-                    primary: "var(--success)",
-                    secondary: "white",
-                  },
+                Input: {
+                  borderRadius: 12,
                 },
-                error: {
-                  iconTheme: {
-                    primary: "var(--error)",
-                    secondary: "white",
-                  },
+                Select: {
+                  borderRadius: 12,
                 },
-              }}
-            />
-          </AuthProvider>
-        </ThemeProvider>
+                Modal: {
+                  borderRadiusLG: 24,
+                },
+                Table: {
+                  borderRadius: 12,
+                },
+                Card: {
+                  borderRadiusLG: 16,
+                },
+              },
+            }}
+          >
+            <ThemeProvider>
+              <AuthProvider>
+                {children}
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    duration: 4000,
+                    style: {
+                      background: "var(--card)",
+                      color: "var(--foreground)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "12px",
+                      boxShadow: "var(--shadow-lg)",
+                    },
+                    success: {
+                      iconTheme: {
+                        primary: "var(--success)",
+                        secondary: "white",
+                      },
+                    },
+                    error: {
+                      iconTheme: {
+                        primary: "var(--error)",
+                        secondary: "white",
+                      },
+                    },
+                  }}
+                />
+              </AuthProvider>
+            </ThemeProvider>
+          </ConfigProvider>
+        </AntdRegistry>
       </body>
     </html>
   );
