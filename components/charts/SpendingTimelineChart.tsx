@@ -12,6 +12,9 @@ import {
 } from "recharts";
 import { BudgetEntry, CurrencyCode } from "@/types";
 import { format, parseISO } from "date-fns";
+import { Card, Empty, Typography } from "antd";
+
+const { Title } = Typography;
 
 interface SpendingTimelineChartProps {
   entries: BudgetEntry[];
@@ -24,7 +27,6 @@ export default function SpendingTimelineChart({
   estimatedBudget,
   currency,
 }: SpendingTimelineChartProps) {
-  // Sort entries by date and calculate cumulative spending
   const sortedEntries = [...entries].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
@@ -56,27 +58,27 @@ export default function SpendingTimelineChart({
     }).format(value);
   };
 
-  const containerClasses = "glass-card p-6 rounded-3xl";
-
   if (data.length === 0) {
     return (
-      <div className={containerClasses}>
-        <h3 className="text-lg font-bold mb-6 text-white">Spending Timeline</h3>
-        <div className="h-64 flex flex-col items-center justify-center text-foreground-muted space-y-2">
-          <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-            <span className="text-xl">📈</span>
-          </div>
-          <p className="text-sm font-medium">
-            Add entries to see your spending trend
-          </p>
+      <Card style={{ height: "100%" }} className="shadow-sm">
+        <Title level={4} style={{ marginBottom: 24 }}>
+          Spending Timeline
+        </Title>
+        <div className="h-64 flex flex-col items-center justify-center">
+          <Empty
+            description="Add entries to see your spending trend"
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          />
         </div>
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div className={containerClasses}>
-      <h3 className="text-lg font-bold mb-6 text-white">Spending Timeline</h3>
+    <Card style={{ height: "100%" }} className="shadow-sm">
+      <Title level={4} style={{ marginBottom: 24 }}>
+        Spending Timeline
+      </Title>
       <div className="h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
@@ -86,13 +88,13 @@ export default function SpendingTimelineChart({
             <CartesianGrid
               strokeDasharray="3 3"
               vertical={false}
-              stroke="rgba(255,255,255,0.1)"
+              stroke="#e2e8f0"
               opacity={0.5}
             />
 
             <XAxis
               dataKey="formattedDate"
-              tick={{ fill: "#94a3b8", fontSize: 11 }}
+              tick={{ fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               dy={10}
@@ -100,7 +102,7 @@ export default function SpendingTimelineChart({
 
             <YAxis
               tickFormatter={formatCurrency}
-              tick={{ fill: "#94a3b8", fontSize: 11 }}
+              tick={{ fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               dx={-10}
@@ -112,32 +114,20 @@ export default function SpendingTimelineChart({
                 name === "cumulative" ? "Total Spent" : "Entry Amount",
               ]}
               contentStyle={{
-                backgroundColor: "#030712", // midnight base
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "16px",
-                padding: "16px",
-                boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.5)",
-              }}
-              itemStyle={{
-                color: "#f8fafc",
-                fontSize: "12px",
-                fontWeight: "bold",
-              }}
-              labelStyle={{
-                color: "#94a3b8",
-                marginBottom: "4px",
-                fontSize: "11px",
+                borderRadius: "8px",
+                border: "none",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
               }}
             />
 
             <ReferenceLine
               y={estimatedBudget}
-              stroke="#f43f5e" // rose-500
+              stroke="#ff4d4f"
               strokeDasharray="6 4"
               strokeWidth={1.5}
               label={{
                 value: "Budget Limit",
-                fill: "#f43f5e",
+                fill: "#ff4d4f",
                 fontSize: 10,
                 fontWeight: "bold",
                 position: "insideBottomRight",
@@ -148,18 +138,18 @@ export default function SpendingTimelineChart({
             <Line
               type="monotone"
               dataKey="cumulative"
-              stroke="#8b5cf6" // accent-violet
+              stroke="#8b5cf6"
               strokeWidth={3}
               dot={{
                 fill: "#8b5cf6",
-                stroke: "#0f172a",
+                stroke: "#fff",
                 strokeWidth: 2,
                 r: 4,
               }}
               activeDot={{
                 r: 6,
                 fill: "#8b5cf6",
-                stroke: "#ffffff",
+                stroke: "#fff",
                 strokeWidth: 2,
               }}
               animationDuration={1500}
@@ -167,6 +157,6 @@ export default function SpendingTimelineChart({
           </LineChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </Card>
   );
 }

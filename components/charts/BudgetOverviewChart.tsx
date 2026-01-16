@@ -11,6 +11,9 @@ import {
 } from "recharts";
 import { CurrencyCode } from "@/types";
 import { formatCurrency } from "@/lib/currency";
+import { Card, Typography } from "antd";
+
+const { Title } = Typography;
 
 interface BudgetOverviewChartProps {
   estimatedBudget: number;
@@ -40,11 +43,11 @@ export default function BudgetOverviewChart({
 
   const formatValue = (val: number) => formatCurrency(val, currency);
 
-  const containerClasses = "glass-card p-6 rounded-3xl";
-
   return (
-    <div className={containerClasses}>
-      <h3 className="text-lg font-bold mb-6 text-white">Budget Overview</h3>
+    <Card style={{ height: "100%" }} className="shadow-sm">
+      <Title level={4} style={{ marginBottom: 24 }}>
+        Budget Overview
+      </Title>
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
@@ -56,7 +59,7 @@ export default function BudgetOverviewChart({
             <XAxis
               type="number"
               tickFormatter={formatValue}
-              tick={{ fill: "#94a3b8", fontSize: 12 }}
+              tick={{ fontSize: 12 }}
               axisLine={false}
               tickLine={false}
             />
@@ -67,50 +70,42 @@ export default function BudgetOverviewChart({
               cursor={{ fill: "transparent" }}
               formatter={(value) => formatValue(value as number)}
               contentStyle={{
-                backgroundColor: "#030712", // midnight base
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "16px",
-                padding: "16px",
-                color: "#f8fafc",
-                boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.5)",
+                borderRadius: "8px",
+                border: "none",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
               }}
-              itemStyle={{ fontSize: "12px", fontWeight: "bold" }}
               labelStyle={{ display: "none" }}
             />
 
             <Legend
               verticalAlign="bottom"
               align="left"
-              wrapperStyle={{
-                paddingTop: "24px",
-                fontSize: "12px",
-                fontWeight: "600",
-              }}
+              wrapperStyle={{ paddingTop: "24px" }}
             />
 
             <Bar
               dataKey="Estimated"
-              fill="#8b5cf6" // accent-violet
-              radius={[0, 6, 6, 0]}
+              fill="#8b5cf6"
+              radius={[0, 4, 4, 0]}
               barSize={32}
             />
             <Bar
               dataKey="Spent"
-              fill="#06b6d4" // accent-cyan
-              radius={[0, 6, 6, 0]}
+              fill="#06b6d4"
+              radius={[0, 4, 4, 0]}
               barSize={32}
             />
             {overBudget > 0 && (
               <Bar
                 dataKey="Over Budget"
-                fill="#f43f5e" // rose-500
-                radius={[0, 6, 6, 0]}
+                fill="#ff4d4f"
+                radius={[0, 4, 4, 0]}
                 barSize={32}
               />
             )}
           </BarChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </Card>
   );
 }

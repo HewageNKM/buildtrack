@@ -10,6 +10,9 @@ import {
   Legend,
 } from "recharts";
 import { ProjectCategory, BudgetEntry, CurrencyCode } from "@/types";
+import { Card, Empty, Typography } from "antd";
+
+const { Title, Text } = Typography;
 
 interface CategoryBreakdownChartProps {
   entries: BudgetEntry[];
@@ -24,14 +27,6 @@ export default function CategoryBreakdownChart({
 }: CategoryBreakdownChartProps) {
   // Aggregate spending by category
   const categoryTotals = entries.reduce((acc, entry) => {
-    // entry.category might be a slug (legacy) or a Name (new)
-    // We normalize to lowercase for aggregation if we want?
-    // Actually, better to map everything to the Category ID or Name defined in ProjectCategory.
-
-    // Find the matching ProjectCategory
-    // Check if entry.category matches a cat.slug or cat.name
-    // (assuming entry.category is the string value stored)
-
     const cat = categories.find(
       (c) =>
         c.type === "category" &&
@@ -40,7 +35,7 @@ export default function CategoryBreakdownChart({
           c.name.toLowerCase() === entry.category.toLowerCase())
     );
 
-    const key = cat ? cat.name : entry.category; // Group by standardized Name, fall back to entry value
+    const key = cat ? cat.name : entry.category;
     acc[key] = (acc[key] || 0) + entry.amount;
     return acc;
   }, {} as Record<string, number>);
@@ -63,45 +58,38 @@ export default function CategoryBreakdownChart({
     }).format(value);
   };
 
-  // Responsive Legend state
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024); // lg breakpoint
+      setIsMobile(window.innerWidth < 1024);
     };
-
-    // Initial check
     handleResize();
-
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Common container classes to replace .card
-  const containerClasses = "glass-card p-6 rounded-3xl";
-
   if (data.length === 0) {
     return (
-      <div className={containerClasses}>
-        <h3 className="text-lg font-bold mb-4 text-white">
+      <Card style={{ height: "100%" }} className="shadow-sm">
+        <Title level={4} style={{ marginBottom: 24 }}>
           Spending by Category
-        </h3>
-        <div className="h-64 flex flex-col items-center justify-center text-foreground-muted space-y-2">
-          <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-            <span className="text-xl">📊</span>
-          </div>
-          <p className="text-sm font-medium">No expenses recorded yet</p>
+        </Title>
+        <div className="h-64 flex flex-col items-center justify-center">
+          <Empty
+            description="No expenses recorded yet"
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          />
         </div>
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div className={containerClasses}>
-      <h3 className="text-lg font-bold mb-6 text-white">
+    <Card style={{ height: "100%" }} className="shadow-sm">
+      <Title level={4} style={{ marginBottom: 24 }}>
         Spending by Category
-      </h3>
+      </Title>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -116,28 +104,16 @@ export default function CategoryBreakdownChart({
               stroke="none"
             >
               {data.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={entry.color}
-                  className="hover:opacity-80 transition-opacity outline-none"
-                  style={{ filter: "drop-shadow(0px 0px 4px rgba(0,0,0,0.2))" }}
-                />
+                <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
 
             <Tooltip
               formatter={(value) => formatCurrency(value as number)}
               contentStyle={{
-                backgroundColor: "var(--card)",
-                border: "1px solid var(--card-border)",
-                borderRadius: "16px",
-                padding: "16px",
-                boxShadow: "var(--shadow-glow)",
-              }}
-              itemStyle={{
-                color: "var(--foreground)",
-                fontSize: "12px",
-                fontWeight: "bold",
+                borderRadius: "8px",
+                border: "none",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
               }}
             />
 
@@ -147,11 +123,6 @@ export default function CategoryBreakdownChart({
               verticalAlign={isMobile ? "bottom" : "middle"}
               iconType="circle"
               iconSize={8}
-              formatter={(value) => (
-                <span className="text-xs font-semibold text-foreground-muted ml-2 mr-2">
-                  {value}
-                </span>
-              )}
               wrapperStyle={{
                 paddingLeft: isMobile ? "0px" : "20px",
                 paddingTop: isMobile ? "20px" : "0px",
@@ -160,6 +131,6 @@ export default function CategoryBreakdownChart({
           </PieChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </Card>
   );
 }

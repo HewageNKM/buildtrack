@@ -3,235 +3,275 @@
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  HardHat,
-  LogOut,
-  FolderKanban,
-  User,
+  UserOutlined,
+  LogoutOutlined,
+  ProjectOutlined,
+  MenuOutlined,
+  LoginOutlined,
+  UserAddOutlined,
+} from "@ant-design/icons";
+import {
+  Layout,
   Menu,
-  X,
-  Sparkles,
-  Sun,
-  Moon,
-} from "lucide-react";
+  Button,
+  Dropdown,
+  Avatar,
+  Space,
+  Drawer,
+  Typography,
+  theme as antTheme,
+} from "antd";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
+import { Sun, Moon, HardHat } from "lucide-react";
+
+const { Text } = Typography;
+const { Header } = Layout;
+const { useToken } = antTheme;
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { token } = useToken();
 
   const handleLogout = async () => {
-    setIsLoggingOut(true);
     try {
       await logout();
       router.push("/login");
     } catch (error) {
       console.error("Logout error:", error);
-    } finally {
-      setIsLoggingOut(false);
     }
   };
 
+  const userMenu = {
+    items: [
+      {
+        key: "projects",
+        label: "My Projects",
+        icon: <ProjectOutlined />,
+        onClick: () => router.push("/projects"),
+      },
+      {
+        type: "divider" as const,
+      },
+      {
+        key: "logout",
+        label: "Logout",
+        icon: <LogoutOutlined />,
+        danger: true,
+        onClick: handleLogout,
+      },
+    ],
+  };
+
+  // Determine active menu item
+  const selectedKeys = pathname === "/projects" ? ["projects"] : [];
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-(--card-border) bg-[var(--background)]/60 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between">
-        {/* Logo */}
-        <Link
-          href={user ? "/projects" : "/"}
-          className="flex items-center gap-3 group"
+    <Header
+      style={{
+        position: "fixed",
+        top: 0,
+        zIndex: 50,
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 24px",
+        height: 72,
+        background: token.colorBgContainer,
+        borderBottom: `1px solid ${token.colorBorderSecondary}`,
+        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+      }}
+    >
+      {/* Logo */}
+      <Link
+        href={user ? "/projects" : "/"}
+        style={{ display: "flex", alignItems: "center", gap: 12 }}
+      >
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 4px 12px rgba(139,92,246,0.3)",
+          }}
         >
-          <motion.div
-            className="flex items-center justify-center w-11 h-11 rounded-xl bg-linear-to-tr from-accent-violet to-primary shadow-[0_0_20px_rgba(139,92,246,0.5)] border border-[var(--card-border)]"
-            whileHover={{ scale: 1.05, rotate: 5 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <HardHat className="w-6 h-6 text-white drop-shadow-md" />
-          </motion.div>
-          <div className="hidden sm:flex flex-col">
-            <span className="text-xl font-bold tracking-tight text-foreground leading-none">
-              Build<span className="text-accent-cyan">Track</span>
-            </span>
-          </div>
-        </Link>
+          <HardHat style={{ width: 20, height: 20, color: "white" }} />
+        </div>
+        <span style={{ fontSize: 20, fontWeight: 700, color: token.colorText }}>
+          Build<span style={{ color: "#06b6d4" }}>Track</span>
+        </span>
+      </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-6">
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className="w-10 h-10 flex items-center justify-center rounded-xl glass-card text-foreground cursor-pointer relative z-50 hover:scale-105 active:scale-95 transition-transform duration-200"
-            title={
-              theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"
-            }
-          >
-            {theme === "dark" ? (
-              <Sun className="w-5 h-5 text-amber-400" />
+      {/* Desktop Navigation */}
+      <div className="hidden md:flex items-center gap-6">
+        {/* Theme Toggle */}
+        <Button
+          type="text"
+          shape="circle"
+          onClick={toggleTheme}
+          icon={
+            theme === "dark" ? (
+              <Sun style={{ width: 20, height: 20, color: "#faad14" }} />
             ) : (
-              <Moon className="w-5 h-5 text-accent-violet" />
-            )}
-          </button>
+              <Moon style={{ width: 20, height: 20, color: "#8b5cf6" }} />
+            )
+          }
+        />
 
-          {user ? (
-            <>
-              <Link
-                href="/projects"
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--input-bg)] hover:bg-[var(--input-focus-bg)] border border-[var(--input-border)] hover:border-accent-violet/50 transition-all group"
+        {user ? (
+          <>
+            <Menu
+              mode="horizontal"
+              selectedKeys={selectedKeys}
+              style={{
+                background: "transparent",
+                borderBottom: "none",
+                minWidth: 100,
+              }}
+              items={[
+                {
+                  key: "projects",
+                  label: "Projects",
+                  icon: <ProjectOutlined />,
+                  onClick: () => router.push("/projects"),
+                },
+              ]}
+            />
+
+            <Dropdown menu={userMenu} placement="bottomRight" arrow>
+              <Button
+                type="text"
+                style={{ height: "auto", padding: "4px 8px" }}
               >
-                <FolderKanban className="w-4 h-4 text-accent-violet group-hover:text-foreground transition-colors" />
-                <span className="text-sm font-semibold text-foreground group-hover:text-foreground">
-                  Projects
-                </span>
-              </Link>
-
-              <div className="h-8 w-px bg-[var(--card-border)]" />
-
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-3 px-3 py-1.5 rounded-full border border-[var(--card-border)] bg-[var(--input-bg)]">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-accent-violet to-accent-pink shadow-lg">
-                    <User className="w-4 h-4 text-white" />
+                <Space>
+                  <Avatar
+                    style={{
+                      background: "linear-gradient(135deg, #8b5cf6, #ec4899)",
+                      verticalAlign: "middle",
+                    }}
+                    icon={<UserOutlined />}
+                  >
+                    {user.displayName?.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <div style={{ textAlign: "left", lineHeight: 1.2 }}>
+                    <Text strong style={{ display: "block", fontSize: 13 }}>
+                      {user.displayName || "User"}
+                    </Text>
                   </div>
-                  <span className="text-sm font-medium text-foreground pr-2">
-                    {user.displayName || user.email?.split("@")[0]}
-                  </span>
-                </div>
-
-                <motion.button
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                  className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 transition-all"
-                  title="Logout"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <LogOut className="w-4 h-4" />
-                </motion.button>
-              </div>
-            </>
-          ) : (
-            <>
-              <Link
-                href="/login"
-                className="text-sm font-semibold text-foreground-muted hover:text-foreground transition-colors"
-              >
+                </Space>
+              </Button>
+            </Dropdown>
+          </>
+        ) : (
+          <Space>
+            <Link href="/login">
+              <Button type="text" icon={<LoginOutlined />}>
                 Log in
-              </Link>
-              <Link
-                href="/register"
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-accent-violet to-primary text-white text-sm font-bold shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)] border border-white/10 transition-all"
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button
+                type="primary"
+                icon={<UserAddOutlined />}
+                style={{
+                  background: "linear-gradient(90deg, #8b5cf6, #6366f1)",
+                  borderColor: "transparent",
+                }}
               >
-                <Sparkles className="w-4 h-4" />
                 Get Started
-              </Link>
-            </>
-          )}
-        </div>
-
-        {/* Mobile Menu Button */}
-        <div className="flex md:hidden items-center gap-3">
-          {/* Theme Toggle (Mobile) */}
-          <button
-            onClick={toggleTheme}
-            className="w-11 h-11 flex items-center justify-center rounded-xl glass-card text-foreground cursor-pointer relative z-50 hover:scale-105 active:scale-95 transition-transform duration-200"
-            title={
-              theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"
-            }
-          >
-            {theme === "dark" ? (
-              <Sun className="w-5 h-5 text-amber-400" />
-            ) : (
-              <Moon className="w-5 h-5 text-accent-violet" />
-            )}
-          </button>
-
-          <motion.button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex items-center justify-center w-11 h-11 rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] text-foreground"
-            whileTap={{ scale: 0.95 }}
-          >
-            {mobileMenuOpen ? (
-              <X className="w-5 h-5" />
-            ) : (
-              <Menu className="w-5 h-5" />
-            )}
-          </motion.button>
-        </div>
+              </Button>
+            </Link>
+          </Space>
+        )}
       </div>
 
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="md:hidden overflow-hidden border-t border-[var(--card-border)] bg-[var(--background)]/95 backdrop-blur-xl"
-          >
-            <div className="p-4 space-y-4">
-              {user ? (
-                <>
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)]">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-accent-violet to-accent-pink flex items-center justify-center">
-                      <User className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">
-                        {user.displayName || "User"}
-                      </p>
-                      <p className="text-xs text-foreground-muted">
-                        {user.email}
-                      </p>
-                    </div>
-                  </div>
+      {/* Mobile Menu Button */}
+      <div className="md:hidden flex items-center gap-4">
+        <Button
+          type="text"
+          shape="circle"
+          onClick={toggleTheme}
+          icon={
+            theme === "dark" ? (
+              <Sun style={{ width: 20, height: 20, color: "#faad14" }} />
+            ) : (
+              <Moon style={{ width: 20, height: 20, color: "#8b5cf6" }} />
+            )
+          }
+        />
+        <Button
+          icon={<MenuOutlined />}
+          onClick={() => setMobileMenuOpen(true)}
+        />
+      </div>
 
-                  <Link
-                    href="/projects"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-accent-violet/10 text-accent-violet font-medium hover:bg-accent-violet/20"
-                  >
-                    <FolderKanban className="w-5 h-5" />
-                    My Projects
-                  </Link>
-
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setMobileMenuOpen(false);
-                    }}
-                    disabled={isLoggingOut}
-                    className="flex items-center gap-3 w-full p-3 rounded-xl bg-red-500/10 text-red-400 font-medium hover:bg-red-500/20"
-                  >
-                    <LogOut className="w-5 h-5" />
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  <Link
-                    href="/login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="w-full p-3.5 rounded-xl bg-[var(--input-bg)] text-center font-semibold text-foreground hover:bg-[var(--input-focus-bg)]"
-                  >
-                    Log in
-                  </Link>
-                  <Link
-                    href="/register"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="w-full p-3.5 rounded-xl bg-gradient-to-r from-accent-violet to-primary text-white text-center font-bold"
-                  >
-                    Get Started Free
-                  </Link>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </nav>
+      {/* Mobile Drawer */}
+      <Drawer
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Avatar
+              style={{
+                background: "linear-gradient(135deg, #8b5cf6, #ec4899)",
+              }}
+              icon={<UserOutlined />}
+            />
+            <Text strong>{user?.displayName || "Menu"}</Text>
+          </div>
+        }
+        placement="right"
+        onClose={() => setMobileMenuOpen(false)}
+        open={mobileMenuOpen}
+        styles={{ body: { padding: 0 } }}
+      >
+        <Menu
+          mode="inline"
+          selectedKeys={selectedKeys}
+          style={{ borderRight: "none" }}
+          onClick={() => setMobileMenuOpen(false)}
+          items={
+            user
+              ? [
+                  {
+                    key: "projects",
+                    label: "My Projects",
+                    icon: <ProjectOutlined />,
+                    onClick: () => router.push("/projects"),
+                  },
+                  {
+                    key: "logout",
+                    label: "Logout",
+                    icon: <LogoutOutlined />,
+                    danger: true,
+                    onClick: handleLogout,
+                  },
+                ]
+              : [
+                  {
+                    key: "login",
+                    label: "Log in",
+                    icon: <LoginOutlined />,
+                    onClick: () => router.push("/login"),
+                  },
+                  {
+                    key: "register",
+                    label: "Get Started",
+                    icon: <UserAddOutlined />,
+                    onClick: () => router.push("/register"),
+                  },
+                ]
+          }
+        />
+      </Drawer>
+    </Header>
   );
 }
