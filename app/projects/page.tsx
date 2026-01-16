@@ -200,7 +200,7 @@ export default function ProjectsPage() {
                 title="Funds Released"
                 value={formatCurrencyCompact(totalReleased, DEFAULT_CURRENCY)}
                 prefix={<WalletOutlined />}
-                styles={{ value: { color: "#10b981" } }}
+                styles={{ content: { color: "#10b981" } }}
               />
             </Card>
           </Col>
@@ -210,7 +210,7 @@ export default function ProjectsPage() {
                 title="Total Spent"
                 value={formatCurrencyCompact(totalSpent, DEFAULT_CURRENCY)}
                 prefix={<RiseOutlined />}
-                styles={{ value: { color: "#06b6d4" } }}
+                styles={{ content: { color: "#06b6d4" } }}
               />
             </Card>
           </Col>
@@ -221,7 +221,7 @@ export default function ProjectsPage() {
                 value={overBudgetProjects}
                 prefix={<WarningOutlined />}
                 styles={{
-                  value: {
+                  content: {
                     color: overBudgetProjects > 0 ? "#f59e0b" : undefined,
                   },
                 }}

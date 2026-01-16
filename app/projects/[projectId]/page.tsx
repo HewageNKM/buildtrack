@@ -12,7 +12,6 @@ import { formatCurrencyCompact, DEFAULT_CURRENCY } from "@/lib/currency";
 import Navbar from "@/components/common/Navbar";
 import { PageLoader } from "@/components/common/LoadingSpinner";
 import AddEntryModal from "@/components/entries/AddEntryModal";
-import FilePreviewModal from "@/components/common/FilePreviewModal";
 import BudgetOverviewChart from "@/components/charts/BudgetOverviewChart";
 import CategoryBreakdownChart from "@/components/charts/CategoryBreakdownChart";
 import SpendingTimelineChart from "@/components/charts/SpendingTimelineChart";
@@ -35,6 +34,8 @@ import {
   RiseOutlined,
   FallOutlined,
   ClearOutlined,
+  EyeOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 
 import {
@@ -55,6 +56,7 @@ import {
   DatePicker,
   message,
   Layout,
+  Image,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import Link from "next/link";
@@ -85,11 +87,7 @@ export default function ProjectDetailPage({
   const [showTeamModal, setShowTeamModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
 
-  const [previewFile, setPreviewFile] = useState<{
-    url: string;
-    name: string;
-    type: "image" | "pdf";
-  } | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [editingEntry, setEditingEntry] = useState<BudgetEntry | undefined>(
     undefined
   );
@@ -300,23 +298,39 @@ export default function ProjectDetailPage({
       align: "center",
       render: (_, record) =>
         record.invoiceUrl ? (
-          <Button
-            type="text"
-            icon={
-              record.invoiceType === "pdf" ? (
-                <FileTextOutlined />
-              ) : (
-                <FileImageOutlined />
-              )
-            }
-            onClick={() =>
-              setPreviewFile({
-                url: record.invoiceUrl!,
-                name: record.invoiceFileName || "Invoice",
-                type: record.invoiceType || "image",
-              })
-            }
-          />
+          <Space>
+            <Tooltip title="Preview">
+              <Button
+                type="text"
+                icon={<EyeOutlined />}
+                onClick={() => {
+                  if (
+                    record.invoiceType === "pdf" ||
+                    record.invoiceUrl?.endsWith(".pdf")
+                  ) {
+                    window.open(record.invoiceUrl, "_blank");
+                  } else {
+                    setPreviewImage(record.invoiceUrl!);
+                  }
+                }}
+              />
+            </Tooltip>
+            <Tooltip title="Download">
+              <Button
+                type="text"
+                icon={<DownloadOutlined />}
+                onClick={() => {
+                  const link = document.createElement("a");
+                  link.href = record.invoiceUrl!;
+                  link.download = record.invoiceFileName || "download";
+                  link.target = "_blank";
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+              />
+            </Tooltip>
+          </Space>
         ) : (
           <Text type="secondary">—</Text>
         ),
@@ -453,8 +467,8 @@ export default function ProjectDetailPage({
                 prefix={
                   <span style={{ fontWeight: "bold", fontSize: 14 }}>LKR</span>
                 }
-                // Updated valueStyle to styles={{ value: ... }}
-                styles={{ value: { color: "#6366f1", fontWeight: "bold" } }}
+                // Updated valueStyle to styles={{ content: ... }}
+                styles={{ content: { color: "#6366f1", fontWeight: "bold" } }}
               />
             </Card>
           </Col>
@@ -464,7 +478,7 @@ export default function ProjectDetailPage({
                 title="Funds Released"
                 value={formatCurrencyCompact(totalReleased, project.currency)}
                 prefix={<WalletOutlined />}
-                styles={{ value: { color: "#10b981", fontWeight: "bold" } }}
+                styles={{ content: { color: "#10b981", fontWeight: "bold" } }}
               />
             </Card>
           </Col>
@@ -474,7 +488,7 @@ export default function ProjectDetailPage({
                 title="Total Spent"
                 value={formatCurrencyCompact(totalSpent, project.currency)}
                 prefix={<RiseOutlined />}
-                styles={{ value: { color: "#06b6d4", fontWeight: "bold" } }}
+                styles={{ content: { color: "#06b6d4", fontWeight: "bold" } }}
               />
             </Card>
           </Col>
@@ -490,7 +504,7 @@ export default function ProjectDetailPage({
                 )}
                 prefix={isOverReleased ? <FallOutlined /> : <WalletOutlined />}
                 styles={{
-                  value: {
+                  content: {
                     color: isOverReleased ? "#ef4444" : "#f59e0b",
                     fontWeight: "bold",
                   },
@@ -800,13 +814,19 @@ export default function ProjectDetailPage({
         onCategoriesUpdated={fetchData}
       />
 
-      {previewFile && (
-        <FilePreviewModal
-          isOpen={!!previewFile}
-          onClose={() => setPreviewFile(null)}
-          fileUrl={previewFile.url}
-          fileName={previewFile.name}
-          fileType={previewFile.type}
+      {/* Hidden Image for Preview */}
+      {previewImage && (
+        <Image
+          style={{ display: "none" }}
+          src={previewImage}
+          alt="Preview"
+          preview={{
+            visible: true,
+            onVisibleChange: (visible, prevVisible) => {
+              if (!visible) setPreviewImage(null);
+            },
+            src: previewImage,
+          }}
         />
       )}
     </Layout>

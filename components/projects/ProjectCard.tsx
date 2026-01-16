@@ -150,7 +150,7 @@ export default function ProjectCard({
             <Statistic
               title="Spent"
               value={formatCurrencyCompact(totalSpent, projectCurrency)}
-              styles={{ value: { fontSize: 16 } }}
+              styles={{ content: { fontSize: 16 } }}
             />
           </Card>
           <Card size="small" style={{ background: "rgba(255,255,255,0.02)" }}>
@@ -160,7 +160,7 @@ export default function ProjectCard({
                 project.estimatedBudget,
                 projectCurrency
               )}
-              styles={{ value: { fontSize: 16 } }}
+              styles={{ content: { fontSize: 16 } }}
             />
           </Card>
         </div>
