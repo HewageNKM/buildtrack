@@ -73,6 +73,8 @@ export interface BudgetEntryItem {
   id: string;
   description: string;
   amount: number;
+  category?: string;
+  subCategory?: string;
 }
 
 export interface BudgetEntryVersion {

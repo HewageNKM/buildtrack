@@ -88,4 +88,47 @@ export class BudgetReleaseService {
 
     await this.releaseRepo.delete(releaseId);
   }
+
+  async updateRelease(
+    releaseId: string,
+    projectId: string,
+    userId: string,
+    data: { amount?: number; date?: string; note?: string },
+    userEmail?: string
+  ): Promise<BudgetRelease> {
+    const project = await this.projectRepo.getById(projectId);
+    if (!project) throw new Error("Project not found");
+
+    // Only allow owner or authorized members
+    if (project.userId !== userId) {
+      const isPrivileged = project.teamMembers?.some(
+        (m) =>
+          (m.userId === userId || (userEmail && m.email === userEmail)) &&
+          (m.role === "owner" || m.role === "editor")
+      );
+      if (!isPrivileged) throw new Error("Unauthorized");
+    }
+
+    // Validate against budget if amount changed
+    if (data.amount !== undefined) {
+      const currentReleases = await this.releaseRepo.getReleasesByProject(
+        projectId
+      );
+      const existingRelease = currentReleases.find((r) => r.id === releaseId);
+      if (!existingRelease) throw new Error("Release not found");
+
+      const totalOther = currentReleases
+        .filter((r) => r.id !== releaseId)
+        .reduce((sum, r) => sum + r.amount, 0);
+      const newTotal = totalOther + data.amount;
+
+      if (newTotal > project.estimatedBudget) {
+        throw new Error(
+          `Cannot update release. Total released (${newTotal}) would exceed estimated budget (${project.estimatedBudget}).`
+        );
+      }
+    }
+
+    return await this.releaseRepo.update(releaseId, data);
+  }
 }

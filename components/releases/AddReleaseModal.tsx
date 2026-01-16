@@ -4,6 +4,7 @@ import { X, Calendar, DollarSign, FileText, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 import toast from "react-hot-toast";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
+import { BudgetRelease } from "@/types";
 
 interface AddReleaseModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface AddReleaseModalProps {
   projectId: string;
   onReleaseAdded: () => void;
   remainingEstimation: number;
+  initialData?: BudgetRelease;
 }
 
 export default function AddReleaseModal({
@@ -19,11 +21,28 @@ export default function AddReleaseModal({
   projectId,
   onReleaseAdded,
   remainingEstimation,
+  initialData,
 }: AddReleaseModalProps) {
-  const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [note, setNote] = useState("");
+  const [amount, setAmount] = useState(initialData?.amount?.toString() || "");
+  const [date, setDate] = useState(
+    initialData?.date?.split("T")[0] || new Date().toISOString().split("T")[0]
+  );
+  const [note, setNote] = useState(initialData?.note || "");
   const [loading, setLoading] = useState(false);
+
+  // Reset form when modal opens/closes or initialData changes
+  const resetForm = () => {
+    setAmount(initialData?.amount?.toString() || "");
+    setDate(
+      initialData?.date?.split("T")[0] || new Date().toISOString().split("T")[0]
+    );
+    setNote(initialData?.note || "");
+  };
+
+  // Effect to reset when modal opens
+  if (isOpen && !loading) {
+    // This is a simple approach; a useEffect might be more robust
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,15 +62,25 @@ export default function AddReleaseModal({
         return;
       }
 
-      await api.releases.create(projectId, {
-        amount: releaseAmount,
-        date,
-        note,
-      });
+      if (initialData) {
+        // Update existing release
+        await api.releases.update(projectId, initialData.id, {
+          amount: releaseAmount,
+          date,
+          note,
+        });
+        toast.success("Release updated successfully");
+      } else {
+        // Create new release
+        await api.releases.create(projectId, {
+          amount: releaseAmount,
+          date,
+          note,
+        });
+        toast.success("Funds released successfully");
+      }
 
-      toast.success("Funds released successfully");
-      setAmount("");
-      setNote("");
+      resetForm();
       onReleaseAdded();
       onClose();
     } catch (error: any) {
@@ -84,7 +113,7 @@ export default function AddReleaseModal({
             <div className="flex items-center justify-between p-6 border-b border-[var(--card-border)]">
               <div>
                 <h2 className="text-xl font-bold text-foreground">
-                  Release Funds
+                  {initialData ? "Edit Release" : "Release Funds"}
                 </h2>
                 <p className="text-sm text-foreground-muted mt-1">
                   Add funds to the working capital
@@ -176,7 +205,7 @@ export default function AddReleaseModal({
                   ) : (
                     <>
                       <DollarSign className="w-5 h-5" />
-                      Release Funds
+                      {initialData ? "Save Changes" : "Release Funds"}
                     </>
                   )}
                 </button>

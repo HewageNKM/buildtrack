@@ -24,4 +24,16 @@ export const releasesApi = {
   delete: async (projectId: string, releaseId: string) => {
     await api.delete(`/projects/${projectId}/releases/${releaseId}`);
   },
+
+  update: async (
+    projectId: string,
+    releaseId: string,
+    data: { amount?: number; date?: string; note?: string }
+  ) => {
+    const response = await api.put<{ release: BudgetRelease }>(
+      `/projects/${projectId}/releases/${releaseId}`,
+      data
+    );
+    return response.data.release;
+  },
 };

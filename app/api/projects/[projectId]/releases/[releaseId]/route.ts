@@ -31,3 +31,35 @@ export async function DELETE(
     );
   }
 }
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ projectId: string; releaseId: string }> }
+) {
+  try {
+    const { projectId, releaseId } = await params;
+    const auth = await verifyAuth(request);
+    if (!auth) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { amount, date, note } = body;
+
+    const release = await releaseService.updateRelease(
+      releaseId,
+      projectId,
+      auth.uid,
+      { amount: amount ? Number(amount) : undefined, date, note },
+      auth.email
+    );
+
+    return NextResponse.json({ release });
+  } catch (error: any) {
+    console.error("Error updating release:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to update release" },
+      { status: 500 }
+    );
+  }
+}

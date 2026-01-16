@@ -148,7 +148,13 @@ export default function AddEntryModal({
   const addItem = () => {
     setItems([
       ...items,
-      { id: Date.now().toString(), description: "", amount: 0 },
+      {
+        id: Date.now().toString(),
+        description: "",
+        amount: 0,
+        category: category,
+        subCategory: "",
+      },
     ]);
   };
 
@@ -163,11 +169,15 @@ export default function AddEntryModal({
 
   const updateItem = (
     id: string,
-    field: "description" | "amount",
-    value: any
+    field: "description" | "amount" | "category" | "subCategory",
+    value: string | number
   ) => {
     const newItems = items.map((item) => {
       if (item.id === id) {
+        // Reset subcategory when category changes
+        if (field === "category") {
+          return { ...item, category: value as string, subCategory: "" };
+        }
         return { ...item, [field]: value };
       }
       return item;
@@ -178,6 +188,14 @@ export default function AddEntryModal({
       const total = newItems.reduce((sum, item) => sum + (item.amount || 0), 0);
       setAmount(total.toString());
     }
+  };
+
+  const getItemSubcategories = (categoryName: string) => {
+    const parent = mainCategories.find((c) => c.name === categoryName);
+    if (!parent) return [];
+    return subCategories.filter(
+      (s) => s.parentId === parent.id || s.parentId === parent.name
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -200,7 +218,7 @@ export default function AddEntryModal({
     try {
       const data = {
         category,
-        subCategory: category === "materials" ? subCategory : undefined,
+        subCategory: subCategory || undefined,
         description: description.trim(),
         amount: parsedAmount,
         date,
@@ -339,7 +357,7 @@ export default function AddEntryModal({
                   >
                     <label className={labelClass}>
                       <Tag className="w-4 h-4 text-indigo-400" />
-                      Material / Sub-category
+                      Sub-category
                     </label>
                     <select
                       value={subCategory}
@@ -351,7 +369,7 @@ export default function AddEntryModal({
                         value=""
                         className="bg-background-secondary text-foreground"
                       >
-                        Select Material...
+                        Select...
                       </option>
                       {currentSubcategories.map((sub) => (
                         <option
@@ -394,47 +412,99 @@ export default function AddEntryModal({
                     </span>
                   </div>
                   <div className="space-y-3 bg-[var(--input-bg)] p-4 rounded-xl border border-[var(--input-border)]">
-                    {items.map((item, index) => (
-                      <div key={item.id} className="flex gap-2 items-start">
-                        <div className="flex-1">
-                          <input
-                            type="text"
-                            placeholder="Item description"
-                            value={item.description}
-                            onChange={(e) =>
-                              updateItem(item.id, "description", e.target.value)
-                            }
-                            className={inputClass + " py-2 text-xs"}
-                            required
-                          />
-                        </div>
-                        <div className="w-32">
-                          <input
-                            type="number"
-                            placeholder="Amount"
-                            value={item.amount || ""}
-                            onChange={(e) =>
-                              updateItem(
-                                item.id,
-                                "amount",
-                                parseFloat(e.target.value)
-                              )
-                            }
-                            className={inputClass + " py-2 text-xs"}
-                            required
-                            min="0"
-                            step="0.01"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeItem(item.id)}
-                          className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                    {items.map((item, index) => {
+                      const itemSubs = getItemSubcategories(
+                        item.category || ""
+                      );
+                      return (
+                        <div
+                          key={item.id}
+                          className="p-3 rounded-lg border border-[var(--card-border)] bg-[var(--card)] space-y-2"
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
+                          <div className="flex gap-2 items-start">
+                            <div className="flex-1 grid grid-cols-2 gap-2">
+                              <select
+                                value={item.category || ""}
+                                onChange={(e) =>
+                                  updateItem(
+                                    item.id,
+                                    "category",
+                                    e.target.value
+                                  )
+                                }
+                                className={inputClass + " py-2 text-xs"}
+                              >
+                                <option value="">Category...</option>
+                                {mainCategories.map((cat) => (
+                                  <option key={cat.id} value={cat.name}>
+                                    {cat.name}
+                                  </option>
+                                ))}
+                              </select>
+                              {itemSubs.length > 0 && (
+                                <select
+                                  value={item.subCategory || ""}
+                                  onChange={(e) =>
+                                    updateItem(
+                                      item.id,
+                                      "subCategory",
+                                      e.target.value
+                                    )
+                                  }
+                                  className={inputClass + " py-2 text-xs"}
+                                >
+                                  <option value="">Sub-category...</option>
+                                  {itemSubs.map((sub) => (
+                                    <option key={sub.id} value={sub.name}>
+                                      {sub.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeItem(item.id)}
+                              className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Item description"
+                              value={item.description}
+                              onChange={(e) =>
+                                updateItem(
+                                  item.id,
+                                  "description",
+                                  e.target.value
+                                )
+                              }
+                              className={inputClass + " py-2 text-xs flex-1"}
+                              required
+                            />
+                            <input
+                              type="number"
+                              placeholder="Amount"
+                              value={item.amount || ""}
+                              onChange={(e) =>
+                                updateItem(
+                                  item.id,
+                                  "amount",
+                                  parseFloat(e.target.value)
+                                )
+                              }
+                              className={inputClass + " py-2 text-xs w-28"}
+                              required
+                              min="0"
+                              step="0.01"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
                     <button
                       type="button"
                       onClick={addItem}

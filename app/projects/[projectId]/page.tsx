@@ -97,6 +97,9 @@ export default function ProjectDetailPage({
   const [editingEntry, setEditingEntry] = useState<BudgetEntry | undefined>(
     undefined
   );
+  const [editingRelease, setEditingRelease] = useState<
+    BudgetRelease | undefined
+  >(undefined);
 
   // Filters & View State
   const [filterCategory, setFilterCategory] = useState<string>("all");
@@ -112,6 +115,10 @@ export default function ProjectDetailPage({
   // Statistics
   const [projectTotalSpent, setProjectTotalSpent] = useState(0);
   const [projectTotalReleased, setProjectTotalReleased] = useState(0);
+
+  // Pagination for Releases
+  const [releasesPage, setReleasesPage] = useState(0);
+  const releasesPerPage = 10;
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -797,12 +804,14 @@ export default function ProjectDetailPage({
           ) : (
             // RELEASES TABLE
             <ReleaseList
-              releases={releases}
+              releases={releases.slice(
+                releasesPage * releasesPerPage,
+                (releasesPage + 1) * releasesPerPage
+              )}
               currency={project.currency}
-              onDelete={handleDeleteRelease}
-              isOwner={
-                currentUserRole === "owner" || currentUserRole === "editor"
-              }
+              currentPage={releasesPage}
+              totalPages={Math.ceil(releases.length / releasesPerPage)}
+              onPageChange={setReleasesPage}
             />
           )}
         </section>
@@ -838,13 +847,17 @@ export default function ProjectDetailPage({
 
       <AddReleaseModal
         isOpen={showReleaseModal}
-        onClose={() => setShowReleaseModal(false)}
+        onClose={() => {
+          setShowReleaseModal(false);
+          setEditingRelease(undefined);
+        }}
         projectId={project.id}
         onReleaseAdded={fetchData}
         remainingEstimation={
           project.estimatedBudget -
           releases.reduce((sum, r) => sum + r.amount, 0)
         }
+        initialData={editingRelease}
       />
 
       {previewFile && (
