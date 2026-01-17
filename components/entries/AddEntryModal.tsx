@@ -23,7 +23,7 @@ import {
   UploadOutlined,
   DollarOutlined,
 } from "@ant-design/icons";
-import { BudgetEntry, ProjectCategory } from "@/types";
+import { BudgetEntry, ProjectCategory, Vendor } from "@/types";
 import { api } from "@/lib/api";
 // import toast from "react-hot-toast"; // Removed
 import dayjs from "dayjs";
@@ -60,10 +60,12 @@ export default function AddEntryModal({
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<ProjectCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
 
   useEffect(() => {
     if (isOpen && projectId) {
       fetchCategories();
+      fetchVendors();
     }
   }, [isOpen, projectId]);
 
@@ -79,7 +81,7 @@ export default function AddEntryModal({
               subCategory: item.subCategory || "",
               description: item.description,
               amount: item.amount,
-            }))
+            })),
           );
         } else {
           setItems([
@@ -128,6 +130,15 @@ export default function AddEntryModal({
     }
   };
 
+  const fetchVendors = async () => {
+    try {
+      const data = await api.vendors.list(projectId);
+      setVendors(data);
+    } catch {
+      // Vendors are optional, silently fail
+    }
+  };
+
   const mainCategories = categories.filter((c) => c.type === "category");
   const subCategories = categories.filter((c) => c.type === "subcategory");
 
@@ -137,7 +148,7 @@ export default function AddEntryModal({
     // Check if this category supports subcategories
     if (!parent.hasSubCategories) return [];
     return subCategories.filter(
-      (s) => s.parentId === parent.id || s.parentId === parent.name
+      (s) => s.parentId === parent.id || s.parentId === parent.name,
     );
   };
 
@@ -163,7 +174,7 @@ export default function AddEntryModal({
   const updateItem = (
     id: string,
     field: keyof FormItem,
-    value: string | number
+    value: string | number,
   ) => {
     setItems(
       items.map((item) => {
@@ -174,7 +185,7 @@ export default function AddEntryModal({
           return { ...item, [field]: value };
         }
         return item;
-      })
+      }),
     );
   };
 
@@ -183,10 +194,11 @@ export default function AddEntryModal({
   const handleSubmit = async (formValues: {
     date: dayjs.Dayjs;
     note?: string;
+    vendorId?: string;
   }) => {
     // Validate items
     const invalidItem = items.find(
-      (item) => !item.category || !item.description.trim() || item.amount <= 0
+      (item) => !item.category || !item.description.trim() || item.amount <= 0,
     );
     if (invalidItem) {
       message.error("All items must have category, description, and amount");
@@ -216,6 +228,7 @@ export default function AddEntryModal({
           description: item.description,
           amount: item.amount,
         })),
+        vendorId: formValues.vendorId || undefined,
       };
 
       if (initialData) {
@@ -357,6 +370,23 @@ export default function AddEntryModal({
           </div>
 
           <Divider />
+
+          {/* Vendor (optional) */}
+          {vendors.length > 0 && (
+            <Form.Item name="vendorId" label="Vendor (Optional)">
+              <Select
+                placeholder="Select vendor"
+                allowClear
+                showSearch
+                optionFilterProp="children"
+                size="large"
+                options={vendors.map((v) => ({
+                  value: v.id,
+                  label: v.name,
+                }))}
+              />
+            </Form.Item>
+          )}
 
           {/* Date */}
           <Form.Item

@@ -367,7 +367,7 @@ export default function ProjectDetailPage({
       ),
     },
     {
-      title: "Receipt",
+      title: "Invoice",
       key: "receipt",
       align: "center",
       width: 100,
@@ -395,13 +395,8 @@ export default function ProjectDetailPage({
                 type="text"
                 icon={<DownloadOutlined />}
                 onClick={() => {
-                  const link = document.createElement("a");
-                  link.href = record.invoiceUrl!;
-                  link.download = record.invoiceFileName || "download";
-                  link.target = "_blank";
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
+                  // Direct navigation downloads the file
+                  window.location.href = record.invoiceUrl!;
                 }}
               />
             </Tooltip>
