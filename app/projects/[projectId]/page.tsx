@@ -99,7 +99,7 @@ export default function ProjectDetailPage({
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [editingEntry, setEditingEntry] = useState<BudgetEntry | undefined>(
-    undefined
+    undefined,
   );
 
   const [editingRelease, setEditingRelease] = useState<
@@ -108,7 +108,7 @@ export default function ProjectDetailPage({
 
   const [viewingEntry, setViewingEntry] = useState<BudgetEntry | null>(null);
   const [viewingRelease, setViewingRelease] = useState<BudgetRelease | null>(
-    null
+    null,
   );
 
   const [activeTab, setActiveTab] = useState<string>("expenses");
@@ -240,7 +240,7 @@ export default function ProjectDetailPage({
 
   const releasedPercentage = widthPercentage(
     totalReleased,
-    project.estimatedBudget
+    project.estimatedBudget,
   );
   const spentPercentage = widthPercentage(totalSpent, project.estimatedBudget);
 
@@ -251,7 +251,7 @@ export default function ProjectDetailPage({
     if (filterCategory !== "all") {
       // Check if ANY item matches the filtered category
       const hasCategory = (e.items || []).some(
-        (item) => item.category === filterCategory
+        (item) => item.category === filterCategory,
       );
       if (!hasCategory) return false;
     }
@@ -268,7 +268,7 @@ export default function ProjectDetailPage({
         c.type === "category" &&
         (c.name === value ||
           c.slug === value ||
-          c.name.toLowerCase() === value.toLowerCase())
+          c.name.toLowerCase() === value.toLowerCase()),
     );
     return cat ? cat.color || "#8b5cf6" : "#8b5cf6";
   };
@@ -311,11 +311,17 @@ export default function ProjectDetailPage({
               color={getCategoryColor(item.category || "")}
               style={{ marginRight: 0, width: "fit-content" }}
             >
-              {item.category?.toLowerCase()}
+              {item.category
+                ?.split(" ")
+                .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                .join(" ")}
             </Tag>
             {item.subCategory && (
               <Text type="secondary" style={{ fontSize: 11 }}>
-                {item.subCategory}
+                {item.subCategory
+                  .split(" ")
+                  .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                  .join(" ")}
               </Text>
             )}
           </div>
@@ -323,18 +329,31 @@ export default function ProjectDetailPage({
       },
     },
     {
-      title: "Description",
+      title: "Items",
       key: "description",
       ellipsis: true,
       render: (_, record) => {
         const items = record.items || [];
-        if (items.length > 1) {
-          return (
-            <Text type="secondary">See details for {items.length} items</Text>
-          );
+        if (items.length === 0) return <Text type="secondary">-</Text>;
+
+        const firstItem = items[0];
+        const description = firstItem.description
+          ?.split(" ")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" ");
+
+        if (items.length === 1) {
+          return <Text>{description}</Text>;
         }
-        const item = items[0] || record;
-        return <Text>{item.description}</Text>;
+
+        return (
+          <Space size={4}>
+            <Text>{description}</Text>
+            <Tag color="blue" style={{ marginLeft: 4 }}>
+              +{items.length - 1} more
+            </Tag>
+          </Space>
+        );
       },
     },
     {
@@ -536,7 +555,7 @@ export default function ProjectDetailPage({
                 title="Estimated Budget"
                 value={formatCurrencyCompact(
                   project.estimatedBudget,
-                  project.currency
+                  project.currency,
                 )}
                 prefix={
                   <span style={{ fontWeight: "bold", fontSize: 14 }}>LKR</span>
@@ -574,7 +593,7 @@ export default function ProjectDetailPage({
                 }
                 value={formatCurrencyCompact(
                   Math.abs(totalReleased - totalSpent),
-                  project.currency
+                  project.currency,
                 )}
                 prefix={isOverReleased ? <FallOutlined /> : <WalletOutlined />}
                 styles={{
@@ -610,14 +629,14 @@ export default function ProjectDetailPage({
               <Text strong style={{ color: "#6366f1" }}>
                 {formatCurrencyCompact(
                   project.estimatedBudget,
-                  project.currency
+                  project.currency,
                 )}
               </Text>
             </Text>
           </div>
           <Tooltip
             title={`Spent: ${spentPercentage.toFixed(
-              1
+              1,
             )}% | Released: ${releasedPercentage.toFixed(1)}%`}
           >
             <Progress
@@ -627,8 +646,8 @@ export default function ProjectDetailPage({
                 isOverBudget
                   ? "#ef4444"
                   : isOverReleased
-                  ? "#f59e0b"
-                  : "#6366f1"
+                    ? "#f59e0b"
+                    : "#6366f1"
               }
               showInfo={false}
               // Updated strokeWidth to size={{ height: 12 }}

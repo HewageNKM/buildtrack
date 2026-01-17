@@ -55,7 +55,7 @@ export default function ReportsTab({
       const response = await api.reports.getReportData(
         projectId,
         startDate,
-        endDate
+        endDate,
       );
       setReportData(response.reportData);
       setCategorySummary(response.categorySummary);
@@ -79,7 +79,23 @@ export default function ReportsTab({
   };
 
   const categoryColumns: ColumnsType<CategorySummary> = [
-    { title: "Category", dataIndex: "category", key: "category" },
+    {
+      title: "Category",
+      dataIndex: "category",
+      key: "category",
+      render: (val: string, record) => {
+        // Capitalize first letter of each word
+        const formatted = val
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ");
+        return (
+          <span style={{ fontWeight: record.children ? "bold" : "normal" }}>
+            {formatted}
+          </span>
+        );
+      },
+    },
     {
       title: "Amount",
       dataIndex: "totalAmount",
@@ -184,15 +200,80 @@ export default function ReportsTab({
                 rowKey="category"
                 pagination={false}
                 size="small"
+                scroll={{ x: 500 }}
+                expandable={{
+                  childrenColumnName: "children",
+                  indentSize: 20,
+                }}
               />
             </Card>
 
-            {/* Entry Count */}
-            <Text type="secondary">
-              Report includes {reportData.entries.length} entries
-              {reportData.dateRange &&
-                ` from ${reportData.dateRange.start} to ${reportData.dateRange.end}`}
-            </Text>
+            {/* Entries Table */}
+            <Card
+              title={
+                <Space>
+                  <span>Entries ({reportData.entries.length})</span>
+                  {reportData.dateRange && (
+                    <Text
+                      type="secondary"
+                      style={{ fontSize: 12, fontWeight: "normal" }}
+                    >
+                      {reportData.dateRange.start} to {reportData.dateRange.end}
+                    </Text>
+                  )}
+                </Space>
+              }
+            >
+              <Table
+                dataSource={reportData.entries}
+                rowKey="id"
+                pagination={{ pageSize: 10 }}
+                size="small"
+                scroll={{ x: 600 }}
+                columns={[
+                  {
+                    title: "Date",
+                    dataIndex: "date",
+                    key: "date",
+                    width: 100,
+                    sorter: (a, b) => a.date.localeCompare(b.date),
+                  },
+                  {
+                    title: "Category",
+                    key: "category",
+                    render: (_, record) => {
+                      const item = record.items?.[0];
+                      if (!item) return "-";
+                      const cat = item.category
+                        ?.split(" ")
+                        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                        .join(" ");
+                      const sub = item.subCategory
+                        ?.split(" ")
+                        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                        .join(" ");
+                      return sub ? `${cat} / ${sub}` : cat;
+                    },
+                  },
+                  {
+                    title: "Items",
+                    key: "items",
+                    render: (_, record) =>
+                      record.items?.map((i) => i.description).join(", ") || "-",
+                    ellipsis: true,
+                  },
+                  {
+                    title: "Amount",
+                    dataIndex: "amount",
+                    key: "amount",
+                    align: "right",
+                    width: 120,
+                    render: (val) => `${currency} ${val.toLocaleString()}`,
+                    sorter: (a, b) => a.amount - b.amount,
+                  },
+                ]}
+              />
+            </Card>
           </Space>
         ) : (
           <Card>

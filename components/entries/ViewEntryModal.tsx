@@ -77,7 +77,7 @@ export default function ViewEntryModal({
       const comment = await api.comments.create(
         projectId,
         entry.id,
-        newComment.trim()
+        newComment.trim(),
       );
       setComments([comment, ...comments]);
       setNewComment("");
@@ -137,7 +137,13 @@ export default function ViewEntryModal({
           {descriptionLabel}
         </Descriptions.Item>
         <Descriptions.Item label="Category">
-          <Tag>{categoryLabel?.toString().toLowerCase()}</Tag>
+          <Tag>
+            {categoryLabel
+              ?.toString()
+              .split(" ")
+              .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+              .join(" ")}
+          </Tag>
         </Descriptions.Item>
         <Descriptions.Item label="Amount">
           <Typography.Text strong>
@@ -186,12 +192,30 @@ export default function ViewEntryModal({
                 </div>
                 <div style={{ display: "flex", gap: 8, fontSize: 12 }}>
                   <Tag style={{ marginRight: 0 }}>
-                    {BUDGET_CATEGORIES.find((c) => c.value === item.category)
-                      ?.label || item.category}
+                    {(
+                      BUDGET_CATEGORIES.find((c) => c.value === item.category)
+                        ?.label ||
+                      item.category ||
+                      ""
+                    )
+                      .split(" ")
+                      .map(
+                        (w) =>
+                          w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
+                      )
+                      .join(" ")}
                   </Tag>
                   {item.subCategory && (
                     <Typography.Text type="secondary">
-                      • {item.subCategory}
+                      •{" "}
+                      {item.subCategory
+                        .split(" ")
+                        .map(
+                          (w) =>
+                            w.charAt(0).toUpperCase() +
+                            w.slice(1).toLowerCase(),
+                        )
+                        .join(" ")}
                     </Typography.Text>
                   )}
                 </div>
@@ -209,7 +233,7 @@ export default function ViewEntryModal({
               .sort(
                 (a, b) =>
                   new Date(b.timestamp).getTime() -
-                  new Date(a.timestamp).getTime()
+                  new Date(a.timestamp).getTime(),
               )
               .map((version) => (
                 <div

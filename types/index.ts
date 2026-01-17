@@ -64,6 +64,8 @@ export interface BudgetEntry {
   addedBy?: string; // User ID who added this entry
   history?: BudgetEntryVersion[];
   items: BudgetEntryItem[];
+  // Optional vendor link
+  vendorId?: string;
   // Approval workflow fields
   approvalStatus?: "pending" | "approved" | "rejected";
   approvedBy?: string; // User ID who approved

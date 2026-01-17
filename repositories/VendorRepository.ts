@@ -9,7 +9,6 @@ export class VendorRepository {
   async getByProjectId(projectId: string): Promise<Vendor[]> {
     const snapshot = await this.getCollection(projectId)
       .where("isActive", "==", true)
-      .orderBy("name")
       .get();
 
     return snapshot.docs.map((doc) => ({
@@ -37,7 +36,7 @@ export class VendorRepository {
   async update(
     projectId: string,
     vendorId: string,
-    data: Partial<Vendor>
+    data: Partial<Vendor>,
   ): Promise<Vendor> {
     const now = new Date().toISOString();
     await this.getCollection(projectId)

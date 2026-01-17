@@ -16,7 +16,7 @@ export abstract class BaseRepository<T extends { id: string }> {
 
   async getAll(): Promise<T[]> {
     const snapshot = await this.collection.get();
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as T));
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as T);
   }
 
   async getById(id: string): Promise<T | null> {
@@ -26,20 +26,22 @@ export abstract class BaseRepository<T extends { id: string }> {
   }
 
   async create(data: Omit<T, "id">): Promise<T> {
-    const docRef = await this.collection.add({
+    const cleanData = removeUndefined({
       ...data,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
+    const docRef = await this.collection.add(cleanData);
     return { id: docRef.id, ...data } as T;
   }
 
   async createWithId(id: string, data: Omit<T, "id">): Promise<T> {
-    await this.collection.doc(id).set({
+    const cleanData = removeUndefined({
       ...data,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
+    await this.collection.doc(id).set(cleanData);
     return { id, ...data } as T;
   }
 

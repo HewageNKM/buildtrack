@@ -19,6 +19,7 @@ export interface CategorySummary {
   totalAmount: number;
   count: number;
   percentage: number;
+  children?: CategorySummary[]; // Subcategories
 }
 
 export class ReportsService {
@@ -35,19 +36,19 @@ export class ReportsService {
     userId: string,
     email?: string,
     startDate?: string,
-    endDate?: string
+    endDate?: string,
   ): Promise<ReportData> {
     const access = await this.projectService.verifyAccess(
       projectId,
       userId,
-      email
+      email,
     );
     if (!access.hasAccess) throw new Error("Access denied");
 
     const project = await this.projectService.getProject(
       projectId,
       userId,
-      email
+      email,
     );
     if (!project) throw new Error("Project not found");
 
@@ -56,7 +57,7 @@ export class ReportsService {
       undefined,
       undefined,
       startDate,
-      endDate
+      endDate,
     );
 
     const totalSpent = entries.reduce((sum, e) => sum + (e.amount || 0), 0);
@@ -76,32 +77,76 @@ export class ReportsService {
   }
 
   getCategorySummary(entries: BudgetEntry[]): CategorySummary[] {
-    const categoryMap = new Map<string, { amount: number; count: number }>();
+    // Map: category -> { amount, count, subcategories }
+    const categoryMap = new Map<
+      string,
+      {
+        amount: number;
+        count: number;
+        subcategories: Map<string, { amount: number; count: number }>;
+      }
+    >();
 
     entries.forEach((entry) => {
       const items = entry.items || [];
       items.forEach((item) => {
         const cat = item.category || "Uncategorized";
-        const current = categoryMap.get(cat) || { amount: 0, count: 0 };
-        categoryMap.set(cat, {
-          amount: current.amount + (item.amount || 0),
-          count: current.count + 1,
-        });
+        const subCat = item.subCategory;
+
+        if (!categoryMap.has(cat)) {
+          categoryMap.set(cat, {
+            amount: 0,
+            count: 0,
+            subcategories: new Map(),
+          });
+        }
+
+        const catData = categoryMap.get(cat)!;
+        catData.amount += item.amount || 0;
+        catData.count += 1;
+
+        // Track subcategory if exists
+        if (subCat) {
+          const subData = catData.subcategories.get(subCat) || {
+            amount: 0,
+            count: 0,
+          };
+          catData.subcategories.set(subCat, {
+            amount: subData.amount + (item.amount || 0),
+            count: subData.count + 1,
+          });
+        }
       });
     });
 
     const totalAmount = Array.from(categoryMap.values()).reduce(
       (sum, v) => sum + v.amount,
-      0
+      0,
     );
 
     return Array.from(categoryMap.entries())
-      .map(([category, data]) => ({
-        category,
-        totalAmount: data.amount,
-        count: data.count,
-        percentage: totalAmount > 0 ? (data.amount / totalAmount) * 100 : 0,
-      }))
+      .map(([category, data]) => {
+        const children =
+          data.subcategories.size > 0
+            ? Array.from(data.subcategories.entries())
+                .map(([subCategory, subData]) => ({
+                  category: subCategory,
+                  totalAmount: subData.amount,
+                  count: subData.count,
+                  percentage:
+                    data.amount > 0 ? (subData.amount / data.amount) * 100 : 0,
+                }))
+                .sort((a, b) => b.totalAmount - a.totalAmount)
+            : undefined;
+
+        return {
+          category,
+          totalAmount: data.amount,
+          count: data.count,
+          percentage: totalAmount > 0 ? (data.amount / totalAmount) * 100 : 0,
+          children,
+        };
+      })
       .sort((a, b) => b.totalAmount - a.totalAmount);
   }
 }
