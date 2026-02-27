@@ -70,9 +70,10 @@ import type { ColumnsType } from "antd/es/table";
 import Link from "next/link";
 import dayjs from "dayjs";
 
+import { AnalyticsData } from "@/services/ReportsService";
+const { Content } = Layout;
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
-const { Content } = Layout;
 
 export default function ProjectDetailPage({
   params,
@@ -85,6 +86,9 @@ export default function ProjectDetailPage({
 
   const [project, setProject] = useState<Project | null>(null);
   const [entries, setEntries] = useState<BudgetEntry[]>([]);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
+    null,
+  );
   const [releases, setReleases] = useState<BudgetRelease[]>([]);
   const [categories, setCategories] = useState<ProjectCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -180,6 +184,10 @@ export default function ProjectDetailPage({
 
       const categoriesData = await api.categories.list(projectId);
       setCategories(categoriesData);
+
+      // Fetch aggregated analytics data for dashboard charts
+      const analyticsInfo = await api.analytics.getAnalyticsData(projectId);
+      setAnalyticsData(analyticsInfo);
     } catch (error) {
       console.error("Error fetching project data:", error);
       message.error("Failed to load project details");
@@ -704,18 +712,21 @@ export default function ProjectDetailPage({
             />
           </Col>
           <Col xs={24} lg={12}>
-            <CategoryBreakdownChart
-              entries={entries}
-              currency={project.currency || DEFAULT_CURRENCY}
-              categories={categories}
-            />
+            {analyticsData && (
+              <CategoryBreakdownChart
+                data={analyticsData.categoryBreakdown}
+                currency={project.currency || DEFAULT_CURRENCY}
+              />
+            )}
           </Col>
           <Col span={24}>
-            <SpendingTimelineChart
-              entries={entries}
-              estimatedBudget={project.estimatedBudget}
-              currency={project.currency || DEFAULT_CURRENCY}
-            />
+            {analyticsData && (
+              <SpendingTimelineChart
+                data={analyticsData.timeline}
+                estimatedBudget={project.estimatedBudget}
+                currency={project.currency || DEFAULT_CURRENCY}
+              />
+            )}
           </Col>
         </Row>
 
@@ -843,7 +854,6 @@ export default function ProjectDetailPage({
                     releases={releases}
                     currency={project.currency}
                     currentPage={releasesPage}
-                    totalPages={Math.ceil(releases.length / 10)}
                     totalReleases={releases.length}
                     onPageChange={setReleasesPage}
                     onDelete={handleDeleteRelease}

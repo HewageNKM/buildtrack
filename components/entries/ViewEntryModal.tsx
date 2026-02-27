@@ -186,9 +186,16 @@ export default function ViewEntryModal({
                   }}
                 >
                   <Typography.Text strong>{item.description}</Typography.Text>
-                  <Typography.Text strong>
-                    {formatCurrency(item.amount, currency)}
-                  </Typography.Text>
+                  <Space>
+                    {item.qty && (
+                      <Typography.Text type="secondary">
+                        {item.qty} x
+                      </Typography.Text>
+                    )}
+                    <Typography.Text strong>
+                      {formatCurrency(item.amount, currency)}
+                    </Typography.Text>
+                  </Space>
                 </div>
                 <div style={{ display: "flex", gap: 8, fontSize: 12 }}>
                   <Tag style={{ marginRight: 0 }}>

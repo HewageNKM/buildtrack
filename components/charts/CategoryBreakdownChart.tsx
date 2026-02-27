@@ -9,63 +9,24 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { ProjectCategory, BudgetEntry, CurrencyCode } from "@/types";
+import { CurrencyCode } from "@/types";
 import { Card, Empty, Typography } from "antd";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 interface CategoryBreakdownChartProps {
-  entries: BudgetEntry[];
+  data: {
+    name: string;
+    value: number;
+    color?: string;
+  }[];
   currency: CurrencyCode;
-  categories: ProjectCategory[];
 }
 
 export default function CategoryBreakdownChart({
-  entries,
+  data,
   currency,
-  categories,
 }: CategoryBreakdownChartProps) {
-  // Aggregate spending by category
-  // Aggregate spending by category
-  const categoryTotals = entries.reduce((acc, entry) => {
-    // Collect items: either use the new items array or allow fallback (though fallback shouldn't be needed if migrated)
-    const items = entry.items || [];
-
-    // If no items (legacy weirdness?), ignore as we removed root category support
-    if (items.length === 0) {
-      // no-op
-    }
-
-    items.forEach((item) => {
-      if (!item.category) return;
-
-      // Safe check for category existence
-      const categoryName = item.category || "";
-
-      const cat = categories.find(
-        (c) =>
-          c.type === "category" &&
-          (c.name === categoryName ||
-            c.slug === categoryName ||
-            c.name.toLowerCase() === categoryName.toLowerCase())
-      );
-
-      const key = cat ? cat.name : categoryName;
-      acc[key] = (acc[key] || 0) + (item.amount || 0);
-    });
-
-    return acc;
-  }, {} as Record<string, number>);
-
-  const data = categories
-    .filter((cat) => cat.type === "category")
-    .map((cat) => ({
-      name: cat.name,
-      value: categoryTotals[cat.name] || 0,
-      color: cat.color || "#ccc",
-    }))
-    .filter((d) => d.value > 0);
-
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",

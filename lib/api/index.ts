@@ -10,6 +10,7 @@ import { phasesApi } from "./phases";
 import { alertsApi } from "./alerts";
 import { approvalsApi } from "./approvals";
 import { recurringApi } from "./recurring";
+import { analyticsApi } from "./analytics";
 
 export const api = {
   projects: projectsApi,
@@ -24,4 +25,5 @@ export const api = {
   alerts: alertsApi,
   approvals: approvalsApi,
   recurring: recurringApi,
+  analytics: analyticsApi,
 };

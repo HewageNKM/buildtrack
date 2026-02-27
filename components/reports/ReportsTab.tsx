@@ -259,7 +259,13 @@ export default function ReportsTab({
                     title: "Items",
                     key: "items",
                     render: (_, record) =>
-                      record.items?.map((i) => i.description).join(", ") || "-",
+                      record.items
+                        ?.map((i) =>
+                          (i.qty ?? 1) > 1
+                            ? `${i.qty}x ${i.description}`
+                            : i.description,
+                        )
+                        .join(", ") || "-",
                     ellipsis: true,
                   },
                   {
@@ -283,8 +289,8 @@ export default function ReportsTab({
                 Generate a Report
               </Title>
               <Text type="secondary">
-                Select a date range (optional) and click "Generate Report" to
-                view and export data.
+                Select a date range (optional) and click &quot;Generate
+                Report&quot; to view and export data.
               </Text>
             </div>
           </Card>

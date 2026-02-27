@@ -44,6 +44,7 @@ interface FormItem {
   category: string;
   subCategory?: string;
   description: string;
+  qty?: number;
   amount: number;
 }
 
@@ -80,6 +81,7 @@ export default function AddEntryModal({
               category: item.category || (initialData as any).category || "",
               subCategory: item.subCategory || "",
               description: item.description,
+              qty: item.qty ?? 1,
               amount: item.amount,
             })),
           );
@@ -90,7 +92,8 @@ export default function AddEntryModal({
               category: (initialData as any).category || "",
               subCategory: (initialData as any).subCategory || "",
               description: (initialData as any).description || "",
-              amount: initialData.amount,
+              qty: (initialData as any).qty ?? 1,
+              amount: (initialData as any).amount || 0,
             },
           ]);
         }
@@ -106,6 +109,7 @@ export default function AddEntryModal({
             category: "",
             subCategory: "",
             description: "",
+            qty: 1,
             amount: 0,
           },
         ]);
@@ -189,7 +193,10 @@ export default function AddEntryModal({
     );
   };
 
-  const totalAmount = items.reduce((sum, item) => sum + (item.amount || 0), 0);
+  const totalAmount = items.reduce(
+    (sum, item) => sum + (item.amount || 0) * (item.qty ?? 1),
+    0,
+  );
 
   const handleSubmit = async (formValues: {
     date: dayjs.Dayjs;
@@ -198,10 +205,17 @@ export default function AddEntryModal({
   }) => {
     // Validate items
     const invalidItem = items.find(
-      (item) => !item.category || !item.description.trim() || item.amount <= 0,
+      (item) =>
+        !item.category ||
+        !item.description.trim() ||
+        item.amount <= 0 ||
+        !item.qty ||
+        item.qty <= 0,
     );
     if (invalidItem) {
-      message.error("All items must have category, description, and amount");
+      message.error(
+        "All items must have category, description, valid quantity, and amount",
+      );
       return;
     }
 
@@ -226,6 +240,7 @@ export default function AddEntryModal({
           category: item.category,
           subCategory: item.subCategory,
           description: item.description,
+          qty: item.qty,
           amount: item.amount,
         })),
         vendorId: formValues.vendorId || undefined,
@@ -304,6 +319,8 @@ export default function AddEntryModal({
                             updateItem(item.id, "category", value)
                           }
                           style={{ width: 180 }}
+                          showSearch
+                          optionFilterProp="label"
                           options={mainCategories.map((cat) => ({
                             value: cat.name,
                             label: cat.name,
@@ -318,6 +335,8 @@ export default function AddEntryModal({
                             }
                             style={{ width: 180 }}
                             allowClear
+                            showSearch
+                            optionFilterProp="label"
                             options={itemSubs.map((sub) => ({
                               value: sub.name,
                               label: sub.name,
@@ -342,14 +361,23 @@ export default function AddEntryModal({
                           style={{ flex: 1, minWidth: "100%" }}
                         />
                         <InputNumber
-                          placeholder="Amount"
+                          placeholder="Qty (Optional)"
+                          value={item.qty || undefined}
+                          onChange={(value) =>
+                            updateItem(item.id, "qty", value || 0)
+                          }
+                          min={0}
+                          style={{ width: 120 }}
+                        />
+                        <InputNumber
+                          placeholder="Unit Price"
                           value={item.amount || undefined}
                           onChange={(value) =>
                             updateItem(item.id, "amount", value || 0)
                           }
                           min={0}
                           step={0.01}
-                          style={{ width: "100%" }}
+                          style={{ flex: 1, minWidth: 120 }}
                           prefix="LKR"
                         />
                       </Space>

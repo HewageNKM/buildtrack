@@ -24,7 +24,8 @@ import {
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
-import { Sun, Moon, HardHat } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
+import Image from "next/image";
 
 const { Text } = Typography;
 const { Header } = Layout;
@@ -93,20 +94,16 @@ export default function Navbar() {
         href={user ? "/projects" : "/"}
         style={{ display: "flex", alignItems: "center", gap: 12 }}
       >
-        <div
+        <Image
+          src="/logo_rounded.png"
+          alt="BuildTrack Logo"
+          width={40}
+          height={40}
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: 10,
-            background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            borderRadius: "50%",
             boxShadow: "0 4px 12px rgba(139,92,246,0.3)",
           }}
-        >
-          <HardHat style={{ width: 20, height: 20, color: "white" }} />
-        </div>
+        />
         <span style={{ fontSize: 20, fontWeight: 700, color: token.colorText }}>
           Build<span style={{ color: "#06b6d4" }}>Track</span>
         </span>

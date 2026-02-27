@@ -14,7 +14,8 @@ import {
   GoogleOutlined,
   ArrowRightOutlined,
 } from "@ant-design/icons";
-import { HardHat, Sun, Moon } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
+import Image from "next/image";
 
 const { Title, Text } = Typography;
 
@@ -113,21 +114,18 @@ export default function LoginPage() {
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <Link href="/">
-            <div
+            <Image
+              src="/logo_rounded.png"
+              alt="BuildTrack Logo"
+              width={80}
+              height={80}
               style={{
-                width: 80,
-                height: 80,
-                borderRadius: 16,
-                background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
                 margin: "0 auto 20px",
+                display: "block",
                 boxShadow: "0 12px 35px rgba(139,92,246,0.4)",
+                borderRadius: "50%",
               }}
-            >
-              <HardHat style={{ width: 40, height: 40, color: "white" }} />
-            </div>
+            />
           </Link>
           <Title level={2} style={{ marginBottom: 8 }}>
             Welcome <span style={{ color: "#8b5cf6" }}>back</span>

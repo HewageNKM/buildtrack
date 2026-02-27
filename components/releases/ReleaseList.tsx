@@ -19,7 +19,6 @@ interface ReleaseListProps {
   onView: (release: BudgetRelease) => void;
   isOwner: boolean;
   currentPage: number;
-  totalPages: number;
   onPageChange: (page: number) => void;
   totalReleases: number;
 }
@@ -32,7 +31,6 @@ export default function ReleaseList({
   onView,
   isOwner,
   currentPage,
-  totalPages,
   onPageChange,
   totalReleases,
 }: ReleaseListProps) {
@@ -98,7 +96,7 @@ export default function ReleaseList({
     },
   ];
 
-  if (releases.length === 0 && currentPage === 0) {
+  if (releases.length === 0 && currentPage === 1) {
     return (
       <Empty
         image={<RiseOutlined style={{ fontSize: 48, color: "#8b5cf6" }} />}
@@ -118,10 +116,10 @@ export default function ReleaseList({
       dataSource={releases}
       rowKey="id"
       pagination={{
-        current: currentPage + 1,
+        current: currentPage,
         total: totalReleases,
         pageSize: 10,
-        onChange: (page) => onPageChange(page - 1),
+        onChange: (page) => onPageChange(page),
         showSizeChanger: false,
         showTotal: (total) => `Total ${total} releases`,
       }}

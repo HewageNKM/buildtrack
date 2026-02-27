@@ -1,6 +1,6 @@
 import { EntryRepository } from "@/repositories/EntryRepository";
 import { ProjectService } from "./ProjectService";
-import { BudgetEntry } from "@/types";
+import { BudgetEntry, ProjectCategory } from "@/types";
 
 export interface ReportData {
   projectId: string;
@@ -20,6 +20,16 @@ export interface CategorySummary {
   count: number;
   percentage: number;
   children?: CategorySummary[]; // Subcategories
+}
+
+export interface AnalyticsData {
+  categoryBreakdown: { name: string; value: number; color?: string }[];
+  timeline: {
+    date: string;
+    formattedDate: string;
+    amount: number;
+    cumulative: number;
+  }[];
 }
 
 export class ReportsService {
@@ -102,7 +112,8 @@ export class ReportsService {
         }
 
         const catData = categoryMap.get(cat)!;
-        catData.amount += item.amount || 0;
+        const itemTotal = (item.amount || 0) * (item.qty ?? 1);
+        catData.amount += itemTotal;
         catData.count += 1;
 
         // Track subcategory if exists
@@ -112,7 +123,7 @@ export class ReportsService {
             count: 0,
           };
           catData.subcategories.set(subCat, {
-            amount: subData.amount + (item.amount || 0),
+            amount: subData.amount + itemTotal,
             count: subData.count + 1,
           });
         }
@@ -148,5 +159,87 @@ export class ReportsService {
         };
       })
       .sort((a, b) => b.totalAmount - a.totalAmount);
+  }
+
+  getAnalyticsData(
+    entries: BudgetEntry[],
+    categories: ProjectCategory[],
+  ): AnalyticsData {
+    // 1. Category Breakdown
+    const categoryTotals = entries.reduce(
+      (acc, entry) => {
+        const items = entry.items || [];
+        items.forEach((item) => {
+          if (!item.category) return;
+          const categoryName = item.category;
+
+          const cat = categories.find(
+            (c) =>
+              c.type === "category" &&
+              (c.name === categoryName ||
+                c.slug === categoryName ||
+                c.name.toLowerCase() === categoryName.toLowerCase()),
+          );
+
+          const key = cat ? cat.name : categoryName;
+          const itemTotal = (item.amount || 0) * (item.qty ?? 1);
+          // The item amount is the unit price, multiply by qty
+          acc[key] = (acc[key] || 0) + itemTotal;
+        });
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    const categoryBreakdown = categories
+      .filter((cat) => cat.type === "category")
+      .map((cat) => ({
+        name: cat.name,
+        value: categoryTotals[cat.name] || 0,
+        color: cat.color || "#ccc",
+      }))
+      .filter((d) => d.value > 0);
+
+    // 2. Spending Timeline
+    const sortedEntries = [...entries].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+    );
+
+    const timeline = sortedEntries.reduce<
+      {
+        date: string;
+        formattedDate: string;
+        amount: number;
+        cumulative: number;
+      }[]
+    >((acc, entry) => {
+      const existingDay = acc.find((d) => d.date === entry.date);
+
+      if (existingDay) {
+        existingDay.amount += entry.amount;
+        const dayIndex = acc.indexOf(existingDay);
+        for (let i = dayIndex; i < acc.length; i++) {
+          acc[i].cumulative += entry.amount;
+        }
+      } else {
+        const prevCumulative =
+          acc.length > 0 ? acc[acc.length - 1].cumulative : 0;
+        acc.push({
+          date: entry.date,
+          // We don't import date-fns here to keep it simple, format string manually
+          // or we can use standard JS formatting
+          formattedDate: new Date(entry.date).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          }),
+          amount: entry.amount,
+          cumulative: prevCumulative + entry.amount,
+        });
+      }
+
+      return acc;
+    }, []);
+
+    return { categoryBreakdown, timeline };
   }
 }

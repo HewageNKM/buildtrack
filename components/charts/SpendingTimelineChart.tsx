@@ -10,45 +10,27 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import { BudgetEntry, CurrencyCode } from "@/types";
-import { format, parseISO } from "date-fns";
+import { CurrencyCode } from "@/types";
 import { Card, Empty, Typography } from "antd";
 
 const { Title } = Typography;
 
 interface SpendingTimelineChartProps {
-  entries: BudgetEntry[];
+  data: {
+    date: string;
+    formattedDate: string;
+    amount: number;
+    cumulative: number;
+  }[];
   estimatedBudget: number;
   currency: CurrencyCode;
 }
 
 export default function SpendingTimelineChart({
-  entries,
+  data,
   estimatedBudget,
   currency,
 }: SpendingTimelineChartProps) {
-  const sortedEntries = [...entries].sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
-
-  const data = sortedEntries.reduce<
-    {
-      date: string;
-      formattedDate: string;
-      amount: number;
-      cumulative: number;
-    }[]
-  >((acc, entry) => {
-    const prevCumulative = acc.length > 0 ? acc[acc.length - 1].cumulative : 0;
-    acc.push({
-      date: entry.date,
-      formattedDate: format(parseISO(entry.date), "MMM dd"),
-      amount: entry.amount,
-      cumulative: prevCumulative + entry.amount,
-    });
-    return acc;
-  }, []);
-
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",

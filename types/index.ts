@@ -77,6 +77,7 @@ export interface BudgetEntryItem {
   id: string;
   description: string;
   amount: number;
+  qty: number;
   category?: string;
   subCategory?: string;
 }
@@ -109,7 +110,8 @@ export type BudgetCategory =
   | "subcontractor"
   | "utilities"
   | "transportation"
-  | "miscellaneous";
+  | "miscellaneous"
+  | "earth";
 
 export const BUDGET_CATEGORIES: {
   value: BudgetCategory;
@@ -124,6 +126,7 @@ export const BUDGET_CATEGORIES: {
   { value: "utilities", label: "Utilities", color: "#06B6D4" },
   { value: "transportation", label: "Transportation", color: "#84CC16" },
   { value: "miscellaneous", label: "Miscellaneous", color: "#6B7280" },
+  { value: "earth", label: "Earth (Foundation)", color: "#8B4513" },
 ];
 
 export const MATERIAL_TYPES = [

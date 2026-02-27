@@ -26,7 +26,8 @@ import {
   ArrowRightOutlined,
   CheckCircleOutlined,
 } from "@ant-design/icons";
-import { HardHat, Sun, Moon } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
+import Image from "next/image";
 
 const { Title, Text } = Typography;
 
@@ -148,21 +149,18 @@ export default function RegisterPage() {
         className="lg:flex"
       >
         <div style={{ maxWidth: 400 }}>
-          <div
+          <Image
+            src="/logo_rounded.png"
+            alt="BuildTrack Logo"
+            width={80}
+            height={80}
             style={{
-              width: 80,
-              height: 80,
-              borderRadius: 16,
-              background: "linear-gradient(135deg, #ec4899, #f43f5e)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
               marginBottom: 32,
-              boxShadow: "0 12px 35px rgba(236,72,153,0.4)",
+              display: "block",
+              boxShadow: "0 12px 35px rgba(139,92,246,0.4)",
+              borderRadius: "50%",
             }}
-          >
-            <HardHat style={{ width: 40, height: 40, color: "white" }} />
-          </div>
+          />
           <Title level={2}>
             Start Tracking Your{" "}
             <span style={{ color: "#06b6d4" }}>Construction</span>{" "}
@@ -206,21 +204,18 @@ export default function RegisterPage() {
             className="lg:hidden"
           >
             <Link href="/">
-              <div
+              <Image
+                src="/logo_rounded.png"
+                alt="BuildTrack Logo"
+                width={64}
+                height={64}
                 style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 16,
-                  background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
                   margin: "0 auto 16px",
+                  display: "block",
                   boxShadow: "0 12px 35px rgba(139,92,246,0.4)",
+                  borderRadius: "50%",
                 }}
-              >
-                <HardHat style={{ width: 32, height: 32, color: "white" }} />
-              </div>
+              />
             </Link>
           </div>
 

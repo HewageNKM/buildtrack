@@ -17,12 +17,12 @@ export class RecurringExpenseService {
   async getRecurringExpenses(
     projectId: string,
     userId: string,
-    email?: string
+    email?: string,
   ): Promise<RecurringExpense[]> {
     const access = await this.projectService.verifyAccess(
       projectId,
       userId,
-      email
+      email,
     );
     if (!access.hasAccess) throw new Error("Access denied");
 
@@ -36,12 +36,12 @@ export class RecurringExpenseService {
     data: Omit<
       RecurringExpense,
       "id" | "projectId" | "createdBy" | "createdAt" | "updatedAt" | "isActive"
-    >
+    >,
   ): Promise<RecurringExpense> {
     const access = await this.projectService.verifyAccess(
       projectId,
       userId,
-      email
+      email,
     );
     if (!access.hasAccess) throw new Error("Access denied");
     if (access.role === "viewer")
@@ -64,12 +64,12 @@ export class RecurringExpenseService {
     expenseId: string,
     userId: string,
     email: string | undefined,
-    data: Partial<RecurringExpense>
+    data: Partial<RecurringExpense>,
   ): Promise<RecurringExpense> {
     const access = await this.projectService.verifyAccess(
       projectId,
       userId,
-      email
+      email,
     );
     if (!access.hasAccess) throw new Error("Access denied");
     if (access.role === "viewer")
@@ -82,12 +82,12 @@ export class RecurringExpenseService {
     projectId: string,
     expenseId: string,
     userId: string,
-    email?: string
+    email?: string,
   ): Promise<void> {
     const access = await this.projectService.verifyAccess(
       projectId,
       userId,
-      email
+      email,
     );
     if (!access.hasAccess) throw new Error("Access denied");
     if (access.role === "viewer")
@@ -118,6 +118,7 @@ export class RecurringExpenseService {
             id: `${Date.now()}`,
             description: expense.name,
             amount: expense.amount,
+            qty: 1,
             category: expense.category,
             subCategory: expense.subCategory,
           },
@@ -129,7 +130,7 @@ export class RecurringExpenseService {
       // Calculate next due date
       const nextDueDate = this.calculateNextDueDate(
         expense.nextDueDate,
-        expense.frequency
+        expense.frequency,
       );
 
       // Update the recurring expense
@@ -146,7 +147,7 @@ export class RecurringExpenseService {
 
   private calculateNextDueDate(
     currentDate: string,
-    frequency: RecurringExpense["frequency"]
+    frequency: RecurringExpense["frequency"],
   ): string {
     const date = new Date(currentDate);
 
