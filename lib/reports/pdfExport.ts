@@ -3,8 +3,8 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { ReportData, CategorySummary } from "@/services/ReportsService";
-import { NotoSansBase64 } from "./notoSansBase64";
-
+import { logoBase64 } from "./logoBase64";
+// custom fonts removed temporarily due to jsPDF parse crash
 export function exportToPdf(
   reportData: ReportData,
   categorySummary: CategorySummary[],
@@ -12,72 +12,102 @@ export function exportToPdf(
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
 
-  // Handle Unicode font
-  doc.addFileToVFS("NotoSans-Regular.ttf", NotoSansBase64);
-  doc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal");
-  doc.setFont("NotoSans", "normal");
+  // Add Project Logo
+  doc.addImage(logoBase64, "PNG", pageWidth / 2 - 10, 8, 20, 20);
 
-  // Header Style
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(24);
   doc.setTextColor(30, 41, 59); // Slate 800
-  doc.text(reportData.projectName, pageWidth / 2, 30, { align: "center" });
+  doc.text(reportData.projectName, pageWidth / 2, 36, { align: "center" });
 
-  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
   doc.setTextColor(100, 116, 139); // Slate 500
+
+  let currentY = 44;
+
+  doc.text(`Project ID: ${reportData.projectId}`, pageWidth / 2, currentY, {
+    align: "center",
+  });
+  currentY += 5;
+
   doc.text(
     `Report Generated: ${new Date(reportData.generatedAt).toLocaleString()}`,
     pageWidth / 2,
-    42,
+    currentY,
     { align: "center" },
   );
+  currentY += 5;
+
+  if (reportData.dateRange) {
+    doc.text(
+      `Period: ${new Date(reportData.dateRange.start).toLocaleDateString()} to ${new Date(reportData.dateRange.end).toLocaleDateString()}`,
+      pageWidth / 2,
+      currentY,
+      { align: "center" },
+    );
+    currentY += 5;
+  }
 
   // Decorative line
+  currentY += 3;
   doc.setDrawColor(226, 232, 240); // Slate 200
   doc.setLineWidth(1);
-  doc.line(14, 52, pageWidth - 14, 52);
-
-  // Budget Summary Box
-  doc.setFontSize(14);
-  doc.setTextColor(15, 23, 42); // Slate 900
-  doc.text("Budget Summary", 14, 75);
+  doc.line(14, currentY, pageWidth - 14, currentY);
+  currentY += 8;
 
   const formatCurrency = (val: number) =>
     `${reportData.currency} ${val.toLocaleString()}`;
 
-  autoTable(doc, {
-    startY: 85,
-    head: [["Metric", "Value"]],
-    body: [
-      ["Total Budget", formatCurrency(reportData.totalBudget)],
-      ["Total Spent", formatCurrency(reportData.totalSpent)],
-      [
-        "Remaining",
-        formatCurrency(reportData.totalBudget - reportData.totalSpent),
-      ],
-    ],
-    theme: "grid",
-    headStyles: {
-      fillColor: [79, 70, 229],
-      textColor: 255,
-      halign: "left",
-      fontStyle: "bold",
+  // Fluid Summary Cards
+  const cards = [
+    { label: "Total Budget", value: formatCurrency(reportData.totalBudget) },
+    {
+      label: "Total Released",
+      value: formatCurrency(reportData.totalReleased),
     },
-    bodyStyles: { textColor: [51, 65, 85], fontSize: 10 },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
-    margin: { left: 14, right: 14 },
-    tableWidth: 250,
+    { label: "Total Spent", value: formatCurrency(reportData.totalSpent) },
+    {
+      label: "Remaining",
+      value: formatCurrency(reportData.totalBudget - reportData.totalSpent),
+    },
+  ];
+
+  const cardSpacing = 4;
+  const cardWidth =
+    (pageWidth - 28 - cardSpacing * (cards.length - 1)) / cards.length;
+
+  cards.forEach((card, index) => {
+    const xPos = 14 + (cardWidth + cardSpacing) * index;
+    doc.setDrawColor(226, 232, 240);
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(xPos, currentY, cardWidth, 22, 2, 2, "FD");
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text(card.label, xPos + cardWidth / 2, currentY + 8, {
+      align: "center",
+    });
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(15, 23, 42);
+    doc.text(card.value, xPos + cardWidth / 2, currentY + 16, {
+      align: "center",
+    });
   });
 
+  currentY += 32;
+
   // Category Breakdown
-  const afterSummary =
-    (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable
-      ?.finalY || 110;
   doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
   doc.setTextColor(15, 23, 42);
-  doc.text("Category Breakdown", 14, afterSummary + 25);
+  doc.text("Category Breakdown", 14, currentY);
 
   autoTable(doc, {
-    startY: afterSummary + 35,
+    startY: currentY + 4,
     head: [["Category", "Amount", "Count", "%"]],
     body: categorySummary.map((c) => [
       c.category,
@@ -86,31 +116,23 @@ export function exportToPdf(
       `${c.percentage.toFixed(1)}%`,
     ]),
     theme: "grid",
-    headStyles: { fillColor: [79, 70, 229], textColor: 255, font: "NotoSans" },
-    bodyStyles: { textColor: [51, 65, 85], fontSize: 10, font: "NotoSans" },
+    headStyles: { fillColor: [79, 70, 229], textColor: 255, font: "helvetica" },
+    bodyStyles: { textColor: [51, 65, 85], fontSize: 10, font: "helvetica" },
     alternateRowStyles: { fillColor: [248, 250, 252] },
     margin: { left: 14, right: 14 },
   });
 
-  // Entries Table
   const afterCategory =
     (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable
-      ?.finalY || 150;
+      ?.finalY || currentY + 50;
 
-  if (afterCategory > 220) {
+  // Entries Table Header
+  if (afterCategory > 240) {
     doc.addPage();
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.setTextColor(15, 23, 42);
-    doc.text("Expense Entries", 14, 30);
+    currentY = 20;
   } else {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.setTextColor(15, 23, 42);
-    doc.text("Expense Entries", 14, afterCategory + 25);
+    currentY = afterCategory + 15;
   }
-
-  const entriesStartY = afterCategory > 220 ? 40 : afterCategory + 35;
 
   const entriesBody = reportData.entries.flatMap((entry) =>
     (entry.items || []).map((item) => [
@@ -122,13 +144,18 @@ export function exportToPdf(
     ]),
   );
 
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.setTextColor(15, 23, 42);
+  doc.text(`Expense Entries (${entriesBody.length})`, 14, currentY);
+
   autoTable(doc, {
-    startY: entriesStartY,
+    startY: currentY + 4,
     head: [["Date", "Category", "Description", "Qty", "Unit Price"]],
-    body: entriesBody.slice(0, 100), // Increased from 50 to 100 for PDF
+    body: entriesBody.slice(0, 100),
     theme: "grid",
-    headStyles: { fillColor: [79, 70, 229], textColor: 255, font: "NotoSans" },
-    bodyStyles: { textColor: [51, 65, 85], fontSize: 9, font: "NotoSans" },
+    headStyles: { fillColor: [79, 70, 229], textColor: 255, font: "helvetica" },
+    bodyStyles: { textColor: [51, 65, 85], fontSize: 9, font: "helvetica" },
     alternateRowStyles: { fillColor: [248, 250, 252] },
     margin: { left: 14, right: 14 },
   });
@@ -138,14 +165,15 @@ export function exportToPdf(
       (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable
         ?.finalY || 200;
     doc.setFont("helvetica", "italic");
+    doc.setFontSize(9);
     doc.setTextColor(100, 116, 139);
     doc.text(
-      `* Showing 100 of ${entriesBody.length} entries. Please export to Excel for the complete dataset.`,
+      `* Showing 100 of ${entriesBody.length} entries. Export to Excel for the complete dataset.`,
       14,
-      afterEntries + 15,
+      afterEntries + 8,
     );
   }
 
   // Save
-  doc.save(`${reportData.projectName}-report.pdf`);
+  doc.save(`${reportData.projectName.replace(/\\s+/g, "_")}_Report.pdf`);
 }
