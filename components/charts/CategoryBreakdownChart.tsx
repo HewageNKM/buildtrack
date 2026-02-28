@@ -70,13 +70,13 @@ export default function CategoryBreakdownChart({
       </Title>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
+          <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
             <Pie
               data={data}
               cx={isMobile ? "50%" : "40%"}
               cy="50%"
-              innerRadius={70}
-              outerRadius={95}
+              innerRadius={65}
+              outerRadius={85}
               paddingAngle={4}
               dataKey="value"
               stroke="none"

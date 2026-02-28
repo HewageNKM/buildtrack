@@ -57,6 +57,10 @@ export default function ProjectsPage() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [showExactBudget, setShowExactBudget] = useState(false);
+  const [showExactReleased, setShowExactReleased] = useState(false);
+  const [showExactSpent, setShowExactSpent] = useState(false);
+
   const fetchProjects = async () => {
     try {
       setLoading(true);
@@ -118,21 +122,21 @@ export default function ProjectsPage() {
   const filteredProjects = projects.filter(
     (project) =>
       project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      project.description?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const totalBudget = projects.reduce(
     (sum, p) => sum + (p.estimatedBudget || 0),
-    0
+    0,
   );
   const totalSpent = projects.reduce((sum, p) => sum + (p.totalSpent || 0), 0);
   const totalReleased = projects.reduce(
     (sum, p) => sum + (p.totalReleased || 0),
-    0
+    0,
   );
   const activeProjects = projects.filter((p) => p.status === "active").length;
   const overBudgetProjects = projects.filter(
-    (p) => (p.totalSpent || 0) > (p.estimatedBudget || 0)
+    (p) => (p.totalSpent || 0) > (p.estimatedBudget || 0),
   ).length;
 
   return (
@@ -195,32 +199,77 @@ export default function ProjectsPage() {
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={8} xl={5}>
-            <Card size="small">
+            <Card
+              size="small"
+              className="cursor-pointer transition-shadow hover:shadow-md"
+              onClick={() => setShowExactBudget(!showExactBudget)}
+            >
               <Statistic
                 title="Total Budget"
                 value={formatCurrencyCompact(totalBudget, DEFAULT_CURRENCY)}
                 prefix={<DollarOutlined />}
               />
+              <div
+                className={`overflow-hidden transition-all duration-300 ${
+                  showExactBudget
+                    ? "max-h-10 mt-1 opacity-100"
+                    : "max-h-0 opacity-0"
+                }`}
+              >
+                <Text type="secondary" style={{ fontSize: "12px" }}>
+                  {formatCurrency(totalBudget, DEFAULT_CURRENCY)}
+                </Text>
+              </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={8} xl={5}>
-            <Card size="small">
+            <Card
+              size="small"
+              className="cursor-pointer transition-shadow hover:shadow-md"
+              onClick={() => setShowExactReleased(!showExactReleased)}
+            >
               <Statistic
                 title="Funds Released"
                 value={formatCurrencyCompact(totalReleased, DEFAULT_CURRENCY)}
                 prefix={<WalletOutlined />}
                 styles={{ content: { color: "#10b981" } }}
               />
+              <div
+                className={`overflow-hidden transition-all duration-300 ${
+                  showExactReleased
+                    ? "max-h-10 mt-1 opacity-100"
+                    : "max-h-0 opacity-0"
+                }`}
+              >
+                <Text type="secondary" style={{ fontSize: "12px" }}>
+                  {formatCurrency(totalReleased, DEFAULT_CURRENCY)}
+                </Text>
+              </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={8} xl={5}>
-            <Card size="small">
+            <Card
+              size="small"
+              className="cursor-pointer transition-shadow hover:shadow-md"
+              onClick={() => setShowExactSpent(!showExactSpent)}
+            >
               <Statistic
                 title="Total Spent"
                 value={formatCurrencyCompact(totalSpent, DEFAULT_CURRENCY)}
                 prefix={<RiseOutlined />}
                 styles={{ content: { color: "#06b6d4" } }}
               />
+              <div
+                className={`overflow-hidden transition-all duration-300 ${
+                  showExactSpent
+                    ? "max-h-10 mt-1 opacity-100"
+                    : "max-h-0 opacity-0"
+                }`}
+              >
+                <Text type="secondary" style={{ fontSize: "12px" }}>
+                  {formatCurrency(totalSpent, DEFAULT_CURRENCY)}
+                </Text>
+              </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={8} xl={5}>

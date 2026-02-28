@@ -7,7 +7,11 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Project, BudgetEntry, BudgetRelease, ProjectCategory } from "@/types";
 import { api } from "@/lib/api";
-import { formatCurrencyCompact, DEFAULT_CURRENCY } from "@/lib/currency";
+import {
+  formatCurrencyCompact,
+  formatCurrency,
+  DEFAULT_CURRENCY,
+} from "@/lib/currency";
 
 import Navbar from "@/components/common/Navbar";
 import { PageLoader } from "@/components/common/LoadingSpinner";
@@ -134,6 +138,11 @@ export default function ProjectDetailPage({
 
   const [projectTotalSpent, setProjectTotalSpent] = useState(0);
   const [projectTotalReleased, setProjectTotalReleased] = useState(0);
+
+  const [showExactBudget, setShowExactBudget] = useState(false);
+  const [showExactReleased, setShowExactReleased] = useState(false);
+  const [showExactSpent, setShowExactSpent] = useState(false);
+  const [showExactRemaining, setShowExactRemaining] = useState(false);
 
   const [dateRange, setDateRange] = useState<
     [dayjs.Dayjs | null, dayjs.Dayjs | null]
@@ -552,8 +561,11 @@ export default function ProjectDetailPage({
         {/* Stats */}
         <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
           <Col xs={24} sm={12} lg={6}>
-            {/* Replaced bordered={false} with variant="borderless" */}
-            <Card variant="borderless" className="shadow-sm">
+            <Card
+              variant="borderless"
+              className="shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => setShowExactBudget(!showExactBudget)}
+            >
               <Statistic
                 title="Estimated Budget"
                 value={formatCurrencyCompact(
@@ -561,35 +573,81 @@ export default function ProjectDetailPage({
                   project.currency,
                 )}
                 prefix={
-                  <span style={{ fontWeight: "bold", fontSize: 14 }}>LKR</span>
+                  <span style={{ fontWeight: "bold", fontSize: 14 }}>
+                    {project.currency}
+                  </span>
                 }
-                // Updated valueStyle to styles={{ content: ... }}
                 styles={{ content: { color: "#6366f1", fontWeight: "bold" } }}
               />
+              <div
+                className={`overflow-hidden transition-all duration-300 ${
+                  showExactBudget
+                    ? "max-h-10 mt-1 opacity-100"
+                    : "max-h-0 opacity-0"
+                }`}
+              >
+                <Text type="secondary" style={{ fontSize: "12px" }}>
+                  {formatCurrency(project.estimatedBudget, project.currency)}
+                </Text>
+              </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card variant="borderless" className="shadow-sm">
+            <Card
+              variant="borderless"
+              className="shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => setShowExactReleased(!showExactReleased)}
+            >
               <Statistic
                 title="Funds Released"
                 value={formatCurrencyCompact(totalReleased, project.currency)}
                 prefix={<WalletOutlined />}
                 styles={{ content: { color: "#10b981", fontWeight: "bold" } }}
               />
+              <div
+                className={`overflow-hidden transition-all duration-300 ${
+                  showExactReleased
+                    ? "max-h-10 mt-1 opacity-100"
+                    : "max-h-0 opacity-0"
+                }`}
+              >
+                <Text type="secondary" style={{ fontSize: "12px" }}>
+                  {formatCurrency(totalReleased, project.currency)}
+                </Text>
+              </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card variant="borderless" className="shadow-sm">
+            <Card
+              variant="borderless"
+              className="shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => setShowExactSpent(!showExactSpent)}
+            >
               <Statistic
                 title="Total Spent"
                 value={formatCurrencyCompact(totalSpent, project.currency)}
                 prefix={<RiseOutlined />}
                 styles={{ content: { color: "#06b6d4", fontWeight: "bold" } }}
               />
+              <div
+                className={`overflow-hidden transition-all duration-300 ${
+                  showExactSpent
+                    ? "max-h-10 mt-1 opacity-100"
+                    : "max-h-0 opacity-0"
+                }`}
+              >
+                <Text type="secondary" style={{ fontSize: "12px" }}>
+                  {formatCurrency(totalSpent, project.currency)}
+                </Text>
+              </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card variant="borderless" className="shadow-sm">
+            <Card
+              variant="borderless"
+              className="shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => setShowExactRemaining(!showExactRemaining)}
+            >
               <Statistic
                 title={
                   isOverReleased ? "Over Released Limit" : "Remaining Released"
@@ -606,6 +664,20 @@ export default function ProjectDetailPage({
                   },
                 }}
               />
+              <div
+                className={`overflow-hidden transition-all duration-300 ${
+                  showExactRemaining
+                    ? "max-h-10 mt-1 opacity-100"
+                    : "max-h-0 opacity-0"
+                }`}
+              >
+                <Text type="secondary" style={{ fontSize: "12px" }}>
+                  {formatCurrency(
+                    Math.abs(totalReleased - totalSpent),
+                    project.currency,
+                  )}
+                </Text>
+              </div>
             </Card>
           </Col>
         </Row>
