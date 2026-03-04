@@ -70,7 +70,16 @@ export class ReportsService {
       endDate,
     );
 
-    const totalSpent = entries.reduce((sum, e) => sum + (e.amount || 0), 0);
+    const totalSpent = entries.reduce((sum, e) => {
+      const entryTotal =
+        e.items && e.items.length > 0
+          ? e.items.reduce(
+              (itemSum, item) => itemSum + (item.amount || 0) * (item.qty || 1),
+              0,
+            )
+          : e.amount || 0;
+      return sum + entryTotal;
+    }, 0);
 
     return {
       projectId,
@@ -213,13 +222,21 @@ export class ReportsService {
         cumulative: number;
       }[]
     >((acc, entry) => {
+      const entryTotal =
+        entry.items && entry.items.length > 0
+          ? entry.items.reduce(
+              (itemSum, item) => itemSum + (item.amount || 0) * (item.qty || 1),
+              0,
+            )
+          : entry.amount || 0;
+
       const existingDay = acc.find((d) => d.date === entry.date);
 
       if (existingDay) {
-        existingDay.amount += entry.amount;
+        existingDay.amount += entryTotal;
         const dayIndex = acc.indexOf(existingDay);
         for (let i = dayIndex; i < acc.length; i++) {
-          acc[i].cumulative += entry.amount;
+          acc[i].cumulative += entryTotal;
         }
       } else {
         const prevCumulative =
@@ -232,8 +249,8 @@ export class ReportsService {
             month: "short",
             day: "numeric",
           }),
-          amount: entry.amount,
-          cumulative: prevCumulative + entry.amount,
+          amount: entryTotal,
+          cumulative: prevCumulative + entryTotal,
         });
       }
 

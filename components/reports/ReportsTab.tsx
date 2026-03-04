@@ -270,12 +270,45 @@ export default function ReportsTab({
                   },
                   {
                     title: "Amount",
-                    dataIndex: "amount",
                     key: "amount",
                     align: "right",
                     width: 120,
-                    render: (val) => `${currency} ${val.toLocaleString()}`,
-                    sorter: (a, b) => a.amount - b.amount,
+                    render: (_, record) => {
+                      const total =
+                        record.items && record.items.length > 0
+                          ? record.items.reduce(
+                              (
+                                sum: number,
+                                item: { amount?: number; qty?: number },
+                              ) => sum + (item.amount || 0) * (item.qty || 1),
+                              0,
+                            )
+                          : record.amount || 0;
+                      return `${currency} ${total.toLocaleString()}`;
+                    },
+                    sorter: (a, b) => {
+                      const totalA =
+                        a.items && a.items.length > 0
+                          ? a.items.reduce(
+                              (
+                                sum: number,
+                                item: { amount?: number; qty?: number },
+                              ) => sum + (item.amount || 0) * (item.qty || 1),
+                              0,
+                            )
+                          : a.amount || 0;
+                      const totalB =
+                        b.items && b.items.length > 0
+                          ? b.items.reduce(
+                              (
+                                sum: number,
+                                item: { amount?: number; qty?: number },
+                              ) => sum + (item.amount || 0) * (item.qty || 1),
+                              0,
+                            )
+                          : b.amount || 0;
+                      return totalA - totalB;
+                    },
                   },
                 ]}
               />

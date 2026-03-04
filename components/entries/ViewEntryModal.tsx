@@ -147,7 +147,15 @@ export default function ViewEntryModal({
         </Descriptions.Item>
         <Descriptions.Item label="Amount">
           <Typography.Text strong>
-            {formatCurrency(entry.amount, currency)}
+            {formatCurrency(
+              entry.items && entry.items.length > 0
+                ? entry.items.reduce(
+                    (sum, item) => sum + (item.amount || 0) * (item.qty || 1),
+                    0,
+                  )
+                : entry.amount || 0,
+              currency,
+            )}
           </Typography.Text>
         </Descriptions.Item>
         {entry.invoiceUrl && (

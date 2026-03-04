@@ -11,7 +11,7 @@ export class EntryRepository extends BaseRepository<BudgetEntry> {
     limit?: number,
     lastVisible?: { date: string; id: string },
     startDate?: string,
-    endDate?: string
+    endDate?: string,
   ): Promise<BudgetEntry[]> {
     let query = this.collection.where("projectId", "==", projectId);
 
@@ -36,7 +36,7 @@ export class EntryRepository extends BaseRepository<BudgetEntry> {
     const snapshot = await query.get();
 
     return snapshot.docs.map(
-      (doc) => ({ id: doc.id, ...doc.data() } as BudgetEntry)
+      (doc) => ({ id: doc.id, ...doc.data() }) as BudgetEntry,
     );
   }
 
@@ -54,17 +54,32 @@ export class EntryRepository extends BaseRepository<BudgetEntry> {
 
   async getProjectTotalSpent(projectId: string): Promise<number> {
     const entries = await this.getByProjectId(projectId);
-    return entries.reduce((sum, entry) => sum + (entry.amount || 0), 0);
+    return entries.reduce((sum, entry) => {
+      const entryTotal =
+        entry.items && entry.items.length > 0
+          ? entry.items.reduce(
+              (itemSum, item) => itemSum + (item.amount || 0) * (item.qty || 1),
+              0,
+            )
+          : entry.amount || 0;
+      return sum + entryTotal;
+    }, 0);
   }
 
   async getProjectStats(
-    projectId: string
+    projectId: string,
   ): Promise<{ totalSpent: number; entryCount: number }> {
     const entries = await this.getByProjectId(projectId);
-    const totalSpent = entries.reduce(
-      (sum, entry) => sum + (entry.amount || 0),
-      0
-    );
+    const totalSpent = entries.reduce((sum, entry) => {
+      const entryTotal =
+        entry.items && entry.items.length > 0
+          ? entry.items.reduce(
+              (itemSum, item) => itemSum + (item.amount || 0) * (item.qty || 1),
+              0,
+            )
+          : entry.amount || 0;
+      return sum + entryTotal;
+    }, 0);
     return { totalSpent, entryCount: entries.length };
   }
 }

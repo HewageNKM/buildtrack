@@ -375,13 +375,21 @@ export default function ProjectDetailPage({
     },
     {
       title: "Amount",
-      dataIndex: "amount",
       key: "amount",
       align: "right",
       width: 120,
-      render: (amount) => (
-        <Text strong>{formatCurrencyCompact(amount, project.currency)}</Text>
-      ),
+      render: (_, record) => {
+        const total =
+          record.items && record.items.length > 0
+            ? record.items.reduce(
+                (sum, item) => sum + (item.amount || 0) * (item.qty || 1),
+                0,
+              )
+            : record.amount || 0;
+        return (
+          <Text strong>{formatCurrencyCompact(total, project.currency)}</Text>
+        );
+      },
     },
     {
       title: "Invoice",

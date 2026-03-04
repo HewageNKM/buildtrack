@@ -24,12 +24,12 @@ export class EntryService {
     cursor?: { date: string; id: string },
     startDate?: string,
     endDate?: string,
-    email?: string
+    email?: string,
   ): Promise<BudgetEntry[]> {
     const access = await this.projectService.verifyAccess(
       projectId,
       userId,
-      email
+      email,
     );
     if (!access.hasAccess) throw new Error("Access denied");
 
@@ -38,7 +38,7 @@ export class EntryService {
       limit,
       cursor,
       startDate,
-      endDate
+      endDate,
     );
 
     // Generate signed URLs for private files
@@ -49,7 +49,7 @@ export class EntryService {
           return url ? { ...entry, invoiceUrl: url } : entry;
         }
         return entry;
-      })
+      }),
     );
 
     return entriesWithUrls;
@@ -58,12 +58,12 @@ export class EntryService {
   async getTotalSpent(
     projectId: string,
     userId: string,
-    email?: string
+    email?: string,
   ): Promise<number> {
     const access = await this.projectService.verifyAccess(
       projectId,
       userId,
-      email
+      email,
     );
     if (!access.hasAccess) throw new Error("Access denied");
     return await this.entryRepo.getProjectTotalSpent(projectId);
@@ -78,12 +78,12 @@ export class EntryService {
       date: string;
       items?: BudgetEntryItem[];
     },
-    file?: { buffer: Buffer; name: string; type: string }
+    file?: { buffer: Buffer; name: string; type: string },
   ): Promise<BudgetEntry> {
     const access = await this.projectService.verifyAccess(
       projectId,
       userId,
-      userEmail
+      userEmail,
     );
     if (!access.hasAccess) throw new Error("Access denied");
 
@@ -106,7 +106,7 @@ export class EntryService {
       if (file.type.startsWith("image/")) {
         const result = await this.compressionService.compressImage(
           file.buffer,
-          file.type
+          file.type,
         );
         fileBuffer = result.buffer;
         contentType = result.contentType;
@@ -125,8 +125,8 @@ export class EntryService {
     // Calculate total amount from items
     const items = data.items || [];
     const totalAmount = items.reduce(
-      (sum, item) => sum + (item.amount || 0),
-      0
+      (sum, item) => sum + (item.amount || 0) * (item.qty || 1),
+      0,
     );
 
     const entryData: Record<string, any> = {
@@ -145,12 +145,12 @@ export class EntryService {
 
     // Remove undefined fields to prevent Firestore "Value for argument data is not a valid Firestore document" error
     Object.keys(entryData).forEach(
-      (key) => entryData[key] === undefined && delete entryData[key]
+      (key) => entryData[key] === undefined && delete entryData[key],
     );
 
     return await this.entryRepo.createWithId(
       entryId,
-      entryData as Omit<BudgetEntry, "id">
+      entryData as Omit<BudgetEntry, "id">,
     );
   }
 
@@ -165,12 +165,12 @@ export class EntryService {
       items?: BudgetEntryItem[];
     },
     file?: { buffer: Buffer; name: string; type: string },
-    email?: string
+    email?: string,
   ): Promise<BudgetEntry> {
     const access = await this.projectService.verifyAccess(
       projectId,
       userId,
-      email
+      email,
     );
     if (!access.hasAccess) throw new Error("Access denied");
 
@@ -214,7 +214,7 @@ export class EntryService {
       if (file.type.startsWith("image/")) {
         const result = await this.compressionService.compressImage(
           file.buffer,
-          file.type
+          file.type,
         );
         fileBuffer = result.buffer;
         contentType = result.contentType;
@@ -233,14 +233,17 @@ export class EntryService {
     // Recalculate amount if items are present
     let newAmount = data.amount;
     if (data.items) {
-      newAmount = data.items.reduce((sum, item) => sum + (item.amount || 0), 0);
+      newAmount = data.items.reduce(
+        (sum, item) => sum + (item.amount || 0) * (item.qty || 1),
+        0,
+      );
     } else if (existingEntry.items) {
       // If updating other fields but items remain same, ensure amount matches items sum?
       // Or trust provided amount?
       // Better to recalculate if we are enforcing item-based.
       newAmount = existingEntry.items.reduce(
-        (sum, item) => sum + (item.amount || 0),
-        0
+        (sum, item) => sum + (item.amount || 0) * (item.qty || 1),
+        0,
       );
     }
 
@@ -300,12 +303,12 @@ export class EntryService {
     projectId: string,
     entryId: string,
     userId: string,
-    email?: string
+    email?: string,
   ): Promise<void> {
     const access = await this.projectService.verifyAccess(
       projectId,
       userId,
-      email
+      email,
     );
     if (!access.hasAccess) throw new Error("Access denied");
     if (access.role === "viewer")
