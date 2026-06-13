@@ -116,4 +116,27 @@ export const entriesApi = {
   delete: async (projectId: string, entryId: string) => {
     await api.delete(`/projects/${projectId}/entries?entryId=${entryId}`);
   },
+
+  scan: async (file: File, categories: string[]) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("categories", JSON.stringify(categories));
+
+    const response = await api.post<{
+      date?: string;
+      vendor?: string;
+      totalAmount?: number;
+      items?: Array<{
+        description: string;
+        qty: number;
+        amount: number;
+        category: string;
+      }>;
+    }>("/scan", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
 };

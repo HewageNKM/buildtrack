@@ -62,6 +62,7 @@ export default function AddEntryModal({
   const [categories, setCategories] = useState<ProjectCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [scanning, setScanning] = useState(false);
 
   useEffect(() => {
     if (isOpen && projectId) {
@@ -140,6 +141,62 @@ export default function AddEntryModal({
       setVendors(data);
     } catch {
       // Vendors are optional, silently fail
+    }
+  };
+
+  const handleScanReceipt = async (file: File) => {
+    setScanning(true);
+    message.loading({ content: "Scanning receipt with AI...", key: "scanReceipt" });
+    try {
+      const categoryNames = mainCategories.map((c) => c.name);
+      const scannedData = await api.entries.scan(file, categoryNames);
+
+      if (scannedData) {
+        // 1. Set Date
+        if (scannedData.date) {
+          form.setFieldsValue({ date: dayjs(scannedData.date) });
+        }
+
+        // 2. Try to match Vendor
+        if (scannedData.vendor) {
+          const matchedVendor = vendors.find(
+            (v) =>
+              v.name.toLowerCase().includes(scannedData.vendor!.toLowerCase()) ||
+              scannedData.vendor!.toLowerCase().includes(v.name.toLowerCase())
+          );
+          if (matchedVendor) {
+            form.setFieldsValue({ vendorId: matchedVendor.id });
+          }
+        }
+
+        // 3. Set Line Items
+        if (scannedData.items && scannedData.items.length > 0) {
+          const newItems = scannedData.items.map((item, idx) => ({
+            id: (Date.now() + idx).toString(),
+            category: item.category || "",
+            subCategory: "",
+            description: item.description || "Parsed Item",
+            qty: item.qty || 1,
+            amount: item.amount || 0,
+          }));
+          setItems(newItems);
+        }
+
+        message.success({
+          content: "Receipt scanned successfully!",
+          key: "scanReceipt",
+          duration: 3,
+        });
+      }
+    } catch (err) {
+      console.error("Scanning failed:", err);
+      message.error({
+        content: "Failed to scan receipt. Please enter details manually.",
+        key: "scanReceipt",
+        duration: 3,
+      });
+    } finally {
+      setScanning(false);
     }
   };
 
@@ -275,7 +332,7 @@ export default function AddEntryModal({
       style={{ maxWidth: "100%", top: 20 }}
       destroyOnHidden
     >
-      <Spin spinning={loadingCategories}>
+      <Spin spinning={loadingCategories || scanning} tip={scanning ? "AI is scanning your receipt..." : undefined}>
         <Form
           form={form}
           layout="vertical"
@@ -427,35 +484,52 @@ export default function AddEntryModal({
 
           {/* Invoice Upload */}
           <Form.Item label="Invoice/Receipt (Optional)">
-            <Upload
-              beforeUpload={(file) => {
-                const isValid =
-                  file.type.startsWith("image/") ||
-                  file.type === "application/pdf";
-                if (!isValid) {
-                  message.error("Only images and PDF files are allowed");
+            <Space align="center" style={{ width: "100%" }} wrap>
+              <Upload
+                beforeUpload={(file) => {
+                  const isValid =
+                    file.type.startsWith("image/") ||
+                    file.type === "application/pdf";
+                  if (!isValid) {
+                    message.error("Only images and PDF files are allowed");
+                    return false;
+                  }
+                  if (file.size > 5 * 1024 * 1024) {
+                    message.error("File size must be less than 5MB");
+                    return false;
+                  }
+                  setInvoice(file);
                   return false;
+                }}
+                maxCount={1}
+                onRemove={() => setInvoice(null)}
+                fileList={
+                  invoice
+                    ? [{ uid: "-1", name: invoice.name, status: "done" }]
+                    : []
                 }
-                if (file.size > 5 * 1024 * 1024) {
-                  message.error("File size must be less than 5MB");
-                  return false;
-                }
-                setInvoice(file);
-                return false;
-              }}
-              maxCount={1}
-              onRemove={() => setInvoice(null)}
-              fileList={
-                invoice
-                  ? [{ uid: "-1", name: invoice.name, status: "done" }]
-                  : []
-              }
-            >
-              <Button icon={<UploadOutlined />}>Upload Invoice</Button>
-            </Upload>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              Max 5MB. Supports images and PDF.
-            </Text>
+              >
+                <Button icon={<UploadOutlined />}>Upload Invoice</Button>
+              </Upload>
+              {invoice && (
+                <Button
+                  type="primary"
+                  onClick={() => handleScanReceipt(invoice)}
+                  loading={scanning}
+                  style={{
+                    background: "linear-gradient(90deg, #8b5cf6, #ec4899)",
+                    borderColor: "transparent",
+                  }}
+                >
+                  Scan Receipt with AI
+                </Button>
+              )}
+            </Space>
+            <div style={{ marginTop: 4 }}>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                Max 5MB. Supports images and PDF. Upload a receipt and click "Scan Receipt with AI" to auto-fill.
+              </Text>
+            </div>
           </Form.Item>
 
           {/* Note for versioning (only when editing) */}

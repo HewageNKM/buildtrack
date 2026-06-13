@@ -29,3 +29,5 @@ secrets:
     secret: FIREBASE_CLIENT_EMAIL
   - variable: FIREBASE_PRIVATE_KEY
     secret: FIREBASE_PRIVATE_KEY
+  - variable: GEMINI_API_KEY
+    secret: GEMINI_API_KEY
