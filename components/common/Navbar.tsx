@@ -95,7 +95,7 @@ export default function Navbar() {
         style={{ display: "flex", alignItems: "center", gap: 12 }}
       >
         <Image
-          src="/logo_rounded.png"
+          src={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/logo_rounded.png`}
           alt="BuildTrack Logo"
           width={40}
           height={40}

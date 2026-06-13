@@ -150,7 +150,7 @@ export default function RegisterPage() {
       >
         <div style={{ maxWidth: 400 }}>
           <Image
-            src="/logo_rounded.png"
+            src={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/logo_rounded.png`}
             alt="BuildTrack Logo"
             width={80}
             height={80}
@@ -205,7 +205,7 @@ export default function RegisterPage() {
           >
             <Link href="/">
               <Image
-                src="/logo_rounded.png"
+                src={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/logo_rounded.png`}
                 alt="BuildTrack Logo"
                 width={64}
                 height={64}

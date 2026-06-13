@@ -115,7 +115,7 @@ export default function LoginPage() {
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <Link href="/">
             <Image
-              src="/logo_rounded.png"
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/logo_rounded.png`}
               alt="BuildTrack Logo"
               width={80}
               height={80}
